@@ -1,0 +1,8 @@
+scope,source,field,cid_start,cid_end,rule,description
+cardiovascular_main,SIM,CAUSABAS,I00,I99,prefix_I,CID-10 capitulo IX doencas do aparelho circulatorio
+hypertension,SIM,CAUSABAS,I10,I15,range,Doencas hipertensivas
+ischemic_heart,SIM,CAUSABAS,I20,I25,range,Doencas isquemicas do coracao
+heart_other,SIM,CAUSABAS,I30,I52,range,Outras formas de doenca do coracao
+cerebrovascular,SIM,CAUSABAS,I60,I69,range,Doencas cerebrovasculares
+arterial,SIM,CAUSABAS,I70,I79,range,Doencas das arterias e capilares
+venous_lymphatic,SIM,CAUSABAS,I80,I89,range,Doencas das veias e vasos linfaticos

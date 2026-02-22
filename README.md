@@ -17,9 +17,16 @@ Comparar três famílias de modelos para previsão de séries temporais:
 
 - `data/raw/`: extrações brutas (SIH/SIM)
 - `data/processed/`: séries tratadas (mensal)
+- `docs/`: dicionários CID e guias de colunas SIH/SIM
 - `src/cv_timeseries/`: código-fonte de preparação, modelos e avaliação
 - `scripts/run_benchmark.py`: CLI para rodar benchmark
 - `results/`: métricas e previsões
+
+## Dicionários e Regras de Incidência
+
+- Dicionário CID-10 cardiovascular (SIM): `docs/cid10_cardiovascular_sim.md`
+- Tabela de faixas CID para filtros automatizados: `docs/cid10_cardiovascular_ranges.csv`
+- Colunas e regras SIH/SIM para incidência cardiovascular: `docs/sih_sim_colunas_incidencia.md`
 
 ## Como começar
 
