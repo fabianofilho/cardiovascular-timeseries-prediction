@@ -148,6 +148,35 @@ Saídas:
 - `results/benchmark_sp_metrics.csv`
 - `results/benchmark_sp_predictions.csv`
 
+## Resultados Atualizados (1k, 5k, 10k)
+
+### Métricas por amostra (sMAPE menor = melhor)
+
+| Amostra | Melhor modelo | sMAPE |
+|---|---|---:|
+| 1.000 | SARIMA | 3.7631 |
+| 5.000 | TimesFM | 0.7609 |
+| 10.000 | SARIMA | 0.5005 |
+
+### Último benchmark (10k)
+
+Arquivo: `results/benchmark_cv_10000_metrics.csv`
+
+| model | mae | rmse | smape | n_predictions |
+|---|---:|---:|---:|---:|
+| sarima | 1.0680 | 1.2768 | 0.5005 | 114 |
+| timesfm | 1.4645 | 1.8987 | 0.6802 | 114 |
+| prophet | 2.6241 | 3.5762 | 1.2336 | 114 |
+
+### Comparativos consolidados
+
+Os comparativos entre amostras ficam em:
+
+- `results/comparisons/all_metrics_long.csv`
+- `results/comparisons/best_model_by_sample.csv`
+- `results/comparisons/smape_by_model_and_sample.csv`
+- `results/comparisons/README.md`
+
 ## Recomendação técnica inicial
 
 Sem benchmark local, a melhor prática é:
