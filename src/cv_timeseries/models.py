@@ -68,23 +68,57 @@ class TimesFMForecaster(Forecaster):
         import timesfm
 
         self._timesfm = timesfm
+        self._model = None
+        self._model_horizon = None
+        self._repo_used = None
+
+    def _build_model(self, horizon: int):
+        repo_candidates = [
+            "google/timesfm-2.0-500m-pytorch",
+            "google/timesfm-1.0-200m-pytorch",
+        ]
+
+        if hasattr(self._timesfm, "TimesFmHparams") and hasattr(
+            self._timesfm, "TimesFmCheckpoint"
+        ):
+            last_error = None
+            for repo_id in repo_candidates:
+                try:
+                    hparams = self._timesfm.TimesFmHparams(
+                        backend="cpu",
+                        context_len=512,
+                        horizon_len=horizon,
+                        per_core_batch_size=1,
+                    )
+                    checkpoint = self._timesfm.TimesFmCheckpoint(
+                        huggingface_repo_id=repo_id
+                    )
+                    model = self._timesfm.TimesFm(
+                        hparams=hparams,
+                        checkpoint=checkpoint,
+                    )
+                    self._repo_used = repo_id
+                    return model
+                except Exception as exc:
+                    last_error = exc
+            raise RuntimeError(
+                "Falha ao carregar checkpoint TimesFM via Hugging Face: "
+                f"{last_error}"
+            )
+
+        raise RuntimeError("API TimesFMHparams/TimesFMCheckpoint não encontrada.")
 
     def forecast(self, train: pd.Series, horizon: int) -> np.ndarray:
-        # API do TimesFM pode variar por versão; tentamos as interfaces mais comuns.
         values = train.to_numpy(dtype=float)
 
-        if hasattr(self._timesfm, "TimesFm"):
-            model = self._timesfm.TimesFm(
-                context_len=max(len(values), 32),
-                horizon_len=horizon,
-                input_patch_len=32,
-                output_patch_len=128,
-                num_layers=20,
-                model_dims=1280,
-            )
-            if hasattr(model, "forecast"):
-                preds, _ = model.forecast([values], freq=[0])
-                return np.asarray(preds[0][:horizon], dtype=float)
+        # Recarrega se o horizonte mudar entre execuções.
+        if self._model is None or self._model_horizon != horizon:
+            self._model = self._build_model(horizon=horizon)
+            self._model_horizon = horizon
+
+        if hasattr(self._model, "forecast"):
+            preds, _ = self._model.forecast([values], freq=[0])
+            return np.asarray(preds[0][:horizon], dtype=float)
 
         raise RuntimeError(
             "Interface TimesFM não reconhecida para esta versão. "

@@ -3,6 +3,7 @@ __pycache__/
 *.so
 .Python
 .venv/
+.venv311/
 venv/
 env/
 .DS_Store
@@ -10,5 +11,8 @@ env/
 .pytest_cache/
 .mypy_cache/
 ruff_cache/
+.mplconfig/
 results/*.csv
 results/*.json
+data/raw/cv_sim_sample_*.csv
+data/processed/serie_eventos_sp_cv_*.csv
