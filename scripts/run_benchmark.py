@@ -20,17 +20,41 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--freq", default="MS", help="Frequência de agregação (ex: MS, W, D)")
     parser.add_argument("--horizon", type=int, default=6, help="Horizonte de previsão")
     parser.add_argument("--min-train-size", type=int, default=36, help="Janela mínima de treino")
+    parser.add_argument(
+        "--models",
+        default="sarima,prophet,timesfm",
+        help="Lista separada por vírgula (opções: sarima, prophet, timesfm)",
+    )
     parser.add_argument("--output-prefix", default="results/benchmark", help="Prefixo de saída")
     return parser.parse_args()
 
 
-def build_models():
-    models = [SarimaForecaster(), ProphetForecaster()]
+def build_models(model_names: list[str]):
+    selected = {m.strip().lower() for m in model_names if m.strip()}
+    valid = {"sarima", "prophet", "timesfm"}
+    invalid = selected - valid
+    if invalid:
+        raise ValueError(f"Modelos inválidos: {sorted(invalid)}")
 
-    try:
-        models.append(TimesFMForecaster())
-    except Exception as exc:
-        print(f"[WARN] TimesFM indisponível: {exc}")
+    models = []
+
+    if "sarima" in selected:
+        models.append(SarimaForecaster())
+
+    if "prophet" in selected:
+        try:
+            models.append(ProphetForecaster())
+        except Exception as exc:
+            print(f"[WARN] Prophet indisponível: {exc}")
+
+    if "timesfm" in selected:
+        try:
+            models.append(TimesFMForecaster())
+        except Exception as exc:
+            print(f"[WARN] TimesFM indisponível: {exc}")
+
+    if not models:
+        raise RuntimeError("Nenhum modelo disponível para rodar.")
 
     return models
 
@@ -93,7 +117,7 @@ def main() -> None:
         freq=args.freq,
     )
 
-    models = build_models()
+    models = build_models(args.models.split(","))
     metrics_rows = []
     preds_frames = []
 
@@ -110,7 +134,13 @@ def main() -> None:
         if not pred_df.empty:
             preds_frames.append(pred_df)
 
-    metrics_df = pd.DataFrame(metrics_rows).sort_values(by="smape", ascending=True)
+    metrics_df = pd.DataFrame(metrics_rows)
+    if not metrics_df.empty:
+        metrics_df = metrics_df.sort_values(by="smape", ascending=True)
+    else:
+        metrics_df = pd.DataFrame(
+            columns=["model", "mae", "rmse", "smape", "n_predictions"]
+        )
     preds_df = pd.concat(preds_frames, ignore_index=True) if preds_frames else pd.DataFrame()
 
     output_prefix = Path(args.output_prefix)
