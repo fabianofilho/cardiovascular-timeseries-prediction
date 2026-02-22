@@ -114,6 +114,34 @@ Ou via atalho:
 make benchmark-all
 ```
 
+## Fluxo de produção (extração real SIM)
+
+Quando o FTP do DataSUS estiver disponível, use o pipeline real:
+
+```bash
+PYTHONPATH=src python scripts/run_real_pipeline.py \
+  --uf SP \
+  --year 2022 \
+  --max-retries 3 \
+  --retry-wait 20 \
+  --horizon 6 \
+  --min-train-size 24 \
+  --models sarima,prophet,timesfm \
+  --output-prefix results/benchmark_sim_real_sp_2022
+```
+
+Esse pipeline executa em sequência:
+
+1. Extração real do SIM com retry: `scripts/extract_sim_real.py`
+2. Validação de realidade dos dados: `scripts/validate_real_dataset.py`
+3. Benchmark dos modelos: `scripts/run_benchmark.py`
+
+Relatórios principais:
+
+- `results/data_reality_report.json`
+- `results/benchmark_sim_real_sp_2022_metrics.csv`
+- `results/benchmark_sim_real_sp_2022_predictions.csv`
+
 ### Formato mínimo do CSV de entrada
 
 O script espera um CSV com, no mínimo:
