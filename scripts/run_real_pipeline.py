@@ -17,7 +17,7 @@ def run(cmd: list[str]) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Pipeline real: extrair, validar e benchmark')
     parser.add_argument('--uf', default='SP')
-    parser.add_argument('--year', type=int, required=True)
+    parser.add_argument('--years', required=True, help='Anos: 2022, 2019-2023, ou 2019,2020,2022')
     parser.add_argument('--max-retries', type=int, default=3)
     parser.add_argument('--retry-wait', type=int, default=20)
     parser.add_argument('--raw-output', default='data/raw/sim_real_sp_latest.csv')
@@ -40,7 +40,7 @@ def main() -> None:
         py,
         str(root / 'scripts' / 'extract_sim_real.py'),
         '--uf', args.uf,
-        '--year', str(args.year),
+        '--years', args.years,
         '--max-retries', str(args.max_retries),
         '--retry-wait', str(args.retry_wait),
         '--raw-output', args.raw_output,

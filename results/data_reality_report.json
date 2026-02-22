@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "checks": {
+    "has_cid_column": true,
+    "raw_rows_gt_0": true,
+    "cid_prefix_all_match": true,
+    "cid_unique_ge_3": true,
+    "series_has_columns": true,
+    "series_points_min": true,
+    "series_value_sum_gt_0": true,
+    "meta_not_synthetic": true,
+    "meta_has_source_sim": true
+  },
+  "raw_csv": "data/raw/sim_real_sp_latest.csv",
+  "series_csv": "data/processed/serie_eventos_sp_sim_real.csv"
+}
