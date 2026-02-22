@@ -32,6 +32,7 @@ MPLCONFIGDIR=.mplconfig PYTHONPATH=src python scripts/run_benchmark.py \
 
 - Tentativa de extração SIM via PySUS/DataSUS: falhou por timeout no FTP (canal de dados).
 - Para não bloquear a execução, foi usada amostra cardiovascular controlada de 5.000 casos (`CAUSABAS` iniciando em `I`).
+- TimesFM executado com checkpoint real do Hugging Face (`google/timesfm-2.5-200m-pytorch`).
 
 ## Métricas
 
@@ -39,13 +40,14 @@ Arquivo: `results/benchmark_cv_5000_metrics.csv`
 
 | model | mae | rmse | smape | n_predictions |
 |---|---:|---:|---:|---:|
+| timesfm | 0.8200 | 1.0772 | 0.7609 | 114 |
 | sarima | 1.0378 | 1.5184 | 0.9855 | 114 |
 | prophet | 1.8195 | 2.1472 | 1.7374 | 114 |
 
 ## Interpretação rápida
 
-- Neste cenário, `sarima` superou `prophet` em todas as métricas.
-- `timesfm` foi acionado, porém não conseguiu carregar checkpoint do Hugging Face neste ambiente e não entrou na comparação final.
+- Neste cenário, `timesfm` foi o melhor modelo nas três métricas.
+- `sarima` ficou em segundo lugar e `prophet` em terceiro.
 
 ## Artefatos
 

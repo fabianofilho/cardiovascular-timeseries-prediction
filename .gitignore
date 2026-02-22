@@ -12,7 +12,15 @@ env/
 .mypy_cache/
 ruff_cache/
 .mplconfig/
-results/*.csv
-results/*.json
-data/raw/cv_sim_sample_*.csv
-data/processed/serie_eventos_sp_cv_*.csv
+.secrets/
+CLAUDE.md
+
+# Ignore datasets and other heavy files; keep only placeholders.
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Keep benchmark outputs versioned.
+!results/*.csv
+!results/*.json
