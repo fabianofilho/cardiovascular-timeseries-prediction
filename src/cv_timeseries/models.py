@@ -19,7 +19,7 @@ class Forecaster(ABC):
 class SarimaForecaster(Forecaster):
     name = "sarima"
 
-    def __init__(self, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12)):
+    def __init__(self, order=(1, 1, 1), seasonal_order=(0, 1, 1, 12)):
         self.order = order
         self.seasonal_order = seasonal_order
 
@@ -28,12 +28,16 @@ class SarimaForecaster(Forecaster):
             train,
             order=self.order,
             seasonal_order=self.seasonal_order,
-            enforce_stationarity=False,
-            enforce_invertibility=False,
+            enforce_stationarity=True,
+            enforce_invertibility=True,
         )
-        fit = model.fit(disp=False)
+        fit = model.fit(disp=False, maxiter=200)
         pred = fit.forecast(steps=horizon)
-        return np.asarray(pred, dtype=float)
+        result = np.asarray(pred, dtype=float)
+        # Clamp to reasonable range based on training data
+        lo = train.min() * 0.1
+        hi = train.max() * 3.0
+        return np.clip(result, lo, hi)
 
 
 class ProphetForecaster(Forecaster):

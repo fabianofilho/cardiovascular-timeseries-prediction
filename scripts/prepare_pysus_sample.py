@@ -39,27 +39,38 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _to_dataframe(obj) -> pd.DataFrame:
-    if isinstance(obj, pd.DataFrame):
-        return obj
-    if isinstance(obj, (list, tuple)):
-        parts = [x for x in obj if isinstance(x, pd.DataFrame)]
-        if parts:
-            return pd.concat(parts, ignore_index=True)
-    raise TypeError(f"Download retornou tipo não suportado: {type(obj)}")
+def _result_to_dataframe(result) -> pd.DataFrame:
+    if isinstance(result, pd.DataFrame):
+        return result
+    if isinstance(result, (list, tuple)):
+        frames = []
+        for item in result:
+            if isinstance(item, pd.DataFrame):
+                frames.append(item)
+            elif isinstance(item, (str, Path)):
+                frames.append(pd.read_parquet(str(item)))
+            elif hasattr(item, "to_dataframe"):
+                frames.append(item.to_dataframe())
+        if frames:
+            return pd.concat(frames, ignore_index=True)
+    if isinstance(result, (str, Path)):
+        return pd.read_parquet(str(result))
+    if hasattr(result, "to_dataframe"):
+        return result.to_dataframe()
+    raise TypeError(f"Download retornou tipo não suportado: {type(result)}")
 
 
 def download_sample(source: str, uf: str, year: int, month: int) -> pd.DataFrame:
     if source == "sih":
         from pysus.online_data.SIH import download
 
-        raw = download(uf, year, month)
-        return _to_dataframe(raw)
+        raw = download(states=uf, years=year, months=month)
+        return _result_to_dataframe(raw)
 
     from pysus.online_data.SIM import download
 
-    raw = download(uf, year)
-    return _to_dataframe(raw)
+    raw = download(groups="CID10", states=uf, years=year)
+    return _result_to_dataframe(raw)
 
 
 def infer_date_column(df: pd.DataFrame) -> str | None:

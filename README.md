@@ -1,228 +1,90 @@
 # Predição de Eventos Cardiovasculares em São Paulo
 
-Repositório para modelagem de tendência de eventos cardiovasculares, com foco em:
-
-- **Internações** (SIH/SUS)
-- **Óbitos** (SIM)
+Análise de séries temporais de mortalidade cardiovascular no estado de São Paulo, usando dados reais do **Sistema de Informações sobre Mortalidade (SIM/DataSUS)**.
 
 ## Objetivo
 
-Comparar três famílias de modelos para previsão de séries temporais:
+Avaliar a capacidade de modelos de forecasting em prever a tendência mensal de óbitos por doenças cardiovasculares (CID-10 capítulo I: I00-I99) no estado de São Paulo, usando backtesting temporal com rolling origin.
 
-1. **ARIMA/SARIMA** (baseline estatístico robusto)
-2. **Prophet** (sazonalidade e tendência com feriados/regressores)
-3. **TimesFM** (foundation model para forecasting)
+Modelos comparados:
 
-## Estrutura
+1. **SARIMA** — baseline estatístico com sazonalidade multiplicativa
+2. **Prophet** — decomposição de tendência + sazonalidade (Meta)
+3. **TimesFM** — foundation model para séries temporais (Google)
 
-- `data/raw/`: extrações brutas (SIH/SIM)
-- `data/processed/`: séries tratadas (mensal)
-- `docs/`: dicionários CID e guias de colunas SIH/SIM
-- `src/cv_timeseries/`: código-fonte de preparação, modelos e avaliação
-- `scripts/run_benchmark.py`: CLI para rodar benchmark
-- `results/`: métricas e previsões
+## Dados
 
-## Dicionários e Regras de Incidência
+- **Fonte**: SIM/DataSUS — registros reais de óbito
+- **Período**: Janeiro/2019 a Dezembro/2023 (60 meses)
+- **Região**: Estado de São Paulo (UF=SP)
+- **Filtro**: Causa básica com CID-10 prefixo "I" (doenças do aparelho circulatório)
+- **Extração**: Download via HTTP mirror do DataSUS com fallback para FTP direto
 
-- Dicionário CID-10 cardiovascular (SIM): `docs/cid10_cardiovascular_sim.md`
-- Tabela de faixas CID para filtros automatizados: `docs/cid10_cardiovascular_ranges.csv`
-- Colunas e regras SIH/SIM para incidência cardiovascular: `docs/sih_sim_colunas_incidencia.md`
+### Resumo dos dados
 
-## Como começar
+| Indicador | Valor |
+|---|---:|
+| Total de registros brutos (SIM) | 1.775.800 |
+| Registros cardiovasculares (CID I) | 461.950 |
+| Pontos na série mensal | 60 |
+| Média mensal de óbitos | ~7.700 |
+| Mínimo mensal | 5.978 (abr/2020) |
+| Máximo mensal | 9.582 (jan/2022) |
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+## Metodologia
 
-Dependências opcionais (modelos mais pesados):
+- **Backtesting**: Rolling origin cross-validation
+- **Horizonte de previsão**: 6 meses
+- **Janela mínima de treino**: 24 meses
+- **Métricas**: MAE, RMSE, sMAPE
+- **Total de previsões por modelo**: 186 pontos (31 janelas x 6 horizontes)
 
-```bash
-pip install -r requirements-optional.txt
-```
+### Configuração dos modelos
 
-Atalhos com `make`:
+| Modelo | Configuração |
+|---|---|
+| SARIMA | order=(1,1,1), seasonal_order=(0,1,1,12) |
+| Prophet | yearly_seasonality=True, weekly/daily=False |
+| TimesFM | google/timesfm-2.5-200m-pytorch, context=512 |
 
-```bash
-make setup-base
-make setup-full
-```
+## Resultados
 
-## Fluxo recomendado: amostra pequena primeiro (PySUS)
+Benchmark com dados reais do SIM (SP, 2019-2023):
 
-### 1) Baixar amostra pequena SIH/SIM via PySUS
-
-Exemplo SIH/SP (amostra curta para smoke test):
-
-```bash
-PYTHONPATH=src python scripts/prepare_pysus_sample.py \
-  --source sih \
-  --uf SP \
-  --year 2024 \
-  --month 1 \
-  --sample-rows 5000 \
-  --raw-output data/raw/pysus_sih_sp_2024_01_sample.csv \
-  --series-output data/processed/serie_eventos_sp_sample.csv
-```
-
-O script gera:
-
-- CSV bruto da amostra (`data/raw/...`)
-- Série mensal agregada em formato `date,value` (`data/processed/...`)
-
-Também disponível via atalho:
-
-```bash
-make sample-pysus
-```
-
-### 2) Rodar benchmark rápido (somente baseline)
-
-```bash
-PYTHONPATH=src python scripts/run_benchmark.py \
-  --input-csv data/processed/serie_eventos_sp_sample.csv \
-  --date-col date \
-  --value-col value \
-  --freq MS \
-  --horizon 3 \
-  --min-train-size 12 \
-  --models sarima \
-  --output-prefix results/benchmark_sp_sample
-```
-
-Ou via atalho (série tiny local para smoke test):
-
-```bash
-make smoke-baseline
-```
-
-### 3) Rodar benchmark completo (quando ambiente estiver pronto)
-
-```bash
-PYTHONPATH=src python scripts/run_benchmark.py \
-  --input-csv data/processed/serie_eventos_sp_sample.csv \
-  --models sarima,prophet,timesfm \
-  --horizon 6 \
-  --min-train-size 24 \
-  --output-prefix results/benchmark_sp_sample_full
-```
-
-Ou via atalho:
-
-```bash
-make benchmark-all
-```
-
-## Fluxo de produção (extração real SIM)
-
-Quando o FTP do DataSUS estiver disponível, use o pipeline real:
-
-```bash
-PYTHONPATH=src python scripts/run_real_pipeline.py \
-  --uf SP \
-  --year 2022 \
-  --max-retries 3 \
-  --retry-wait 20 \
-  --horizon 6 \
-  --min-train-size 24 \
-  --models sarima,prophet,timesfm \
-  --output-prefix results/benchmark_sim_real_sp_2022
-```
-
-Esse pipeline executa em sequência:
-
-1. Extração real do SIM com retry: `scripts/extract_sim_real.py`
-2. Validação de realidade dos dados: `scripts/validate_real_dataset.py`
-3. Benchmark dos modelos: `scripts/run_benchmark.py`
-
-Relatórios principais:
-
-- `results/data_reality_report.json`
-- `results/benchmark_sim_real_sp_2022_metrics.csv`
-- `results/benchmark_sim_real_sp_2022_predictions.csv`
-
-### Formato mínimo do CSV de entrada
-
-O script espera um CSV com, no mínimo:
-
-- `date` (ou coluna equivalente informada no CLI)
-- `value` (contagem de eventos no período)
-
-Exemplo:
-
-```csv
-date,value
-2015-01-01,120
-2015-02-01,131
-...
-```
-
-## Rodar benchmark
-
-```bash
-PYTHONPATH=src python scripts/run_benchmark.py \
-  --input-csv data/processed/serie_eventos_sp.csv \
-  --date-col date \
-  --value-col value \
-  --freq MS \
-  --horizon 6 \
-  --models sarima,prophet,timesfm \
-  --output-prefix results/benchmark_sp
-```
-
-Saídas:
-
-- `results/benchmark_sp_metrics.csv`
-- `results/benchmark_sp_predictions.csv`
-
-## Resultados Atualizados (1k, 5k, 10k)
-
-### Métricas por amostra (sMAPE menor = melhor)
-
-| Amostra | Melhor modelo | sMAPE |
-|---|---|---:|
-| 1.000 | SARIMA | 3.7631 |
-| 5.000 | TimesFM | 0.7609 |
-| 10.000 | SARIMA | 0.5005 |
-
-### Último benchmark (10k)
-
-Arquivo: `results/benchmark_cv_10000_metrics.csv`
-
-| model | mae | rmse | smape | n_predictions |
+| Modelo | MAE | RMSE | sMAPE (%) | n_predictions |
 |---|---:|---:|---:|---:|
-| sarima | 1.0680 | 1.2768 | 0.5005 | 114 |
-| timesfm | 1.4645 | 1.8987 | 0.6802 | 114 |
-| prophet | 2.6241 | 3.5762 | 1.2336 | 114 |
+| **TimesFM** | **586.02** | **765.77** | **7.30** | 186 |
+| SARIMA | 603.51 | 787.83 | 7.45 | 186 |
+| Prophet | 613.80 | 767.23 | 7.68 | 186 |
 
-### Comparativos consolidados
+- **TimesFM** vence em todas as métricas (MAE, RMSE, sMAPE)
+- Com média de ~8.000 óbitos/mês, MAE ~586 representa erro de ~7.3%
+- Os três modelos capturam a sazonalidade (pico no inverno: jun-jul)
+- TimesFM também produz previsões com range mais conservador [6.664, 9.078] vs valores reais [6.217, 9.582]
 
-Os comparativos entre amostras ficam em:
+### Sazonalidade observada
 
-- `results/comparisons/all_metrics_long.csv`
-- `results/comparisons/best_model_by_sample.csv`
-- `results/comparisons/smape_by_model_and_sample.csv`
-- `results/comparisons/README.md`
+A série apresenta padrão sazonal claro com pico de mortalidade nos meses de inverno (junho-julho) e vale no verão (fevereiro), consistente com a literatura sobre mortalidade cardiovascular e temperatura.
 
-## Recomendação técnica inicial
+## Conclusões
 
-Sem benchmark local, a melhor prática é:
-
-- usar **SARIMA** como baseline obrigatório;
-- usar **Prophet** quando houver sazonalidade forte e necessidade de interpretabilidade;
-- testar **TimesFM** como candidato de maior desempenho, validando custo, estabilidade e disponibilidade de inferência.
-
-A escolha final deve ser por **backtesting temporal** (rolling origin), não por preferência teórica.
+1. **TimesFM** (foundation model) é o melhor modelo: menor MAE, RMSE e sMAPE, com previsões mais estáveis
+2. **SARIMA** é um baseline competitivo (sMAPE 7.45% vs 7.30%), leve e sem dependências pesadas
+3. **Prophet** oferece interpretabilidade adicional (decomposição tendência + sazonalidade), mas ficou em terceiro
+4. A diferença entre os três modelos é pequena (~0.4 pp de sMAPE), sugerindo que a série tem boa previsibilidade
+5. A escolha final deve considerar: robustez operacional, interpretabilidade e custo computacional
 
 ## Próximos passos
 
-1. Extrair SIH/SIM para série mensal por município/DRS.
-2. Criar variáveis exógenas (temperatura, cobertura APS, envelhecimento, etc.).
-3. Rodar benchmark por estrato (sexo, faixa etária, CID, território).
-4. Definir modelo campeão por métrica (MAE/RMSE/sMAPE) e robustez operacional.
+1. Extrair SIH/SIM para série mensal por município/DRS
+2. Criar variáveis exógenas (temperatura, cobertura APS, envelhecimento)
+3. Rodar benchmark por estrato (sexo, faixa etária, subcategoria CID, território)
+4. Definir modelo campeão por métrica e robustez operacional
 
-## Nota sobre execução neste ambiente
+## Referências
 
-Nesta sessão, a instalação com `pip` falhou por restrição de rede para acessar PyPI.
-No seu ambiente com internet, execute `make setup-base` (ou `make setup-full`) e depois os alvos de teste.
+- **SIM/DataSUS**: Sistema de Informações sobre Mortalidade — Ministério da Saúde
+- **CID-10 Cap. IX**: Doenças do aparelho circulatório (I00-I99)
+- Dicionário CID-10 cardiovascular: `docs/cid10_cardiovascular_sim.md`
+- Faixas CID automatizadas: `docs/cid10_cardiovascular_ranges.csv`
+- Colunas SIH/SIM: `docs/sih_sim_colunas_incidencia.md`
