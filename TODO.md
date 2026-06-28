@@ -32,10 +32,11 @@ O mesmo movimento que o dengue-imdc fez com clima/umidade.
   - Variaveis: temperatura minima mensal (tm_min) e media (tm_med) para estado de SP
   - Periodo: 2010-2023, mesma granularidade da serie principal
 - [ ] Adicionar suporte a exogenas no `run_benchmark.py` (`--exog-csv` opcional)
-- [ ] Criar `XGBoostForecaster` e `CatBoostForecaster` em `src/cv_timeseries/models.py`
-  - Interface identica a `Forecaster` base
-  - Features: lags 1-12 meses + temperatura como exogena
-  - Seguir o padrao skforecast/ForecasterRecursive do projeto dengue
+- [x] Criar `XGBoostForecaster` e `CatBoostForecaster` em `src/cv_timeseries/models.py`
+  - [x] Interface identica a `Forecaster` base (via `_SkforecastRecursiveForecaster`)
+  - [x] Features: lags 1-12 meses (skforecast/ForecasterRecursive, previsao recursiva)
+  - [x] Conectados ao `run_benchmark.py` (`--models xgboost,catboost`) e testados na serie tiny
+  - [ ] Falta: temperatura como exogena (depende do download ERA5 acima)
 - [ ] Rodar benchmark comparativo: boosting com temperatura vs. TimesFM zero-shot
   - Hipotese: XGBoost com temperatura pode chegar perto ou superar TimesFM
   - Registrar em `docs/experiments/benchmark_boosting_temperatura.md`

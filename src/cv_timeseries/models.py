@@ -66,6 +66,91 @@ class ProphetForecaster(Forecaster):
         return fcst["yhat"].to_numpy(dtype=float)
 
 
+class _SkforecastRecursiveForecaster(Forecaster):
+    """Base para modelos de boosting via skforecast ForecasterRecursive.
+
+    Usa previsão recursiva multi-passo com features de lag. Subclasses
+    fornecem o regressor sklearn-compatível em `_build_regressor`.
+    """
+
+    name: str
+    lags: int = 12
+
+    def _build_regressor(self):  # pragma: no cover - implementado nas subclasses
+        raise NotImplementedError
+
+    def forecast(self, train: pd.Series, horizon: int) -> np.ndarray:
+        from skforecast.recursive import ForecasterRecursive
+
+        # skforecast exige índice datetime com frequência definida.
+        y = train.copy()
+        if not isinstance(y.index, pd.DatetimeIndex):
+            y.index = pd.to_datetime(y.index)
+        if y.index.freq is None:
+            inferred = pd.infer_freq(y.index)
+            y = y.asfreq(inferred or "MS")
+
+        # Não usar mais lags do que o histórico permite.
+        usable_lags = max(1, min(self.lags, len(y) - 1))
+
+        forecaster = ForecasterRecursive(
+            regressor=self._build_regressor(),
+            lags=usable_lags,
+        )
+        forecaster.fit(y=y)
+        pred = forecaster.predict(steps=horizon)
+        result = np.asarray(pred, dtype=float)
+
+        lo = train.min() * 0.1
+        hi = train.max() * 3.0
+        return np.clip(result, lo, hi)
+
+
+class XGBoostForecaster(_SkforecastRecursiveForecaster):
+    name = "xgboost"
+
+    def __init__(self, lags: int = 12, **xgb_kwargs):
+        self.lags = lags
+        self._xgb_kwargs = xgb_kwargs
+
+    def _build_regressor(self):
+        from xgboost import XGBRegressor
+
+        params = dict(
+            n_estimators=300,
+            max_depth=4,
+            learning_rate=0.05,
+            subsample=0.9,
+            colsample_bytree=0.9,
+            random_state=42,
+            n_jobs=-1,
+        )
+        params.update(self._xgb_kwargs)
+        return XGBRegressor(**params)
+
+
+class CatBoostForecaster(_SkforecastRecursiveForecaster):
+    name = "catboost"
+
+    def __init__(self, lags: int = 12, **cat_kwargs):
+        self.lags = lags
+        self._cat_kwargs = cat_kwargs
+
+    def _build_regressor(self):
+        from catboost import CatBoostRegressor
+
+        params = dict(
+            iterations=300,
+            depth=4,
+            learning_rate=0.05,
+            random_seed=42,
+            verbose=False,
+            allow_writing_files=False,
+        )
+        params.update(self._cat_kwargs)
+        return CatBoostRegressor(**params)
+
+
 class TimesFMForecaster(Forecaster):
     name = "timesfm"
 

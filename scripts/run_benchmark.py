@@ -9,7 +9,13 @@ import pandas as pd
 
 from cv_timeseries.data import load_and_aggregate_series
 from cv_timeseries.evaluate import mae, rmse, rolling_origin_splits, smape
-from cv_timeseries.models import ProphetForecaster, SarimaForecaster, TimesFMForecaster
+from cv_timeseries.models import (
+    CatBoostForecaster,
+    ProphetForecaster,
+    SarimaForecaster,
+    TimesFMForecaster,
+    XGBoostForecaster,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,7 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         default="sarima,prophet,timesfm",
-        help="Lista separada por vírgula (opções: sarima, prophet, timesfm)",
+        help="Lista separada por vírgula (opções: sarima, prophet, timesfm, xgboost, catboost)",
     )
     parser.add_argument("--output-prefix", default="results/benchmark", help="Prefixo de saída")
     return parser.parse_args()
@@ -31,7 +37,7 @@ def parse_args() -> argparse.Namespace:
 
 def build_models(model_names: list[str]):
     selected = {m.strip().lower() for m in model_names if m.strip()}
-    valid = {"sarima", "prophet", "timesfm"}
+    valid = {"sarima", "prophet", "timesfm", "xgboost", "catboost"}
     invalid = selected - valid
     if invalid:
         raise ValueError(f"Modelos inválidos: {sorted(invalid)}")
@@ -52,6 +58,18 @@ def build_models(model_names: list[str]):
             models.append(TimesFMForecaster())
         except Exception as exc:
             print(f"[WARN] TimesFM indisponível: {exc}")
+
+    if "xgboost" in selected:
+        try:
+            models.append(XGBoostForecaster())
+        except Exception as exc:
+            print(f"[WARN] XGBoost indisponível: {exc}")
+
+    if "catboost" in selected:
+        try:
+            models.append(CatBoostForecaster())
+        except Exception as exc:
+            print(f"[WARN] CatBoost indisponível: {exc}")
 
     if not models:
         raise RuntimeError("Nenhum modelo disponível para rodar.")
