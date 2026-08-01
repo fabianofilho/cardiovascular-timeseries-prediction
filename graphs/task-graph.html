@@ -521,7 +521,7 @@
     { id: "N1", nivel: 0, tit: "reconstruir série e índice janela/horizonte",
       curto: "36 meses recuperados", estado: "done",
       metrica: "36 datas únicas com y_true único por data, 31x6 por modelo, e MAE, RMSE e sMAPE recalculados batendo com o CSV publicado",
-      res: "36 meses (2021-01 a 2023-12), 31 janelas x 6 horizontes nos 3 modelos, 9 de 9 métricas batendo na 4ª casa. Média do subperíodo: 8.001 óbitos/mês",
+      res: "36 meses (2021-01 a 2023-12), 31 janelas x 6 horizontes nos 3 modelos, 9 de 9 métricas batendo na 4ª casa. Média do subperíodo: 8.001 óbitos/mês. O CSV é gerado pelo script, não versionado: o .gitignore exclui data/processed inteiro, que é a causa raiz da LAB-62",
       entrega: "scripts/rebuild_series_from_predictions.py, data/processed/serie_sim_sp_2021_2023_reconstruida.csv" },
     { id: "N2", nivel: 1, tit: "IC bootstrap por bloco de janela",
       curto: "largura 2,45 pp", estado: "done",

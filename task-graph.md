@@ -54,7 +54,7 @@ graph TD
 | N6 | importância TreeSHAP dos lags do XGBoost final, com direção | \|SHAP\| médio por lag, sinal da relação lag/contribuição, e comparação de sinal contra regressão linear nos mesmos lags, com divergências marcadas | `results/shap_lags_xgboost.csv` | lag 1 domina (\|SHAP\| 396,5, positivo), lag 12 é o mais fraco dos quatro (122,9). Nenhuma divergência de sinal contra o modelo linear | done |
 | N7 | página do grafo com resultado medido nó a nó | resultado principal no topo, grafo interativo com estado por cor, tabela nó a nó, gráficos com IC e linha de referência, seção SHAP, validação por script | `graphs/task-graph.html`, `graphs/README.md` | publicada. Validação no DOM: 9 nós, 16 arestas com path, nada fora do viewBox, nenhuma caixa sobreposta, 5 gráficos renderizados, zero erro de console | done |
 | N8 | levar os números para o Linear | issues do projeto CPT atualizadas com o número medido e status update publicado com health coerente com o resultado | comentários e status update no projeto CPT | LAB-64 criada como Urgent; LAB-31, LAB-32, LAB-62 e LAB-63 comentadas; status update com health `offTrack` | done |
-| N9 | versionar a rodada | commit e push em `cardiovascular-timeseries-prediction` e no `ai-lab-hub` (grafo espelhado), sem dado bruto nem credencial | commits em ambos os repos | em execução | in_progress |
+| N9 | versionar a rodada | commit e push em `cardiovascular-timeseries-prediction` e no `ai-lab-hub` (grafo espelhado), sem dado bruto nem credencial | commits em ambos os repos | `0dd1e2a` em `fabianofilho/incerteza-benchmark` e `92b677b` em `fabianofilho/grafo-cpt-incerteza`, ambos no remoto. Nenhum dado bruto e nenhuma credencial no diff | done |
 
 <!-- status: pending → in_progress → done -->
 
