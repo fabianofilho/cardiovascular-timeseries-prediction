@@ -1,0 +1,207 @@
+"""Incerteza do benchmark: IC por bootstrap de janelas, teste pareado e erro por horizonte.
+
+Motivação: o benchmark publicado ordena TimesFM, SARIMA e Prophet por uma amplitude de
+0,38 pp de sMAPE, sem nenhuma medida de incerteza. Antes de comparar mais famílias de modelo
+é preciso saber a largura do intervalo de uma família, senão o ranking é ruído
+(aprendizado 5 de `ai-lab-hub/docs/aprendizados-pipeline-agentes.md`).
+
+Desenho da reamostragem: as 186 previsões de cada modelo NÃO são independentes. Elas vêm de
+31 janelas de rolling origin que se sobrepõem, e dentro de cada janela os 6 horizontes
+compartilham a mesma origem. Reamostrar previsão a previsão superestimaria a precisão. Por isso
+o bootstrap reamostra **janelas inteiras**, com os 6 horizontes juntos, e usa as MESMAS janelas
+para os três modelos em cada réplica, o que preserva o pareamento.
+
+Saídas:
+    results/uncertainty_bootstrap_metrics.csv  (N2)
+    results/uncertainty_pairwise_tests.csv     (N3)
+    results/error_by_horizon.csv               (N4)
+
+Uso:
+    python scripts/run_uncertainty.py
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from scipy import stats
+
+ROOT = Path(__file__).resolve().parents[1]
+INDEX_CSV = ROOT / "results" / "predictions_indexed.csv"
+OUT_BOOT = ROOT / "results" / "uncertainty_bootstrap_metrics.csv"
+OUT_PAIR = ROOT / "results" / "uncertainty_pairwise_tests.csv"
+OUT_HORIZ = ROOT / "results" / "error_by_horizon.csv"
+
+B = 10_000
+SEED = 20260801
+MODELS = ["timesfm", "sarima", "prophet"]
+
+
+def smape_vec(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+    """sMAPE ponto a ponto, em porcentagem."""
+    return 200.0 * np.abs(y_pred - y_true) / (np.abs(y_true) + np.abs(y_pred))
+
+
+def to_matrices(df: pd.DataFrame) -> dict[str, np.ndarray]:
+    """Empilha as previsões em matriz (janela x horizonte) por modelo."""
+    out = {}
+    for m in MODELS:
+        g = df[df.model == m].sort_values(["window", "horizon"])
+        out[m] = {
+            "y_true": g["y_true"].to_numpy().reshape(31, 6),
+            "y_pred": g["y_pred"].to_numpy().reshape(31, 6),
+        }
+    return out
+
+
+def dm_test(d: np.ndarray, h: int) -> tuple[float, float]:
+    """Diebold-Mariano com correção de Harvey, Leybourne e Newbold para amostra pequena.
+
+    d é a série do diferencial de perda por janela, para um horizonte fixo.
+    A variância de longo prazo usa truncamento em h-1 defasagens, que é o padrão para
+    previsão h passos à frente.
+    """
+    n = len(d)
+    d_bar = d.mean()
+    gamma0 = np.sum((d - d_bar) ** 2) / n
+    var = gamma0
+    for lag in range(1, h):
+        cov = np.sum((d[lag:] - d_bar) * (d[:-lag] - d_bar)) / n
+        var += 2.0 * cov
+    if var <= 0:  # variância de longo prazo negativa, truncamento não confiável
+        return float("nan"), float("nan")
+    dm = d_bar / np.sqrt(var / n)
+    correcao = np.sqrt((n + 1 - 2 * h + h * (h - 1) / n) / n)
+    dm_corrigido = dm * correcao
+    p = 2 * (1 - stats.t.cdf(abs(dm_corrigido), df=n - 1))
+    return float(dm_corrigido), float(p)
+
+
+def main() -> int:
+    df = pd.read_csv(INDEX_CSV, parse_dates=["date"])
+    mats = to_matrices(df)
+    rng = np.random.default_rng(SEED)
+    n_win = 31
+
+    # sMAPE e erro absoluto ponto a ponto, matriz 31x6 por modelo
+    sm = {m: smape_vec(mats[m]["y_true"], mats[m]["y_pred"]) for m in MODELS}
+    ae = {m: np.abs(mats[m]["y_pred"] - mats[m]["y_true"]) for m in MODELS}
+
+    # ---------- N2 e N3: bootstrap pareado de janelas ----------
+    idx = rng.integers(0, n_win, size=(B, n_win))
+    boot_sm = {m: sm[m][idx].mean(axis=(1, 2)) for m in MODELS}
+    boot_ae = {m: ae[m][idx].mean(axis=(1, 2)) for m in MODELS}
+
+    linhas = []
+    for m in MODELS:
+        for nome, pontual, boot in (
+            ("smape", sm[m].mean(), boot_sm[m]),
+            ("mae", ae[m].mean(), boot_ae[m]),
+        ):
+            lo, hi = np.percentile(boot, [2.5, 97.5])
+            linhas.append({
+                "model": m, "metric": nome, "point": pontual,
+                "ci_low": lo, "ci_high": hi, "ci_width": hi - lo,
+                "n_windows": n_win, "n_predictions": sm[m].size, "B": B,
+            })
+    boot_df = pd.DataFrame(linhas)
+    boot_df.to_csv(OUT_BOOT, index=False)
+
+    pares = [("timesfm", "sarima"), ("timesfm", "prophet"), ("sarima", "prophet")]
+    linhas = []
+    for a, b in pares:
+        for nome, mat, boot in (
+            ("smape", sm, boot_sm),
+            ("mae", ae, boot_ae),
+        ):
+            dif = mat[a].mean() - mat[b].mean()
+            boot_dif = boot[a] - boot[b]
+            lo, hi = np.percentile(boot_dif, [2.5, 97.5])
+            # p-valor bicaudal do bootstrap: fração de réplicas do outro lado do zero
+            p_boot = 2 * min((boot_dif >= 0).mean(), (boot_dif <= 0).mean())
+            linhas.append({
+                "pair": f"{a}_menos_{b}", "metric": nome, "diff_point": dif,
+                "ci_low": lo, "ci_high": hi, "ci_contains_zero": bool(lo <= 0 <= hi),
+                "p_bootstrap": min(p_boot, 1.0), "B": B,
+            })
+    pair_df = pd.DataFrame(linhas)
+
+    # Diebold-Mariano por horizonte, perda = erro absoluto
+    dm_linhas = []
+    for a, b in pares:
+        for h in range(1, 7):
+            d = ae[a][:, h - 1] - ae[b][:, h - 1]
+            estat, p = dm_test(d, h)
+            dm_linhas.append({
+                "pair": f"{a}_menos_{b}", "horizon": h, "mean_loss_diff": float(d.mean()),
+                "dm_stat_harvey": estat, "p_value": p, "n_windows": n_win,
+            })
+    dm_df = pd.DataFrame(dm_linhas)
+    pd.concat([
+        pair_df.assign(test="bootstrap_pareado", horizon="pooled"),
+        dm_df.assign(test="diebold_mariano_harvey", metric="mae"),
+    ], ignore_index=True).to_csv(OUT_PAIR, index=False)
+
+    # ---------- N4: erro por horizonte ----------
+    linhas = []
+    for m in MODELS:
+        for h in range(1, 7):
+            col = sm[m][:, h - 1]
+            boot_h = col[rng.integers(0, n_win, size=(B, n_win))].mean(axis=1)
+            lo, hi = np.percentile(boot_h, [2.5, 97.5])
+            linhas.append({
+                "model": m, "horizon": h, "smape": col.mean(),
+                "ci_low": lo, "ci_high": hi,
+                "mae": ae[m][:, h - 1].mean(), "n_windows": n_win,
+            })
+    hor_df = pd.DataFrame(linhas)
+    hor_df.to_csv(OUT_HORIZ, index=False)
+
+    # ---------- relatório ----------
+    print("N2  IC95% por bootstrap de janelas (B=10.000, reamostra as 31 janelas inteiras)\n")
+    print(f"{'modelo':<10}{'sMAPE':>8}{'IC95%':>22}{'largura':>10}")
+    for _, r in boot_df[boot_df.metric == "smape"].iterrows():
+        ic = f"[{r.ci_low:.2f}, {r.ci_high:.2f}]"
+        print(f"{r.model:<10}{r.point:>8.2f}{ic:>22}{r.ci_width:>10.2f}")
+    amplitude = boot_df[boot_df.metric == "smape"].point.max() - boot_df[boot_df.metric == "smape"].point.min()
+    largura_media = boot_df[boot_df.metric == "smape"].ci_width.mean()
+    print(f"\nAmplitude entre modelos: {amplitude:.2f} pp")
+    print(f"Largura média do IC:     {largura_media:.2f} pp")
+    print(f"Razão amplitude/largura: {amplitude / largura_media:.2f}"
+          f"  ({'ranking informativo' if amplitude > largura_media else 'ranking dentro do ruído'})")
+
+    print("\n\nN3  Diferença pareada (bootstrap sobre as mesmas janelas)\n")
+    print(f"{'par':<26}{'métrica':<8}{'diferença':>11}{'IC95%':>22}  zero dentro?")
+    for _, r in pair_df.iterrows():
+        ic = f"[{r.ci_low:.3f}, {r.ci_high:.3f}]"
+        print(f"{r.pair:<26}{r.metric:<8}{r.diff_point:>11.3f}{ic:>22}  "
+              f"{'SIM' if r.ci_contains_zero else 'não'}  p={r.p_bootstrap:.3f}")
+
+    print("\nDiebold-Mariano por horizonte (perda = erro absoluto, correção de Harvey)\n")
+    print(f"{'par':<26}" + "".join(f"{'h=' + str(h):>12}" for h in range(1, 7)))
+    for a, b in pares:
+        sub = dm_df[dm_df.pair == f"{a}_menos_{b}"].sort_values("horizon")
+        cel = "".join(f"{r.p_value:>12.3f}" for _, r in sub.iterrows())
+        print(f"{a + '_menos_' + b:<26}{cel}")
+    print("(valores são p-valores; nenhum abaixo de 0,05 significa nenhuma diferença detectada)")
+
+    print("\n\nN4  sMAPE por horizonte\n")
+    print(f"{'modelo':<10}" + "".join(f"{'h=' + str(h):>9}" for h in range(1, 7)))
+    for m in MODELS:
+        sub = hor_df[hor_df.model == m].sort_values("horizon")
+        print(f"{m:<10}" + "".join(f"{r.smape:>9.2f}" for _, r in sub.iterrows()))
+    melhor = hor_df.loc[hor_df.groupby("horizon").smape.idxmin()].sort_values("horizon")
+    print("\nMelhor modelo por horizonte: "
+          + ", ".join(f"h{int(r.horizon)}={r.model}" for _, r in melhor.iterrows()))
+
+    print(f"\nGravado: {OUT_BOOT.relative_to(ROOT)}")
+    print(f"Gravado: {OUT_PAIR.relative_to(ROOT)}")
+    print(f"Gravado: {OUT_HORIZ.relative_to(ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,1026 @@
+<title>CPT: o ranking do benchmark está dentro do ruído</title>
+
+<style>
+  :root {
+    --ground: #f4f6f7;
+    --surface: #ffffff;
+    --surface-2: #eceff1;
+    --line: #d3dade;
+    --line-soft: #e3e8ea;
+    --ink: #16212a;
+    --ink-2: #4a5a66;
+    --ink-3: #74858f;
+    --accent: #0d6e7a;
+    --accent-soft: #d6eaec;
+    --ruido: #93a4ad;
+    --ruido-soft: #dfe5e8;
+    --alerta: #a1600d;
+    --alerta-soft: #f5e6cd;
+    --critico: #8f2b3c;
+    --critico-soft: #f3dade;
+    --serie-a: #0d6e7a;
+    --serie-b: #8f2b3c;
+    --serie-c: #6b5aa6;
+    --no-done: #0d6e7a;
+    --no-pending: #93a4ad;
+    --shadow: 0 1px 2px rgba(22, 33, 42, .06), 0 8px 24px rgba(22, 33, 42, .06);
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0f161b;
+      --surface: #161f26;
+      --surface-2: #1c272f;
+      --line: #2b3941;
+      --line-soft: #223038;
+      --ink: #e6edf1;
+      --ink-2: #a8b8c2;
+      --ink-3: #7e909b;
+      --accent: #4fb3c0;
+      --accent-soft: #17383d;
+      --ruido: #6e828d;
+      --ruido-soft: #212e36;
+      --alerta: #d9a557;
+      --alerta-soft: #33280f;
+      --critico: #e0798a;
+      --critico-soft: #3a1c22;
+      --serie-a: #4fb3c0;
+      --serie-b: #e0798a;
+      --serie-c: #a394d6;
+      --no-done: #4fb3c0;
+      --no-pending: #6e828d;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0f161b;
+    --surface: #161f26;
+    --surface-2: #1c272f;
+    --line: #2b3941;
+    --line-soft: #223038;
+    --ink: #e6edf1;
+    --ink-2: #a8b8c2;
+    --ink-3: #7e909b;
+    --accent: #4fb3c0;
+    --accent-soft: #17383d;
+    --ruido: #6e828d;
+    --ruido-soft: #212e36;
+    --alerta: #d9a557;
+    --alerta-soft: #33280f;
+    --critico: #e0798a;
+    --critico-soft: #3a1c22;
+    --serie-a: #4fb3c0;
+    --serie-b: #e0798a;
+    --serie-c: #a394d6;
+    --no-done: #4fb3c0;
+    --no-pending: #6e828d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+  }
+
+  :root[data-theme="light"] {
+    --ground: #f4f6f7;
+    --surface: #ffffff;
+    --surface-2: #eceff1;
+    --line: #d3dade;
+    --line-soft: #e3e8ea;
+    --ink: #16212a;
+    --ink-2: #4a5a66;
+    --ink-3: #74858f;
+    --accent: #0d6e7a;
+    --accent-soft: #d6eaec;
+    --ruido: #93a4ad;
+    --ruido-soft: #dfe5e8;
+    --alerta: #a1600d;
+    --alerta-soft: #f5e6cd;
+    --critico: #8f2b3c;
+    --critico-soft: #f3dade;
+    --serie-a: #0d6e7a;
+    --serie-b: #8f2b3c;
+    --serie-c: #6b5aa6;
+    --no-done: #0d6e7a;
+    --no-pending: #93a4ad;
+    --shadow: 0 1px 2px rgba(22, 33, 42, .06), 0 8px 24px rgba(22, 33, 42, .06);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 20px 96px;
+  }
+
+  .wrap { max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+  .prosa { max-width: 68ch; }
+
+  header { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 4.6vw, 46px);
+    line-height: 1.12; margin: 0; text-wrap: balance; letter-spacing: -.01em;
+  }
+  h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 25px; line-height: 1.2;
+    margin: 0 0 6px; text-wrap: balance;
+  }
+  h3 { font-size: 15px; font-weight: 650; margin: 0 0 4px; }
+  p { margin: 0 0 14px; color: var(--ink-2); }
+  p.lead { font-size: 18px; color: var(--ink); }
+  section { display: flex; flex-direction: column; gap: 14px; }
+  strong { color: var(--ink); font-weight: 650; }
+  code { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  .veredicto {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--critico);
+    border-radius: 10px; padding: 26px 28px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .veredicto h2 { color: var(--ink); }
+  .numeros { display: flex; flex-wrap: wrap; gap: 14px; }
+  .num {
+    flex: 1 1 190px; background: var(--surface-2); border-radius: 8px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .num .v {
+    font-family: var(--mono); font-size: 27px; font-weight: 600;
+    font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+  }
+  .num .k { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; }
+  .num.destaque .v { color: var(--critico); }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figcaption { font-size: 13.5px; color: var(--ink-3); }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 20px; box-shadow: var(--shadow);
+  }
+  .chart { width: 100%; height: auto; display: block; }
+
+  /* ---- grafo ---- */
+  .visor {
+    position: relative; overflow: auto; max-height: 72vh;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .visor.panning { cursor: grabbing; }
+  #grafo { display: block; touch-action: pan-x pan-y; }
+  .no { cursor: pointer; touch-action: none; }
+  .no:focus-visible { outline: none; }
+  .no:focus-visible .caixa { stroke-width: 3; stroke: var(--accent); }
+  .caixa { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; rx: 8; }
+  .no.done .caixa { stroke: var(--no-done); fill: var(--accent-soft); }
+  .no.pending .caixa { stroke: var(--no-pending); stroke-dasharray: 5 4; }
+  .no.replan .caixa { stroke: var(--alerta); }
+  .no-id {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--ink-3);
+  }
+  .no.done .no-id { fill: var(--accent); }
+  .no-tit { font-family: var(--sans); font-size: 12.5px; fill: var(--ink); }
+  .no-res {
+    font-family: var(--mono); font-size: 11px; fill: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .aresta { fill: none; stroke: var(--line); stroke-width: 1.6; }
+  .aresta.dep { stroke: var(--ruido); }
+  .aresta.neg { stroke: var(--critico); stroke-dasharray: 5 4; stroke-width: 1.4; }
+  .aresta.pos { stroke: var(--accent); stroke-dasharray: 5 4; stroke-width: 1.4; }
+  .rot { font-family: var(--mono); font-size: 10px; fill: var(--ink-3); }
+  .rot.neg { fill: var(--critico); }
+  .rot.pos { fill: var(--accent); }
+  .seta { fill: var(--ruido); }
+
+  .legenda {
+    display: flex; flex-wrap: wrap; gap: 16px; font-size: 12.5px; color: var(--ink-3);
+    align-items: center;
+  }
+  .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
+  .sw-dep { background: var(--ruido); }
+  .sw-neg { background: repeating-linear-gradient(90deg, var(--critico) 0 5px, transparent 5px 9px); }
+  .sw-pos { background: repeating-linear-gradient(90deg, var(--accent) 0 5px, transparent 5px 9px); }
+  .box { width: 13px; height: 11px; border-radius: 3px; display: inline-block; border: 1.5px solid; }
+  .bx-done { border-color: var(--no-done); background: var(--accent-soft); }
+  .bx-pend { border-color: var(--no-pending); border-style: dashed; }
+
+  dialog {
+    border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+    color: var(--ink); padding: 0; max-width: 540px; width: calc(100vw - 40px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+  }
+  dialog::backdrop { background: rgba(10, 16, 20, .55); }
+  .modal-corpo { padding: 24px 26px 26px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+  .fechar {
+    background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2);
+    border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 16px;
+    line-height: 1; flex: none;
+  }
+  .fechar:hover { color: var(--ink); }
+  .modal-linha { display: flex; flex-direction: column; gap: 3px; }
+  .modal-linha .rotulo {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--ink-3);
+  }
+  .modal-linha .valor { font-size: 14.5px; color: var(--ink-2); }
+  .modal-linha .valor.medido { color: var(--ink); font-weight: 550; }
+
+  .tabela-rolo { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 620px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; border-bottom: 1px solid var(--line);
+  }
+  td.num-col { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px;
+    border-radius: 100px; white-space: nowrap;
+  }
+  .pill.done { background: var(--accent-soft); color: var(--accent); }
+  .pill.pend { background: var(--ruido-soft); color: var(--ink-3); }
+
+  .decisao {
+    background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--alerta);
+    border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .decisao .tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--alerta);
+  }
+  .lista { display: flex; flex-direction: column; gap: 14px; }
+  ul { margin: 0; padding-left: 20px; color: var(--ink-2); }
+  li { margin-bottom: 7px; }
+  a { color: var(--accent); }
+
+  footer {
+    border-top: 1px solid var(--line); padding-top: 20px; font-size: 13px; color: var(--ink-3);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .001ms !important; animation-duration: .001ms !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Cardiovascular Prediction Timeseries · rodada de 01/08/2026 · commit 801becf</div>
+    <h1>A ordem entre TimesFM, SARIMA e Prophet está inteiramente dentro do ruído</h1>
+    <p class="lead prosa">
+      O benchmark publicado separa o primeiro do terceiro modelo por 0,38 pp de sMAPE. O intervalo de
+      confiança de um único modelo tem 2,45 pp de largura. A régua é seis vezes maior que a diferença
+      que ela deveria medir.
+    </p>
+  </header>
+
+  <div class="veredicto">
+    <h2>O resultado principal</h2>
+    <p class="prosa">
+      Reamostrando as 31 janelas do rolling origin, os seis intervalos de confiança das diferenças
+      pareadas contêm zero, com p entre 0,66 e 0,85. Nos 18 testes de Diebold-Mariano por horizonte,
+      uma única célula ficou abaixo de 0,05, que é o que se espera do acaso em 18 testes. A frase
+      <em>"TimesFM vence em todas as métricas"</em>, hoje no README e no <code>paper.md</code>, não se
+      sustenta nos dados que a produziram.
+    </p>
+    <div class="numeros">
+      <div class="num destaque">
+        <div class="v">0,38 pp</div>
+        <div class="k">amplitude entre o melhor e o pior dos três modelos</div>
+      </div>
+      <div class="num destaque">
+        <div class="v">2,45 pp</div>
+        <div class="k">largura média do IC95% de um modelo isolado</div>
+      </div>
+      <div class="num">
+        <div class="v">6 de 6</div>
+        <div class="k">intervalos de diferença pareada que contêm zero</div>
+      </div>
+      <div class="num">
+        <div class="v">1 de 6</div>
+        <div class="k">horizontes em que o TimesFM é o melhor modelo</div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>O grafo desta rodada</h2>
+    <p class="prosa">
+      Nove nós, executados na ordem topológica. Clique num nó para ver o que ele mediu, arraste um nó
+      para desembaraçar as arestas, arraste o fundo para percorrer o grafo.
+    </p>
+    <div class="visor" id="visor">
+      <svg id="grafo" role="img" aria-label="Grafo dirigido dos nove nós desta rodada"></svg>
+    </div>
+    <div class="legenda">
+      <span class="chip"><span class="box bx-done"></span> concluído</span>
+      <span class="chip"><span class="box bx-pend"></span> pendente</span>
+      <span class="chip"><span class="swatch sw-dep"></span> depende de</span>
+      <span class="chip"><span class="swatch sw-neg"></span> degrada métrica</span>
+      <span class="chip"><span class="swatch sw-pos"></span> melhora métrica</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Nó a nó, com o resultado medido</h2>
+    <div class="card tabela-rolo">
+      <table id="tabela-nos">
+        <thead>
+          <tr><th>nó</th><th>o que faz</th><th>resultado medido</th><th>estado</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>As métricas que estavam em tensão</h2>
+    <p class="prosa">
+      A tensão declarada no grafo era rigor estatístico contra a narrativa já escrita. Os dois gráficos
+      abaixo são a medição dessa tensão: o primeiro mostra a régua, o segundo mostra o que sobra da
+      diferença quando ela é aplicada.
+    </p>
+
+    <figure>
+      <div class="card"><svg id="ch-ci" class="chart" role="img"
+        aria-label="sMAPE de cada modelo com intervalo de confiança de 95 por cento"></svg></div>
+      <figcaption>
+        sMAPE com IC95% por bootstrap de 10.000 réplicas, reamostrando janelas inteiras do rolling
+        origin. A barra escura à direita compara a amplitude entre modelos com a largura média do
+        intervalo. Fonte: <code>results/uncertainty_bootstrap_metrics.csv</code>.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <div class="card"><svg id="ch-dif" class="chart" role="img"
+        aria-label="Diferença pareada de sMAPE entre os modelos, com intervalo de confiança"></svg></div>
+      <figcaption>
+        Diferença pareada de sMAPE, mesmas janelas nas duas pontas de cada par. A linha de referência
+        é o zero: um intervalo que a cruza não distingue os dois modelos. Fonte:
+        <code>results/uncertainty_pairwise_tests.csv</code>.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <div class="card"><svg id="ch-hor" class="chart" role="img"
+        aria-label="sMAPE por horizonte de previsão, para os três modelos"></svg></div>
+      <figcaption>
+        sMAPE por horizonte, n=31 janelas por ponto. O círculo marca o melhor modelo daquele horizonte.
+        A ordem do ranking agregado se inverte em cinco dos seis horizontes. Fonte:
+        <code>results/error_by_horizon.csv</code>.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <div class="card"><svg id="ch-boost" class="chart" role="img"
+        aria-label="Comparação de sMAPE entre boosting e modelos incumbentes nos mesmos pontos de teste"></svg></div>
+      <figcaption>
+        XGBoost e CatBoost contra os três incumbentes, nos mesmos 42 pontos de teste (7 janelas de 2023
+        x 6 horizontes). O boosting treina desde 2021-01 e os incumbentes desde 2019-01, então a
+        desvantagem de histórico está embutida. Os valores desta figura não são comparáveis com os das
+        anteriores: 2023 foi um ano mais fácil de prever. Fonte:
+        <code>results/benchmark_boosting_reconstruido.csv</code>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>O que o modelo final usa por dentro</h2>
+    <p class="prosa">
+      Importância TreeSHAP do XGBoost da última janela, treinado em 18 linhas com as defasagens 1, 2, 3
+      e 12. Nenhuma variável diverge em sinal do modelo linear ajustado nas mesmas defasagens, o que
+      significa que não há interação a interpretar aqui, só um modelo pequeno se apoiando no mês
+      anterior.
+    </p>
+    <figure>
+      <div class="card"><svg id="ch-shap" class="chart" role="img"
+        aria-label="Importância SHAP média por defasagem, com direção do efeito"></svg></div>
+      <figcaption>
+        O mês imediatamente anterior responde por quase o dobro da contribuição da defasagem sazonal de
+        12 meses. Com 18 linhas de treino, o modelo aprendeu persistência, não sazonalidade, que é
+        justamente o que os modelos estatísticos já entregam de graça. Fonte:
+        <code>results/shap_lags_xgboost.csv</code>.
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Achados que exigem decisão humana</h2>
+    <div class="lista">
+      <div class="decisao">
+        <div class="tag">decisão do F · sustenta-se em: 6 de 6 IC contendo zero</div>
+        <h3>O que fazer com a conclusão do <code>paper.md</code> e do README</h3>
+        <p>
+          As duas frases afirmam que o TimesFM vence. O que os dados sustentam é que os três modelos
+          empatam e que o SARIMA, mais leve e sem dependência pesada, é a escolha operacional
+          defensável. Reescrever o texto muda a contribuição declarada do trabalho, então não foi feito
+          nesta rodada.
+        </p>
+      </div>
+      <div class="decisao">
+        <div class="tag">decisão do F · sustenta-se em: 60 meses de série, 2,45 pp de IC</div>
+        <h3>Estender a série antes de qualquer novo modelo</h3>
+        <p>
+          Com 31 janelas o intervalo tem 2,45 pp. Nenhum modelo novo vai produzir diferença detectável
+          nesse regime. A prioridade 1 do <code>TODO.md</code>, estender para 2010 a 2023, deixa de ser
+          melhoria incremental e passa a ser pré-requisito para qualquer comparação.
+        </p>
+      </div>
+      <div class="decisao">
+        <div class="tag">decisão do F · sustenta-se em: 36 de 60 meses recuperados</div>
+        <h3>Como versionar a série do SIM</h3>
+        <p>
+          A reconstrução recuperou 2021-01 a 2023-12 a partir da coluna <code>y_true</code> das
+          previsões. Os 24 primeiros meses só existem na máquina onde a extração rodou. A LAB-62 segue
+          aberta: a decisão é versionar a série processada ou publicá-la em release.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>O que ficou pendente, e por quê</h2>
+    <ul class="prosa">
+      <li>
+        <strong>Calibração não foi avaliada.</strong> Nenhum dos três modelos produz intervalo de
+        previsão nos artefatos versionados, só previsão pontual, então não há cobertura para medir. Sem
+        isso a LAB-32 não fecha, porque a issue cita TRIPOD-AI e PROBAST.
+      </li>
+      <li>
+        <strong>Boosting com temperatura não rodou.</strong> Depende do download do ERA5, que é a
+        prioridade 2 do <code>TODO.md</code>. O que rodou aqui foi boosting só com defasagens, que é
+        exatamente o que os modelos estatísticos já capturam.
+      </li>
+      <li>
+        <strong>Os 24 primeiros meses da série continuam irrecuperáveis</strong> por este caminho. Eles
+        nunca entraram em janela de teste, então não aparecem em <code>y_true</code>.
+      </li>
+      <li>
+        <strong>SARIMA, Prophet e TimesFM não foram reexecutados.</strong> <code>statsmodels</code>,
+        <code>prophet</code> e <code>skforecast</code> não estão no ambiente desta máquina. Todos os
+        números dos três vêm do CSV versionado, e a conferência de MAE, RMSE e sMAPE bateu nas nove
+        células.
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    <div>
+      Versão 1, publicada em 01/08/2026. Primeira publicação desta página, nada foi reescrito.
+    </div>
+    <div>
+      Fonte da verdade do grafo: <code>task-graph.md</code> na raiz do repositório
+      <code>cardiovascular-timeseries-prediction</code>. Todos os números desta página saem dos CSVs em
+      <code>results/</code>, gerados pelos scripts citados em cada figura.
+    </div>
+  </footer>
+</div>
+
+<dialog id="modal">
+  <div class="modal-corpo">
+    <div class="modal-topo">
+      <div>
+        <div class="eyebrow" id="m-id"></div>
+        <h2 id="m-tit"></h2>
+      </div>
+      <button class="fechar" id="m-fechar" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="modal-linha"><span class="rotulo">estado</span><span class="valor" id="m-estado"></span></div>
+    <div class="modal-linha"><span class="rotulo">métrica de sucesso</span><span class="valor" id="m-metrica"></span></div>
+    <div class="modal-linha"><span class="rotulo">resultado medido</span><span class="valor medido" id="m-res"></span></div>
+    <div class="modal-linha"><span class="rotulo">entregável</span><span class="valor" id="m-entrega"></span></div>
+    <div class="modal-linha"><span class="rotulo">depende de</span><span class="valor" id="m-dep"></span></div>
+    <div class="modal-linha"><span class="rotulo">alimenta</span><span class="valor" id="m-alim"></span></div>
+    <div class="modal-linha"><span class="rotulo">efeitos colaterais</span><span class="valor" id="m-efeitos"></span></div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  "use strict";
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const el = (n, a = {}) => {
+    const e = document.createElementNS(SVGNS, n);
+    for (const k in a) e.setAttribute(k, a[k]);
+    return e;
+  };
+  const fmt = (v, d = 2) => v.toFixed(d).replace(".", ",");
+
+  /* ---------------- dados ---------------- */
+  const NOS = [
+    { id: "N1", nivel: 0, tit: "reconstruir série e índice janela/horizonte",
+      curto: "36 meses recuperados", estado: "done",
+      metrica: "36 datas únicas com y_true único por data, 31x6 por modelo, e MAE, RMSE e sMAPE recalculados batendo com o CSV publicado",
+      res: "36 meses (2021-01 a 2023-12), 31 janelas x 6 horizontes nos 3 modelos, 9 de 9 métricas batendo na 4ª casa. Média do subperíodo: 8.001 óbitos/mês",
+      entrega: "scripts/rebuild_series_from_predictions.py, data/processed/serie_sim_sp_2021_2023_reconstruida.csv" },
+    { id: "N2", nivel: 1, tit: "IC bootstrap por bloco de janela",
+      curto: "largura 2,45 pp", estado: "done",
+      metrica: "IC95% para os 3 modelos e largura reportada em pp, comparável à amplitude de 0,38 pp",
+      res: "TimesFM 7,30 [6,38, 8,34]; SARIMA 7,45 [6,20, 8,92]; Prophet 7,68 [6,49, 9,16]. Razão amplitude sobre largura: 0,16",
+      entrega: "results/uncertainty_bootstrap_metrics.csv" },
+    { id: "N3", nivel: 1, tit: "teste pareado entre os modelos",
+      curto: "6 de 6 IC contêm zero", estado: "done",
+      metrica: "IC95% da diferença e p-valor por par, com veredicto binário sobre o zero",
+      res: "TimesFM menos SARIMA: −0,154 pp [−1,429, 1,068], p=0,809. Os 6 IC contêm zero. Diebold-Mariano: 1 de 18 células abaixo de 0,05",
+      entrega: "results/uncertainty_pairwise_tests.csv" },
+    { id: "N4", nivel: 1, tit: "erro por horizonte h=1..6",
+      curto: "ordem inverte em 5 de 6", estado: "done",
+      metrica: "sMAPE por modelo e horizonte, n=31 por célula, e identificação de onde a ordem se inverte",
+      res: "SARIMA vence h1, h5 e h6; Prophet vence h2 e h3; TimesFM vence só h4",
+      entrega: "results/error_by_horizon.csv" },
+    { id: "N5", nivel: 2, tit: "boosting na série reconstruída",
+      curto: "42 pontos, razão 0,82", estado: "done",
+      metrica: "rodar com o n de janelas que a série permite, com o n declarado, e sMAPE ao lado da largura de IC de N2",
+      res: "7 janelas x 6 = 42 pontos comuns. CatBoost lags 1-12 faz 5,70 contra 5,53 do TimesFM. Amplitude 2,57 pp contra largura média 3,15 pp",
+      entrega: "results/benchmark_boosting_reconstruido.csv, scripts/run_boosting_reconstruido.py" },
+    { id: "N6", nivel: 3, tit: "SHAP dos lags do modelo final",
+      curto: "lag 1 domina", estado: "done",
+      metrica: "|SHAP| médio por lag, direção, e comparação de sinal contra regressão linear nas mesmas defasagens",
+      res: "lag 1 com |SHAP| 396,5 (positivo), lag 12 com 122,9. Nenhuma divergência de sinal contra o modelo linear",
+      entrega: "results/shap_lags_xgboost.csv" },
+    { id: "N7", nivel: 4, tit: "página do grafo", curto: "esta página", estado: "done",
+      metrica: "resultado principal no topo, grafo interativo, tabela nó a nó, gráficos com IC e linha de referência, seção SHAP",
+      res: "publicada nesta URL, versionada em graphs/task-graph.html",
+      entrega: "graphs/task-graph.html, graphs/README.md" },
+    { id: "N8", nivel: 5, tit: "Linear com os números medidos", curto: "em execução", estado: "pending",
+      metrica: "issues do projeto CPT com o número medido e status update com health coerente",
+      res: "pendente nesta versão da página",
+      entrega: "comentários e status update no projeto CPT" },
+    { id: "N9", nivel: 6, tit: "commit e push nos dois repos", curto: "em execução", estado: "pending",
+      metrica: "commit e push em cardiovascular-timeseries-prediction e ai-lab-hub, sem dado bruto nem credencial",
+      res: "pendente nesta versão da página",
+      entrega: "commits em ambos os repositórios" },
+  ];
+
+  const DEPS = [["N1","N2"],["N1","N3"],["N1","N4"],["N1","N5"],["N2","N5"],["N5","N6"],
+                ["N2","N7"],["N3","N7"],["N4","N7"],["N6","N7"],["N7","N8"],["N8","N9"]];
+  const IMPACTOS = [
+    ["N1","N5","−fidelidade à fonte","neg"],
+    ["N5","N3","−credibilidade do ranking","neg"],
+    ["N2","N7","−narrativa do paper","neg"],
+    ["N1","N9","+reprodutibilidade","pos"],
+  ];
+
+  const CI = [
+    { m: "TimesFM", p: 7.2996, lo: 6.3785, hi: 8.3414 },
+    { m: "SARIMA",  p: 7.4540, lo: 6.2022, hi: 8.9216 },
+    { m: "Prophet", p: 7.6823, lo: 6.4948, hi: 9.1553 },
+  ];
+  const DIF = [
+    { par: "TimesFM − SARIMA",  d: -0.1543, lo: -1.4293, hi: 1.0684, p: 0.809 },
+    { par: "TimesFM − Prophet", d: -0.3826, lo: -2.0183, hi: 1.2399, p: 0.663 },
+    { par: "SARIMA − Prophet",  d: -0.2283, lo: -1.8251, hi: 1.3604, p: 0.773 },
+  ];
+  const HOR = {
+    TimesFM: [6.1032, 7.7748, 7.6098, 7.2865, 7.3773, 7.6463],
+    SARIMA:  [6.0042, 8.2440, 8.4797, 7.9263, 6.8391, 7.2305],
+    Prophet: [7.2695, 6.9933, 7.3799, 7.9481, 7.7817, 8.7212],
+  };
+  const BOOST = [
+    { m: "TimesFM",  cfg: "benchmark oficial", fam: "inc", p: 5.5345, lo: 4.9393, hi: 6.1457 },
+    { m: "SARIMA",   cfg: "benchmark oficial", fam: "inc", p: 5.5437, lo: 4.1622, hi: 6.9732 },
+    { m: "CatBoost", cfg: "lags 1-12",         fam: "bst", p: 5.7029, lo: 4.5202, hi: 7.0661 },
+    { m: "Prophet",  cfg: "benchmark oficial", fam: "inc", p: 5.7710, lo: 4.5680, hi: 7.0595 },
+    { m: "XGBoost",  cfg: "lags 1-12",         fam: "bst", p: 6.5113, lo: 4.3930, hi: 8.9561 },
+    { m: "XGBoost",  cfg: "lags 1,2,3,12",     fam: "bst", p: 7.6564, lo: 5.6088, hi: 10.0295 },
+    { m: "CatBoost", cfg: "lags 1,2,3,12",     fam: "bst", p: 8.1079, lo: 6.2227, hi: 10.2333 },
+  ];
+  const SHAP = [
+    { lag: 1,  v: 396.4687, dir: "positiva" },
+    { lag: 2,  v: 207.0342, dir: "negativa" },
+    { lag: 3,  v: 146.4727, dir: "negativa" },
+    { lag: 12, v: 122.8635, dir: "positiva" },
+  ];
+
+  /* ---------------- grafo ---------------- */
+  const LARG = 210, ALT = 64, GAP_X = 26, GAP_Y = 62, MARG = 34;
+  const porNivel = {};
+  NOS.forEach(n => (porNivel[n.nivel] = porNivel[n.nivel] || []).push(n));
+  const niveis = Object.keys(porNivel).map(Number).sort((a, b) => a - b);
+  const maxCol = Math.max(...niveis.map(l => porNivel[l].length));
+  const VB_W = MARG * 2 + maxCol * LARG + (maxCol - 1) * GAP_X;
+  const VB_H = MARG * 2 + niveis.length * ALT + (niveis.length - 1) * GAP_Y;
+
+  const base = {};
+  niveis.forEach((l, i) => {
+    const fila = porNivel[l];
+    const largFila = fila.length * LARG + (fila.length - 1) * GAP_X;
+    const x0 = (VB_W - largFila) / 2;
+    fila.forEach((n, j) => {
+      base[n.id] = { x: x0 + j * (LARG + GAP_X), y: MARG + i * (ALT + GAP_Y) };
+    });
+  });
+  const pos = {};
+  for (const k in base) pos[k] = { x: base[k].x, y: base[k].y };
+
+  const svg = document.getElementById("grafo");
+  svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
+  svg.setAttribute("width", VB_W);
+  svg.setAttribute("height", VB_H);
+
+  const defs = el("defs");
+  [["seta", "var-dep"]].forEach(() => {});
+  const marker = el("marker", { id: "seta", viewBox: "0 0 8 8", refX: "7", refY: "4",
+    markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" });
+  marker.appendChild(el("path", { d: "M0,0 L8,4 L0,8 z", class: "seta" }));
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
+  const gArestas = el("g");
+  const gRotulos = el("g");
+  const gNos = el("g");
+  svg.append(gArestas, gRotulos, gNos);
+
+  const caminhos = [];
+  const centro = id => ({ cx: pos[id].x + LARG / 2, cy: pos[id].y + ALT / 2 });
+
+  DEPS.forEach(([a, b]) => {
+    const p = el("path", { class: "aresta dep", "marker-end": "url(#seta)" });
+    gArestas.appendChild(p);
+    caminhos.push({ el: p, a, b, tipo: "dep" });
+  });
+  IMPACTOS.forEach(([a, b, rot, sinal]) => {
+    const p = el("path", { class: `aresta ${sinal}` });
+    gArestas.appendChild(p);
+    const t = el("text", { class: `rot ${sinal}`, "text-anchor": "middle" });
+    t.textContent = rot;
+    gRotulos.appendChild(t);
+    caminhos.push({ el: p, a, b, tipo: sinal, rotulo: t });
+  });
+
+  function desenharArestas() {
+    for (const c of caminhos) {
+      const A = centro(c.a), B = centro(c.b);
+      if (c.tipo === "dep") {
+        const y1 = pos[c.a].y + ALT, y2 = pos[c.b].y;
+        const meio = (y1 + y2) / 2;
+        c.el.setAttribute("d", `M${A.cx},${y1} C${A.cx},${meio} ${B.cx},${meio} ${B.cx},${y2 - 7}`);
+      } else {
+        const desvio = (A.cx <= B.cx ? -1 : 1) * (LARG / 2 + 44);
+        const mx = (A.cx + B.cx) / 2 + desvio, my = (A.cy + B.cy) / 2;
+        c.el.setAttribute("d", `M${A.cx},${A.cy} Q${mx},${my} ${B.cx},${B.cy}`);
+        if (c.rotulo) {
+          c.rotulo.setAttribute("x", (A.cx + B.cx) / 2 + desvio * 0.62);
+          c.rotulo.setAttribute("y", my);
+        }
+      }
+    }
+  }
+
+  const nosEl = {};
+  NOS.forEach(n => {
+    const g = el("g", {
+      class: `no ${n.estado}`, tabindex: "0", role: "button",
+      "aria-label": `${n.id}: ${n.tit}. Estado ${n.estado === "done" ? "concluído" : "pendente"}. Enter para detalhes.`,
+    });
+    g.appendChild(el("rect", { class: "caixa", width: LARG, height: ALT }));
+    const id = el("text", { class: "no-id", x: 12, y: 19 });
+    id.textContent = n.id;
+    const tit = el("text", { class: "no-tit", x: 12, y: 37 });
+    tit.textContent = n.tit.length > 30 ? n.tit.slice(0, 29) + "…" : n.tit;
+    const res = el("text", { class: "no-res", x: 12, y: 53 });
+    res.textContent = n.curto;
+    g.append(id, tit, res);
+    gNos.appendChild(g);
+    nosEl[n.id] = g;
+    ligarNo(g, n);
+  });
+
+  function posicionarNos() {
+    for (const id in nosEl) nosEl[id].setAttribute("transform", `translate(${pos[id].x},${pos[id].y})`);
+  }
+
+  /* -------- modal -------- */
+  const modal = document.getElementById("modal");
+  const campos = {
+    id: document.getElementById("m-id"), tit: document.getElementById("m-tit"),
+    estado: document.getElementById("m-estado"), metrica: document.getElementById("m-metrica"),
+    res: document.getElementById("m-res"), entrega: document.getElementById("m-entrega"),
+    dep: document.getElementById("m-dep"), alim: document.getElementById("m-alim"),
+    efeitos: document.getElementById("m-efeitos"),
+  };
+  function abrir(n) {
+    campos.id.textContent = n.id;
+    campos.tit.textContent = n.tit;
+    campos.estado.textContent = n.estado === "done" ? "concluído" : "pendente";
+    campos.metrica.textContent = n.metrica;
+    campos.res.textContent = n.res;
+    campos.entrega.textContent = n.entrega;
+    const dep = DEPS.filter(d => d[1] === n.id).map(d => d[0]);
+    const alim = DEPS.filter(d => d[0] === n.id).map(d => d[1]);
+    campos.dep.textContent = dep.length ? dep.join(", ") : "nada, é o primeiro nó";
+    campos.alim.textContent = alim.length ? alim.join(", ") : "nada, é o último nó";
+    const ef = IMPACTOS.filter(i => i[0] === n.id || i[1] === n.id)
+      .map(i => `${i[0]} → ${i[1]}: ${i[2]}`);
+    campos.efeitos.textContent = ef.length ? ef.join(" · ") : "nenhum declarado";
+    modal.showModal();
+  }
+  document.getElementById("m-fechar").addEventListener("click", () => modal.close());
+  modal.addEventListener("click", ev => {
+    if (ev.target !== modal) return;
+    const r = modal.getBoundingClientRect();
+    const fora = ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom;
+    if (fora) modal.close();
+  });
+
+  /* -------- arrastar nó, com volta ao lugar -------- */
+  const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)");
+  function ligarNo(g, n) {
+    let ativo = false, px = 0, py = 0, andou = 0;
+    g.addEventListener("pointerdown", ev => {
+      ativo = true; andou = 0; px = ev.clientX; py = ev.clientY;
+      g.setPointerCapture(ev.pointerId);
+      ev.preventDefault();
+    });
+    g.addEventListener("pointermove", ev => {
+      if (!ativo) return;
+      const escala = VB_W / svg.getBoundingClientRect().width;
+      const dx = (ev.clientX - px) * escala, dy = (ev.clientY - py) * escala;
+      px = ev.clientX; py = ev.clientY;
+      andou += Math.abs(dx) + Math.abs(dy);
+      pos[n.id].x += dx; pos[n.id].y += dy;
+      posicionarNos(); desenharArestas();
+    });
+    const soltar = () => {
+      if (!ativo) return;
+      ativo = false;
+      voltar(n.id);
+    };
+    g.addEventListener("pointerup", ev => {
+      const clique = andou < 4;
+      soltar();
+      if (clique) abrir(n);
+    });
+    g.addEventListener("pointercancel", soltar);
+    g.addEventListener("keydown", ev => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); abrir(n); }
+    });
+  }
+
+  function voltar(id) {
+    const de = { x: pos[id].x, y: pos[id].y }, para = base[id];
+    if (reduzido.matches) {
+      pos[id] = { x: para.x, y: para.y };
+      posicionarNos(); desenharArestas();
+      return;
+    }
+    const t0 = performance.now(), dur = 260;
+    const passo = t => {
+      const k = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      pos[id].x = de.x + (para.x - de.x) * e;
+      pos[id].y = de.y + (para.y - de.y) * e;
+      posicionarNos(); desenharArestas();
+      if (k < 1) requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+  }
+
+  /* -------- panorâmica do fundo -------- */
+  const visor = document.getElementById("visor");
+  let pan = false, sx = 0, sy = 0, sl = 0, st = 0;
+  visor.addEventListener("pointerdown", ev => {
+    if (ev.pointerType !== "mouse") return;
+    if (ev.target.closest && ev.target.closest(".no")) return;
+    pan = true; sx = ev.clientX; sy = ev.clientY;
+    sl = visor.scrollLeft; st = visor.scrollTop;
+    visor.classList.add("panning");
+  });
+  window.addEventListener("pointermove", ev => {
+    if (!pan) return;
+    visor.scrollLeft = sl - (ev.clientX - sx);
+    visor.scrollTop = st - (ev.clientY - sy);
+  });
+  window.addEventListener("pointerup", () => { pan = false; visor.classList.remove("panning"); });
+
+  posicionarNos();
+  desenharArestas();
+
+  /* ---------------- tabela ---------------- */
+  const tb = document.querySelector("#tabela-nos tbody");
+  NOS.forEach(n => {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td class="num-col">${n.id}</td><td>${n.tit}</td><td>${n.res}</td>` +
+      `<td><span class="pill ${n.estado === "done" ? "done" : "pend"}">` +
+      `${n.estado === "done" ? "concluído" : "pendente"}</span></td>`;
+    tb.appendChild(tr);
+  });
+
+  /* ---------------- gráficos ---------------- */
+  const css = (c, extra = {}) => Object.assign({ class: c }, extra);
+
+  function eixoX(g, x0, x1, y, min, max, ticks, sufixo = "") {
+    g.appendChild(el("line", { x1: x0, y1: y, x2: x1, y2: y, class: "eixo" }));
+    ticks.forEach(t => {
+      const x = x0 + (t - min) / (max - min) * (x1 - x0);
+      g.appendChild(el("line", { x1: x, y1: y, x2: x, y2: y + 4, class: "eixo" }));
+      const tx = el("text", { x, y: y + 17, class: "tick", "text-anchor": "middle" });
+      tx.textContent = fmt(t, Number.isInteger(t) ? 0 : 1) + sufixo;
+      g.appendChild(tx);
+    });
+  }
+
+  function grafCI() {
+    const s = document.getElementById("ch-ci");
+    const W = 720, H = 250, L = 96, R = 250, T = 26;
+    s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const min = 5.5, max = 9.6, x0 = L, x1 = W - R;
+    const px = v => x0 + (v - min) / (max - min) * (x1 - x0);
+    const g = el("g");
+    eixoX(g, x0, x1, H - 46, min, max, [6, 7, 8, 9], "%");
+    CI.forEach((d, i) => {
+      const y = T + 22 + i * 46;
+      g.appendChild(el("line", { x1: px(d.lo), y1: y, x2: px(d.hi), y2: y, class: "ci" }));
+      [d.lo, d.hi].forEach(v =>
+        g.appendChild(el("line", { x1: px(v), y1: y - 6, x2: px(v), y2: y + 6, class: "ci" })));
+      g.appendChild(el("circle", { cx: px(d.p), cy: y, r: 5.5, class: "pt" }));
+      const nome = el("text", { x: x0 - 12, y: y + 4, class: "rotulo-eixo", "text-anchor": "end" });
+      nome.textContent = d.m;
+      const val = el("text", { x: px(d.hi) + 12, y: y + 4, class: "valor-num" });
+      val.textContent = `${fmt(d.p)}  [${fmt(d.lo)}, ${fmt(d.hi)}]`;
+      g.append(nome, val);
+    });
+    // comparação amplitude x largura
+    const yb = H - 78;
+    const larg = 2.4467, amp = 0.3827;
+    const barra = (v, y, cls, txt) => {
+      g.appendChild(el("rect", { x: px(min) + 0.5, y, width: (v / (max - min)) * (x1 - x0), height: 11,
+        rx: 3, class: cls }));
+      const t = el("text", { x: px(min) + (v / (max - min)) * (x1 - x0) + 10, y: y + 10, class: "valor-num" });
+      t.textContent = txt;
+      g.appendChild(t);
+    };
+    const cab = el("text", { x: x0 - 12, y: yb - 6, class: "rotulo-eixo", "text-anchor": "end" });
+    cab.textContent = "a régua";
+    g.appendChild(cab);
+    barra(amp, yb, "barra-sinal", `${fmt(amp)} pp de amplitude entre modelos`);
+    barra(larg, yb + 17, "barra-ruido", `${fmt(larg)} pp de largura média do IC`);
+    s.appendChild(g);
+  }
+
+  function grafDif() {
+    const s = document.getElementById("ch-dif");
+    const W = 720, H = 210, L = 150, R = 130, T = 26;
+    s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const min = -2.4, max = 1.8, x0 = L, x1 = W - R;
+    const px = v => x0 + (v - min) / (max - min) * (x1 - x0);
+    const g = el("g");
+    g.appendChild(el("line", { x1: px(0), y1: T - 6, x2: px(0), y2: H - 52, class: "ref" }));
+    const rt = el("text", { x: px(0), y: T - 12, class: "ref-rot", "text-anchor": "middle" });
+    rt.textContent = "zero: modelos indistinguíveis";
+    g.appendChild(rt);
+    eixoX(g, x0, x1, H - 46, min, max, [-2, -1, 0, 1], " pp");
+    DIF.forEach((d, i) => {
+      const y = T + 22 + i * 34;
+      g.appendChild(el("line", { x1: px(d.lo), y1: y, x2: px(d.hi), y2: y, class: "ci" }));
+      [d.lo, d.hi].forEach(v =>
+        g.appendChild(el("line", { x1: px(v), y1: y - 6, x2: px(v), y2: y + 6, class: "ci" })));
+      g.appendChild(el("circle", { cx: px(d.d), cy: y, r: 5, class: "pt" }));
+      const nome = el("text", { x: x0 - 12, y: y + 4, class: "rotulo-eixo", "text-anchor": "end" });
+      nome.textContent = d.par;
+      const val = el("text", { x: x1 + 12, y: y + 4, class: "valor-num" });
+      val.textContent = `p = ${fmt(d.p, 3)}`;
+      g.append(nome, val);
+    });
+    s.appendChild(g);
+  }
+
+  function grafHor() {
+    const s = document.getElementById("ch-hor");
+    const W = 720, H = 290, L = 56, R = 108, T = 22, B = 52;
+    s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const min = 5.6, max = 9.0, x0 = L, x1 = W - R, y0 = T, y1 = H - B;
+    const px = h => x0 + (h - 1) / 5 * (x1 - x0);
+    const py = v => y1 - (v - min) / (max - min) * (y1 - y0);
+    const g = el("g");
+    [6, 7, 8, 9].forEach(v => {
+      g.appendChild(el("line", { x1: x0, y1: py(v), x2: x1, y2: py(v), class: "grade" }));
+      const t = el("text", { x: x0 - 10, y: py(v) + 4, class: "tick", "text-anchor": "end" });
+      t.textContent = fmt(v, 0) + "%";
+      g.appendChild(t);
+    });
+    for (let h = 1; h <= 6; h++) {
+      const t = el("text", { x: px(h), y: y1 + 20, class: "tick", "text-anchor": "middle" });
+      t.textContent = "h" + h;
+      g.appendChild(t);
+    }
+    const cls = { TimesFM: "s-a", SARIMA: "s-b", Prophet: "s-c" };
+    const melhores = [];
+    for (let i = 0; i < 6; i++) {
+      let bm = null, bv = 99;
+      for (const m in HOR) if (HOR[m][i] < bv) { bv = HOR[m][i]; bm = m; }
+      melhores.push(bm);
+    }
+    for (const m in HOR) {
+      const d = HOR[m].map((v, i) => `${i ? "L" : "M"}${px(i + 1)},${py(v)}`).join(" ");
+      g.appendChild(el("path", { d, class: `linha ${cls[m]}` }));
+      HOR[m].forEach((v, i) => {
+        const vencedor = melhores[i] === m;
+        g.appendChild(el("circle", { cx: px(i + 1), cy: py(v), r: vencedor ? 5.5 : 3,
+          class: `ponto ${cls[m]}${vencedor ? " vencedor" : ""}` }));
+      });
+      const ult = HOR[m][5];
+      const t = el("text", { x: x1 + 10, y: py(ult) + 4, class: `serie-rot ${cls[m]}` });
+      t.textContent = m;
+      g.appendChild(t);
+    }
+    const nota = el("text", { x: x0, y: H - 12, class: "tick" });
+    nota.textContent = "círculo maior = melhor modelo naquele horizonte";
+    g.appendChild(nota);
+    s.appendChild(g);
+  }
+
+  function grafBoost() {
+    const s = document.getElementById("ch-boost");
+    const W = 748, H = 320, L = 184, R = 128, T = 24;
+    s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const min = 3.9, max = 10.5, x0 = L, x1 = W - R;
+    const px = v => x0 + (v - min) / (max - min) * (x1 - x0);
+    const g = el("g");
+    eixoX(g, x0, x1, H - 46, min, max, [4, 6, 8, 10], "%");
+    BOOST.forEach((d, i) => {
+      const y = T + 16 + i * 34;
+      const c = d.fam === "bst" ? "bst" : "inc";
+      g.appendChild(el("line", { x1: px(d.lo), y1: y, x2: px(d.hi), y2: y, class: `ci ${c}` }));
+      [d.lo, d.hi].forEach(v =>
+        g.appendChild(el("line", { x1: px(v), y1: y - 5, x2: px(v), y2: y + 5, class: `ci ${c}` })));
+      g.appendChild(el("circle", { cx: px(d.p), cy: y, r: 5, class: `pt ${c}` }));
+      const nome = el("text", { x: x0 - 12, y: y + 4, class: "rotulo-eixo", "text-anchor": "end" });
+      nome.textContent = `${d.m} · ${d.cfg}`;
+      const val = el("text", { x: x1 + 12, y: y + 4, class: "valor-num" });
+      val.textContent = fmt(d.p);
+      g.append(nome, val);
+    });
+    const nota = el("text", { x: x0 - 12, y: H - 12, class: "tick", "text-anchor": "end" });
+    nota.textContent = "amplitude 2,57 pp";
+    const nota2 = el("text", { x: x0, y: H - 12, class: "tick" });
+    nota2.textContent = " contra largura média de IC de 3,15 pp: nenhuma ordem é afirmável";
+    g.append(nota, nota2);
+    s.appendChild(g);
+  }
+
+  function grafShap() {
+    const s = document.getElementById("ch-shap");
+    const W = 720, H = 216, L = 86, R = 210, T = 26;
+    s.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const max = 420, x0 = L, x1 = W - R;
+    const g = el("g");
+    SHAP.forEach((d, i) => {
+      const y = T + i * 40;
+      const w = d.v / max * (x1 - x0);
+      g.appendChild(el("rect", { x: x0, y, width: w, height: 22, rx: 3,
+        class: d.dir === "positiva" ? "barra-pos" : "barra-neg" }));
+      const nome = el("text", { x: x0 - 12, y: y + 16, class: "rotulo-eixo", "text-anchor": "end" });
+      nome.textContent = "lag " + d.lag;
+      const val = el("text", { x: x0 + w + 12, y: y + 16, class: "valor-num" });
+      val.textContent = `${fmt(d.v, 1)} · direção ${d.dir}`;
+      g.append(nome, val);
+    });
+    const nota = el("text", { x: x0, y: H - 14, class: "tick" });
+    nota.textContent = "nenhuma defasagem diverge em sinal do modelo linear ajustado nas mesmas variáveis";
+    g.appendChild(nota);
+    s.appendChild(g);
+  }
+
+  grafCI(); grafDif(); grafHor(); grafBoost(); grafShap();
+})();
+</script>
+
+<style>
+  .eixo { stroke: var(--line); stroke-width: 1; }
+  .grade { stroke: var(--line-soft); stroke-width: 1; }
+  .tick { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .rotulo-eixo { font-family: var(--sans); font-size: 13px; fill: var(--ink); }
+  .valor-num { font-family: var(--mono); font-size: 11.5px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .ci { stroke: var(--ruido); stroke-width: 2; }
+  .ci.bst { stroke: var(--serie-c); }
+  .pt { fill: var(--accent); }
+  .pt.bst { fill: var(--serie-c); }
+  .ref { stroke: var(--critico); stroke-width: 1.6; stroke-dasharray: 4 4; }
+  .ref-rot { font-family: var(--mono); font-size: 11px; fill: var(--critico); }
+  .barra-sinal { fill: var(--critico); }
+  .barra-ruido { fill: var(--ruido); }
+  .barra-pos { fill: var(--accent); }
+  .barra-neg { fill: var(--serie-b); }
+  .linha { fill: none; stroke-width: 2; }
+  .ponto { stroke: var(--surface); stroke-width: 1.5; }
+  .ponto.vencedor { stroke-width: 2; }
+  .serie-rot { font-family: var(--sans); font-size: 12.5px; font-weight: 600; }
+  .s-a { stroke: var(--serie-a); fill: var(--serie-a); }
+  .s-b { stroke: var(--serie-b); fill: var(--serie-b); }
+  .s-c { stroke: var(--serie-c); fill: var(--serie-c); }
+  text.s-a, text.serie-rot.s-a { fill: var(--serie-a); }
+  text.s-b, text.serie-rot.s-b { fill: var(--serie-b); }
+  text.s-c, text.serie-rot.s-c { fill: var(--serie-c); }
+</style>
