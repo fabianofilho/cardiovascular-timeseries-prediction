@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CPT: o empate sobrevive à série longa</title>
+<style>
+  :root {
+    --slate: #3D5A80; --slate-dark: #1F3050; --slate-mid: #6B87AD;
+    --slate-pale: #E3EBF3; --coral: #EE6C4D; --amber: #F4A261;
+    --ink: #2B2B2B; --mute: #6B7280; --bone: #F6F2EE; --white: #FFFFFF;
+    --line: #E4DED6; --ok: #1D9E75;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Lato', 'Segoe UI', system-ui, sans-serif;
+    color: var(--ink); background: var(--bone); line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+  header { background: var(--slate); color: var(--white); padding: 56px 0 48px; margin-bottom: 48px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--slate-pale); margin-bottom: 14px; }
+  header h1 { font-weight: 300; font-size: 40px; letter-spacing: 1px; line-height: 1.15; margin-bottom: 14px; text-wrap: balance; }
+  header h1 strong { font-weight: 900; }
+  header p.lead { font-size: 16px; color: var(--slate-pale); font-weight: 300; max-width: 700px; }
+  .coral-tick { display: inline-block; width: 56px; height: 5px; background: var(--coral); margin-top: 24px; border-radius: 2px; }
+
+  section { margin-bottom: 56px; }
+  .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--slate); padding-bottom: 10px; border-bottom: 1px solid #C9D3DF; margin-bottom: 24px; }
+  h2.big { font-weight: 900; font-size: 26px; color: var(--slate-dark); letter-spacing: .5px; margin-bottom: 10px; text-wrap: balance; }
+  p.prosa { font-size: 15.5px; color: var(--ink); max-width: 760px; margin-bottom: 14px; }
+  p.prosa .mute { color: var(--mute); }
+  code { background: var(--slate-pale); border-radius: 4px; padding: 1px 6px; font-size: .88em; }
+
+  .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 20px; }
+  .num { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; border-top: 4px solid var(--slate); }
+  .num.destaque { border-top-color: var(--coral); }
+  .num .v { font-size: 30px; font-weight: 900; color: var(--slate-dark); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .num.destaque .v { color: var(--coral); }
+  .num .k { font-size: 12.5px; color: var(--mute); margin-top: 6px; line-height: 1.45; }
+
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 18px; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--mute); margin: 10px 0 4px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .box { width: 13px; height: 13px; border-radius: 4px; display: inline-block; }
+  .bx-done { background: var(--slate); }
+  .bx-pend { background: var(--white); border: 2px dashed var(--slate-mid); }
+  .sw-line { width: 20px; height: 0; border-top: 2.5px solid var(--slate-mid); display: inline-block; }
+  .sw-neg { width: 20px; height: 0; border-top: 2.5px dashed var(--coral); display: inline-block; }
+  .sw-pos { width: 20px; height: 0; border-top: 2.5px dashed var(--ok); display: inline-block; }
+
+  .tabela-rolo { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 780px; }
+  th { text-align: left; font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mute); padding: 8px 12px; border-bottom: 2px solid var(--slate-pale); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.id { font-weight: 900; color: var(--slate); white-space: nowrap; }
+  td.num-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 10px; border-radius: 12px; }
+  .p-done { background: var(--slate-pale); color: var(--slate-dark); }
+  .p-pend { background: #FBE9E2; color: #C24E2F; }
+
+  .chart { width: 100%; height: auto; display: block; }
+  .chart-title { font-size: 13px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--slate-dark); margin-bottom: 4px; }
+  .chart-sub { font-size: 12.5px; color: var(--mute); margin-bottom: 12px; }
+
+  h3 { font-size: 16.5px; font-weight: 900; color: var(--slate-dark); margin: 22px 0 6px; }
+  ul.lista { margin: 8px 0 8px 20px; font-size: 15px; }
+  ul.lista li { margin-bottom: 6px; }
+
+  #modal { position: fixed; inset: 0; background: rgba(31,48,80,.45); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 50; }
+  #modal.on { display: flex; }
+  #modal .mbox { background: var(--white); border-radius: 14px; max-width: 620px; width: 100%; padding: 26px; max-height: 80vh; overflow-y: auto; }
+  #modal .mid { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--coral); text-transform: uppercase; }
+  #modal h2 { font-size: 20px; font-weight: 900; color: var(--slate-dark); margin: 4px 0 10px; }
+  #modal p { font-size: 14.5px; margin-bottom: 10px; }
+  #modal .fecha { margin-top: 8px; background: var(--slate); color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; }
+  .g-node { cursor: pointer; }
+  .g-node:hover rect { stroke-width: 3; }
+  footer { padding: 36px 0 56px; text-align: center; color: var(--mute); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Cardiovascular Prediction Timeseries · rodada de 17/08/2026 · PR #2 · fork isasaade-23</div>
+    <h1>O empate sobrevive à série longa — <strong>com uma régua duas vezes mais fina</strong></h1>
+    <p class="lead">A rodada de 01/08 mostrou que, com 60 meses, o ranking era ruído e estender a série virou pré-requisito. Esta rodada estendeu: 168 meses reais do SIM (2010–2023), 103 janelas de rolling origin, temperatura como exógena sem vazamento, e os mesmos testes de incerteza. O empate entre Prophet, SARIMA e TimesFM persiste — e agora isso é um resultado, não uma limitação.</p>
+    <div class="coral-tick"></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <div class="sec-label">O resultado principal</div>
+    <h2 class="big">Nenhum vencedor no topo — afirmado com o dobro de precisão</h2>
+    <p class="prosa">Com 618 previsões por modelo (3,3× a rodada anterior), os intervalos caíram de ~2,45 pp para ~1,07 pp de largura. Ainda assim, as três diferenças pareadas do topo contêm zero e nenhum Diebold-Mariano fica abaixo de 0,05. O ranking pontual <strong>inverteu</strong> — o Prophet, último com 60 meses, agora lidera por 0,13 pp. A ordem antiga era ruído mesmo. O que ficou afirmável: boosting sem exógena é pior (p=0,000 em 6/6 horizontes), e a temperatura melhora quem a recebe — pouco, e por ser climatologia.</p>
+    <div class="numeros">
+      <div class="num destaque"><div class="v">0,13 pp</div><div class="k">amplitude entre o melhor e o pior do top-3 (Prophet 4,70 · SARIMA 4,80 · TimesFM 4,83)</div></div>
+      <div class="num destaque"><div class="v">1,07 pp</div><div class="k">largura média do IC95% no top-3 — era 2,45 pp com 60 meses</div></div>
+      <div class="num"><div class="v">1,2–1,7 pp</div><div class="k">o que 9 anos extras de treino compram, nas mesmas datas de teste da rodada anterior</div></div>
+      <div class="num"><div class="v">0,03 pp</div><div class="k">quanto a temperatura futura real ganha sobre a climatologia — o sinal é a sazonalidade</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">O grafo desta rodada</div>
+    <h2 class="big">Nó a nó, do dado bruto ao Linear</h2>
+    <p class="prosa">Clique em um nó para ver a métrica de sucesso e o resultado medido. Arestas cheias são dependência; tracejadas são efeitos colaterais auditados — coral degrada uma métrica em tensão, verde melhora.</p>
+    <div class="card">
+      <svg id="grafo" class="chart" viewBox="0 0 940 360" role="img" aria-label="Grafo de dependências da rodada"></svg>
+      <div class="legenda">
+        <span class="chip"><span class="box bx-done"></span> concluído</span>
+        <span class="chip"><span class="box bx-pend"></span> pendente</span>
+        <span class="chip"><span class="sw-line"></span> depende de</span>
+        <span class="chip"><span class="sw-neg"></span> tensiona métrica</span>
+        <span class="chip"><span class="sw-pos"></span> melhora métrica</span>
+      </div>
+    </div>
+
+    <div class="card tabela-rolo">
+      <table id="tb-nos">
+        <thead><tr><th>id</th><th>entrega</th><th>resultado medido</th><th>status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">As métricas medidas</div>
+    <h2 class="big">Os números, com a incerteza junto</h2>
+
+    <div class="card">
+      <div class="chart-title">sMAPE com IC95% — bootstrap de 10.000 réplicas por janela inteira</div>
+      <div class="chart-sub">103 janelas × 6 horizontes por modelo, série 2010–2023, min_train=60. A linha pontilhada marca o melhor sMAPE da rodada de 60 meses (7,30).</div>
+      <svg id="ch-ci" class="chart" viewBox="0 0 900 300" role="img" aria-label="sMAPE com intervalo de confiança por modelo"></svg>
+    </div>
+
+    <div class="card">
+      <div class="chart-title">Diferenças pareadas — o zero está dentro?</div>
+      <div class="chart-sub">Bootstrap pareado sobre as mesmas janelas. Topo: os três pares do top-3, todos com zero dentro. Base: cada modelo contra si mesmo com temperatura (climatologia) — os três ICs excluem zero, ganho real porém pequeno.</div>
+      <svg id="ch-dif" class="chart" viewBox="0 0 900 330" role="img" aria-label="Diferenças pareadas com IC95%"></svg>
+    </div>
+
+    <div class="card">
+      <div class="chart-title">sMAPE por horizonte de previsão</div>
+      <div class="chart-sub">O topo continua trocando de líder por horizonte (SARIMA h1, Prophet h2–h3 e h5–h6, TimesFM nunca) — mais um sinal de empate. Boosting fica acima em todos.</div>
+      <svg id="ch-hor" class="chart" viewBox="0 0 900 320" role="img" aria-label="sMAPE por horizonte"></svg>
+    </div>
+
+    <div class="card">
+      <div class="chart-title">Mesmas datas de teste, 9 anos a mais de treino</div>
+      <div class="chart-sub">Recorte 2021-01 a 2023-12, as datas da rodada anterior. O ganho de histórico (1,2–1,7 pp) é maior que toda a amplitude que sustentava o claim antigo (0,38 pp).</div>
+      <svg id="ch-slice" class="chart" viewBox="0 0 900 280" role="img" aria-label="Comparação com a rodada anterior nas mesmas datas"></svg>
+    </div>
+
+    <div class="card">
+      <div class="chart-title">Temperatura por política de exógena</div>
+      <div class="chart-sub">Climatologia calculada só até o fim de cada treino (zero vazamento) contra o cenário-teto com temperatura futura real (vazamento deliberado e rotulado). O teto quase não paga acima da climatologia.</div>
+      <svg id="ch-exog" class="chart" viewBox="0 0 900 300" role="img" aria-label="Efeito da temperatura por política"></svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">Decisão humana</div>
+    <h2 class="big">Achados que exigem decisão</h2>
+    <h3>A contribuição do paper agora tem forma final possível</h3>
+    <p class="prosa">Com 60 e com 168 meses, medido com IC, o empate do topo persiste e o ranking pontual até inverteu entre rodadas. A redação defensável para README e <code>paper.md</code> (LAB-64) é: <em>"com incerteza medida, foundation model zero-shot e clássicos empatam da série curta à longa; o baseline leve basta"</em>. Os dados desta rodada sustentam essa frase com 2× mais precisão que a anterior.</p>
+    <h3>Versionamento da série (LAB-62)</h3>
+    <p class="prosa">A série agregada 2010–2023 está versionada em <code>results/series/</code> (168 linhas <code>date,value</code>, sem microdado) — benchmark reproduzível de clone limpo. Mover para <code>data/processed/</code> com exceção no <code>.gitignore</code> é decisão do dono do repositório.</p>
+    <h3>Figuras do paper</h3>
+    <p class="prosa">As figs 1 e 7 antigas misturam 24 meses sintetizados (2019–2020) rotulados como observação. As substitutas <code>fig*_2010_2023.png</code> usam só dado observado, já na identidade visual da rodada. Adotar é decisão de LAB-64.</p>
+  </section>
+
+  <section>
+    <div class="sec-label">Pendências</div>
+    <h2 class="big">O que ficou de fora, e por quê</h2>
+    <ul class="lista">
+      <li><strong>Fine-tuning do TimesFM (Prioridade 3):</strong> adiado — sem GPU ≥8GB nesta máquina, um fine-tune por janela (necessário para não vazar futuro) é inviável em CPU. O pré-requisito da série longa agora está cumprido.</li>
+      <li><strong>Política <code>lag12</code>:</strong> implementada e disponível por flag, não rodada — a climatologia já respondeu a pergunta principal e o teto mostrou que não há mais o que extrair da temperatura mensal.</li>
+      <li><strong>Post no Linear (N9):</strong> aguardando aprovação humana antes de publicar — nada existente será editado.</li>
+    </ul>
+  </section>
+
+</div>
+
+<div id="modal" role="dialog" aria-modal="true"><div class="mbox">
+  <div class="mid" id="m-id"></div><h2 id="m-tit"></h2>
+  <p id="m-metrica"></p><p id="m-res"></p>
+  <button class="fecha" onclick="document.getElementById('modal').classList.remove('on')">Fechar</button>
+</div></div>
+
+<footer>Rodada 17/08/2026 · fork isasaade-23 · PR #2 sobre fabianofilho/incerteza-benchmark · paleta: identidade visual Isabela Venancio</footer>
+
+<script>
+const CORES = { slate:'#3D5A80', dark:'#1F3050', mid:'#6B87AD', pale:'#E3EBF3', coral:'#EE6C4D', amber:'#F4A261', ink:'#2B2B2B', mute:'#6B7280', line:'#E4DED6', ok:'#1D9E75' };
+const MC = { timesfm:CORES.dark, sarima:CORES.coral, prophet:CORES.mid, xgboost:CORES.amber, catboost:CORES.slate };
+const ML = { timesfm:'TimesFM', sarima:'SARIMA', prophet:'Prophet', xgboost:'XGBoost', catboost:'CatBoost' };
+
+/* ---------- nós ---------- */
+const NOS = [
+ {id:'N1', t:'série SIM 2010–2023', m:'168 meses contínuos, validador 9/9, reconciliação com a rodada anterior ≤1%', r:'168 meses sem gap, 9/9 checks, divergência 0,000% nos 36 meses comuns. Série agregada versionada em results/series/ (sem microdado).', s:'done', x:60, y:60},
+ {id:'N2', t:'infra anti-vazamento', m:'predictions.csv com window/horizon/train_end; clamp assimétrico removido; run_uncertainty genérico reproduzindo a rodada de 01/08', r:'Reprodução exata dos números de 01/08 (TimesFM 7,30 [6,38, 8,34] etc.). Clamp removido; warning diagnóstico disparou 0 vezes nesta série.', s:'done', x:60, y:180},
+ {id:'N3', t:'temperatura INMET A701', m:'tmin mensal 2010–2023 sem buraco, gates de qualidade (≥18h/dia, ≥20 dias/mês)', r:'168 meses só da A701, zero interpolação, zero fallback. tmin médio 16,8°C [11,0–21,2].', s:'done', x:60, y:300},
+ {id:'N4', t:'benchmark baseline 5 modelos', m:'103 janelas × 6 = 618 previsões, n idêntico entre modelos', r:'Prophet 4,70 · SARIMA 4,80 · TimesFM 4,83 · CatBoost 6,59 · XGBoost 6,94. Zero falhas de janela, pareamento perfeito.', s:'done', x:300, y:120},
+ {id:'N5', t:'benchmark com temperatura', m:'políticas climatology (sem vazamento) e observed (teto rotulado), mesmas janelas', r:'sarima_temp 4,66 · catboost_temp 6,33 · xgboost_temp 6,55 (climatologia). Teto ganha só ~0,03 pp sobre a climatologia.', s:'done', x:300, y:250},
+ {id:'N6', t:'incerteza e critérios', m:'bootstrap B=10.000 por janela + DM por horizonte, critérios declarados antes do resultado', r:'Top-3: 6/6 ICs pareados com zero dentro, DM ns. Boosting pior com p=0,000. Temperatura: melhoria sugestiva (IC exclui zero, DM só em 1–2/6 horizontes).', s:'done', x:540, y:180},
+ {id:'N7', t:'figuras e docs', m:'figuras 100% dado observado, docs no padrão do repo, recálculo independente batendo', r:'6 figuras na identidade visual; 2 docs em docs/experiments/; recálculo de MAE/RMSE/sMAPE bateu nas 11 células.', s:'done', x:740, y:60},
+ {id:'N8', t:'PR no repositório', m:'fork + PR sobre a branch de incerteza, sem sobrescrever nada do dono', r:'PR #2 aberto com 6 commits temáticos; README/paper/TODO/imagens antigas intactos; decisões LAB-62/64 marcadas como do dono.', s:'done', x:740, y:180},
+ {id:'N9', t:'Linear com os números', m:'update de projeto + comentários LAB-62/63, identificados como versão, nada editado', r:'Rascunhos prontos, aguardando aprovação humana para postar.', s:'pend', x:740, y:300},
+];
+const DEPS = [['N1','N4'],['N2','N4'],['N2','N5'],['N3','N5'],['N4','N6'],['N5','N6'],['N6','N7'],['N7','N8'],['N8','N9']];
+const EFEITOS = [
+ {a:'N2', b:'N4', tipo:'neg', rot:'−sem clamp'},
+ {a:'N3', b:'N5', tipo:'pos', rot:'+zero vazamento'},
+ {a:'N1', b:'N8', tipo:'pos', rot:'+reprodutibilidade'},
+];
+const NW = 150, NH = 52;
+(function desenhaGrafo(){
+  const svg = document.getElementById('grafo');
+  const pos = Object.fromEntries(NOS.map(n => [n.id, n]));
+  let g = '';
+  const anc = (n, saida) => [n.x + (saida ? NW : 0), n.y + NH/2];
+  for (const [a,b] of DEPS) {
+    const [x1,y1] = anc(pos[a], true), [x2,y2] = anc(pos[b], false);
+    const mx = (x1+x2)/2;
+    g += `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" stroke="${CORES.mid}" stroke-width="2.2" marker-end="url(#seta)"/>`;
+  }
+  for (const e of EFEITOS) {
+    const [x1,y1] = anc(pos[e.a], true), [x2,y2] = anc(pos[e.b], false);
+    const mx = (x1+x2)/2, my = (y1+y2)/2 - 26;
+    const c = e.tipo === 'neg' ? CORES.coral : CORES.ok;
+    g += `<path d="M${x1},${y1-8} Q${mx},${my-20} ${x2},${y2-8}" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="6 5" opacity=".8"/>`;
+    g += `<text x="${mx}" y="${my-24}" text-anchor="middle" font-size="10.5" fill="${c}" font-weight="700">${e.rot}</text>`;
+  }
+  for (const n of NOS) {
+    const done = n.s === 'done';
+    g += `<g class="g-node" data-id="${n.id}">
+      <rect x="${n.x}" y="${n.y}" width="${NW}" height="${NH}" rx="10"
+        fill="${done ? CORES.slate : '#FFFFFF'}" stroke="${done ? CORES.dark : CORES.mid}"
+        stroke-width="2" ${done ? '' : 'stroke-dasharray="7 5"'}/>
+      <text x="${n.x+12}" y="${n.y+21}" font-size="12" font-weight="900" fill="${done ? '#FFFFFF' : CORES.slate}">${n.id}</text>
+      <text x="${n.x+12}" y="${n.y+38}" font-size="10.5" fill="${done ? CORES.pale : CORES.mute}">${n.t.length > 24 ? n.t.slice(0,23)+'…' : n.t}</text>
+    </g>`;
+  }
+  svg.innerHTML = `<defs><marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${CORES.mid}"/></marker></defs>` + g;
+  svg.querySelectorAll('.g-node').forEach(el => el.addEventListener('click', () => {
+    const n = NOS.find(x => x.id === el.dataset.id);
+    document.getElementById('m-id').textContent = n.id + (n.s==='done' ? ' · concluído' : ' · pendente');
+    document.getElementById('m-tit').textContent = n.t;
+    document.getElementById('m-metrica').innerHTML = '<strong>Métrica de sucesso:</strong> ' + n.m;
+    document.getElementById('m-res').innerHTML = '<strong>Resultado medido:</strong> ' + n.r;
+    document.getElementById('modal').classList.add('on');
+  }));
+})();
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') e.target.classList.remove('on'); });
+
+/* ---------- tabela ---------- */
+document.querySelector('#tb-nos tbody').innerHTML = NOS.map(n => `<tr>
+  <td class="id">${n.id}</td><td><strong>${n.t}</strong><br><span style="color:var(--mute);font-size:12.5px">${n.m}</span></td>
+  <td>${n.r}</td>
+  <td><span class="pill ${n.s==='done'?'p-done':'p-pend'}">${n.s==='done'?'done':'aguardando'}</span></td></tr>`).join('');
+
+/* ---------- helpers de gráfico ---------- */
+function esc(v, d0, d1, r0, r1) { return r0 + (v - d0) / (d1 - d0) * (r1 - r0); }
+function eixoX(min, max, y, x0, x1, fmt) {
+  let g = `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${CORES.line}" stroke-width="1.5"/>`;
+  const passo = (max - min) / 4;
+  for (let i = 0; i <= 4; i++) {
+    const v = min + i * passo, x = esc(v, min, max, x0, x1);
+    g += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+5}" stroke="${CORES.line}"/><text x="${x}" y="${y+20}" text-anchor="middle" font-size="11" fill="${CORES.mute}">${fmt(v)}</text>`;
+  }
+  return g;
+}
+const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
+
+/* ---------- ch-ci ---------- */
+(function(){
+  const dados = [
+    {m:'prophet',  p:4.70, lo:4.17, hi:5.27},
+    {m:'sarima',   p:4.80, lo:4.29, hi:5.33},
+    {m:'timesfm',  p:4.83, lo:4.32, hi:5.39},
+    {m:'catboost', p:6.59, lo:5.92, hi:7.27},
+    {m:'xgboost',  p:6.94, lo:6.26, hi:7.65},
+  ];
+  const x0=150, x1=850, min=4, max=8;
+  let g = eixoX(min, max, 260, x0, x1, f1);
+  const xref = esc(7.30, min, max, x0, x1);
+  g += `<line x1="${xref}" y1="30" x2="${xref}" y2="260" stroke="${CORES.mute}" stroke-dasharray="4 4"/><text x="${xref}" y="22" text-anchor="middle" font-size="10.5" fill="${CORES.mute}">melhor com 60 meses (7,30)</text>`;
+  dados.forEach((d, i) => {
+    const y = 55 + i * 44, c = MC[d.m];
+    g += `<text x="${x0-12}" y="${y+4}" text-anchor="end" font-size="13" font-weight="700" fill="${CORES.ink}">${ML[d.m]}</text>
+      <line x1="${esc(d.lo,min,max,x0,x1)}" y1="${y}" x2="${esc(d.hi,min,max,x0,x1)}" y2="${y}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="${esc(d.p,min,max,x0,x1)}" cy="${y}" r="7" fill="${c}" stroke="#fff" stroke-width="2"/>
+      <text x="${esc(d.hi,min,max,x0,x1)+12}" y="${y+4}" font-size="12" fill="${CORES.mute}" font-weight="700">${f2(d.p)} [${f2(d.lo)}, ${f2(d.hi)}]</text>`;
+  });
+  document.getElementById('ch-ci').innerHTML = g;
+})();
+
+/* ---------- ch-dif ---------- */
+(function(){
+  const dados = [
+    {r:'TimesFM − SARIMA',        p: 0.037, lo:-0.262, hi:0.303, zero:true},
+    {r:'TimesFM − Prophet',       p: 0.132, lo:-0.056, hi:0.319, zero:true},
+    {r:'SARIMA − Prophet',        p: 0.095, lo:-0.157, hi:0.367, zero:true},
+    {r:'SARIMA − SARIMA+temp',    p: 0.136, lo: 0.034, hi:0.257, zero:false},
+    {r:'CatBoost − CatBoost+temp',p: 0.258, lo: 0.073, hi:0.452, zero:false},
+    {r:'XGBoost − XGBoost+temp',  p: 0.382, lo: 0.222, hi:0.543, zero:false},
+  ];
+  const x0=280, x1=850, min=-0.45, max=0.65;
+  let g = eixoX(min, max, 290, x0, x1, f2);
+  const xz = esc(0, min, max, x0, x1);
+  g += `<line x1="${xz}" y1="26" x2="${xz}" y2="290" stroke="${CORES.ink}" stroke-width="1.5"/><text x="${xz}" y="18" text-anchor="middle" font-size="11" fill="${CORES.ink}" font-weight="700">zero</text>`;
+  dados.forEach((d, i) => {
+    const y = 50 + i * 42, c = d.zero ? CORES.mid : CORES.coral;
+    g += `<text x="${x0-12}" y="${y+4}" text-anchor="end" font-size="12.5" font-weight="700" fill="${CORES.ink}">${d.r}</text>
+      <line x1="${esc(d.lo,min,max,x0,x1)}" y1="${y}" x2="${esc(d.hi,min,max,x0,x1)}" y2="${y}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="${esc(d.p,min,max,x0,x1)}" cy="${y}" r="6.5" fill="${c}" stroke="#fff" stroke-width="2"/>
+      <text x="${esc(d.hi,min,max,x0,x1)+10}" y="${y+4}" font-size="11.5" fill="${CORES.mute}" font-weight="700">${d.zero ? 'zero dentro' : 'exclui zero'}</text>`;
+  });
+  document.getElementById('ch-dif').innerHTML = g;
+})();
+
+/* ---------- ch-hor ---------- */
+(function(){
+  const serie = {
+    timesfm:[4.30,4.62,4.90,5.11,4.97,5.10], sarima:[4.16,4.70,4.77,4.81,5.11,5.23],
+    prophet:[4.35,4.45,4.65,4.82,4.93,5.00], xgboost:[6.02,6.74,7.16,7.32,7.14,7.22],
+    catboost:[5.72,6.38,6.76,6.91,6.80,6.97],
+  };
+  const x0=80, x1=800, y0=270, y1=40, min=4, max=7.6;
+  let g = `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y0}" stroke="${CORES.line}" stroke-width="1.5"/>`;
+  for (let h = 1; h <= 6; h++) {
+    const x = esc(h, 1, 6, x0, x1);
+    g += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+5}" stroke="${CORES.line}"/><text x="${x}" y="${y0+20}" text-anchor="middle" font-size="11" fill="${CORES.mute}">h=${h}</text>`;
+  }
+  for (let v = 4; v <= 7.5; v += 1) {
+    const y = esc(v, min, max, y0, y1);
+    g += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${CORES.line}" stroke-dasharray="3 5"/><text x="${x0-10}" y="${y+4}" text-anchor="end" font-size="11" fill="${CORES.mute}">${f1(v)}%</text>`;
+  }
+  // Rótulos finais sem colisão: ordena pelo valor em h=6 e força espaçamento mínimo
+  const fins = Object.entries(serie).map(([m, vs]) => ({m, y: esc(vs[5], min, max, y0, y1)}))
+    .sort((a, b) => a.y - b.y);
+  for (let i = 1; i < fins.length; i++) {
+    if (fins[i].y - fins[i-1].y < 16) fins[i].y = fins[i-1].y + 16;
+  }
+  const yfim = Object.fromEntries(fins.map(f => [f.m, f.y]));
+  for (const [m, vs] of Object.entries(serie)) {
+    const pts = vs.map((v,i) => [esc(i+1,1,6,x0,x1), esc(v,min,max,y0,y1)]);
+    g += `<path d="M${pts.map(p=>p.join(',')).join(' L')}" fill="none" stroke="${MC[m]}" stroke-width="2.6"/>`;
+    pts.forEach(p => g += `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="${MC[m]}" stroke="#fff" stroke-width="1.5"/>`);
+    g += `<text x="${pts[5][0]+14}" y="${yfim[m]+4}" font-size="12" font-weight="700" fill="${MC[m]}">${ML[m]}</text>`;
+  }
+  document.getElementById('ch-hor').innerHTML = g;
+})();
+
+/* ---------- ch-slice ---------- */
+(function(){
+  const dados = [
+    {m:'prophet', antes:7.68, depois:5.97}, {m:'sarima', antes:7.45, depois:6.18}, {m:'timesfm', antes:7.30, depois:6.07},
+  ];
+  const x0=140, x1=850, min=0, max=8.5;
+  let g = eixoX(min, max, 230, x0, x1, f1);
+  dados.forEach((d, i) => {
+    const yA = 42 + i * 62, yD = yA + 22, c = MC[d.m];
+    g += `<text x="${x0-12}" y="${yA+16}" text-anchor="end" font-size="13" font-weight="700" fill="${CORES.ink}">${ML[d.m]}</text>
+      <rect x="${x0}" y="${yA}" width="${esc(d.antes,min,max,0,x1-x0)}" height="16" rx="4" fill="${c}" opacity=".35"/>
+      <text x="${x0+esc(d.antes,min,max,0,x1-x0)+8}" y="${yA+13}" font-size="11.5" fill="${CORES.mute}">${f2(d.antes)} · treino 24–54m (rodada 01/08)</text>
+      <rect x="${x0}" y="${yD}" width="${esc(d.depois,min,max,0,x1-x0)}" height="16" rx="4" fill="${c}"/>
+      <text x="${x0+esc(d.depois,min,max,0,x1-x0)+8}" y="${yD+13}" font-size="11.5" font-weight="900" fill="${CORES.ink}">${f2(d.depois)} · treino 132–168m (−${f2(d.antes-d.depois)} pp)</text>`;
+  });
+  document.getElementById('ch-slice').innerHTML = g;
+})();
+
+/* ---------- ch-exog ---------- */
+(function(){
+  const dados = [
+    {m:'sarima',  v:[4.80,4.66,4.63]}, {m:'catboost', v:[6.59,6.33,6.30]}, {m:'xgboost', v:[6.94,6.55,6.55]},
+  ];
+  const rot = ['baseline', 'climatologia (sem vazamento)', 'teto (temperatura futura real)'];
+  const alfa = [1, .62, .3];
+  const x0=80, x1=860, y0=240, min=0, max=7.6;
+  let g = '';
+  dados.forEach((d, gi) => {
+    const gx = x0 + gi * 260;
+    d.v.forEach((v, i) => {
+      const bx = gx + i * 62, h = esc(v, min, max, 0, y0 - 50);
+      g += `<rect x="${bx}" y="${y0-h}" width="52" height="${h}" rx="5" fill="${MC[d.m]}" opacity="${alfa[i]}"/>
+        <text x="${bx+26}" y="${y0-h-8}" text-anchor="middle" font-size="11.5" font-weight="900" fill="${CORES.ink}">${f2(v)}</text>`;
+    });
+    g += `<text x="${gx+93}" y="${y0+22}" text-anchor="middle" font-size="13" font-weight="700" fill="${CORES.ink}">${ML[d.m]}</text>`;
+  });
+  g += `<line x1="${x0-10}" y1="${y0}" x2="${x1}" y2="${y0}" stroke="${CORES.line}" stroke-width="1.5"/>`;
+  rot.forEach((r, i) => {
+    g += `<rect x="${x0}" y="${262+i*0}" width="0" height="0"/>`;
+  });
+  g += `<g font-size="11.5" fill="${CORES.mute}">
+    <rect x="${x0}" y="258" width="13" height="13" rx="3" fill="${CORES.slate}" opacity="1"/><text x="${x0+19}" y="269">${rot[0]}</text>
+    <rect x="${x0+150}" y="258" width="13" height="13" rx="3" fill="${CORES.slate}" opacity=".62"/><text x="${x0+169}" y="269">${rot[1]}</text>
+    <rect x="${x0+420}" y="258" width="13" height="13" rx="3" fill="${CORES.slate}" opacity=".3"/><text x="${x0+439}" y="269">${rot[2]}</text>
+  </g>`;
+  document.getElementById('ch-exog').innerHTML = g;
+})();
+</script>
+
+</body>
+</html>
