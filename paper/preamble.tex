@@ -1,0 +1,29 @@
+% Preambulo do manuscrito. Compilar de dentro de paper/:
+%   tectonic -X compile manuscript.tex --outdir ../build
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+
+\usepackage{setspace}
+\usepackage{lineno}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{xurl}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{amsmath}
+\usepackage[numbers,sort&compress]{natbib}
+
+\captionsetup{font=small,labelfont=bf}
+\graphicspath{{figures/}}
+
+% Marcador de dado ainda indisponivel. Sai vermelho e em negrito de proposito:
+% e para ser impossivel submeter sem ver.
+\newcommand{\missing}[1]{\textcolor{red}{\textbf{[MISSING: #1]}}}
+
+\setstretch{1.5}
+\linenumbers

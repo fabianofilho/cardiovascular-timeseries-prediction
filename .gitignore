@@ -24,3 +24,8 @@ data/processed/*
 # Keep benchmark outputs versioned.
 !results/*.csv
 !results/*.json
+
+# Saida da compilacao do manuscrito. O PDF e regeravel de paper/ com
+# `cd paper && tectonic -X compile manuscript.tex --outdir ../build`; as tabelas e
+# figuras de paper/ ficam versionadas porque sao a entrada dele.
+build/

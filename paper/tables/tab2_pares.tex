@@ -1,0 +1,30 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\caption{Paired differences in sMAPE among the three leading models. A positive
+difference means the first model has the larger error.}
+\label{tab:pares}
+\begin{tabular}{lrcrc}
+\toprule
+Comparison & Difference (pp) & 95\% CI & $p$ (bootstrap) & DM cells $p<0.05$ \\
+\midrule
+Prophet $-$ SARIMA & $-0.095$ & $[-0.367, +0.157]$ & 0.512 & 0 of 6 \\
+Prophet $-$ TimesFM & $-0.132$ & $[-0.319, +0.056]$ & 0.171 & 0 of 6 \\
+SARIMA $-$ TimesFM & $-0.037$ & $[-0.303, +0.262]$ & 0.768 & 0 of 6 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+pp, percentage points; DM, Diebold-Mariano test with the Harvey-Leybourne-Newbold
+small-sample correction, applied separately at each of the six forecast horizons with
+absolute error as the loss function. Bootstrap differences were computed within
+replicate on identical resampled windows, so the interval is for the difference itself
+rather than a comparison of overlapping marginal intervals. Under the criterion fixed
+before the analysis, a difference counts as established only if the interval excludes
+zero and DM reaches $p<0.05$ in at least three of the six horizons; no comparison in
+this table meets either condition.
+\end{minipage}
+\end{table}

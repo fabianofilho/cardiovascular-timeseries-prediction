@@ -1,0 +1,30 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Expanding versus sliding 60-month training window, evaluated on identical
+test origins. A negative difference means the expanding window is more accurate.}
+\label{tab:janela}
+\begin{tabular}{lrrrcrc}
+\toprule
+Model & Expanding & Sliding 60 & Diff. (pp) & 95\% CI & $p$ & DM cells $p<0.05$ \\
+\midrule
+Prophet & 4.70 & 5.39 & $-0.69$ & $[-1.159, -0.219]$ & 0.005 & 0 of 6 \\
+SARIMA & 4.80 & 5.46 & $-0.66$ & $[-1.008, -0.346]$ & 0.000 & 3 of 6 \\
+TimesFM & 4.83 & 4.74 & $+0.09$ & $[-0.125, +0.307]$ & 0.424 & 0 of 6 \\
+CatBoost & 6.59 & 6.64 & $-0.05$ & $[-0.288, +0.176]$ & 0.661 & 0 of 6 \\
+XGBoost & 6.94 & 6.87 & $+0.07$ & $[-0.213, +0.354]$ & 0.635 & 0 of 6 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+The only difference between the two runs is how much past each model may use: the
+expanding window trains from the start of the series to the origin (60 to 162 months),
+the sliding window on the most recent 60 months only. Test origins, horizons and
+evaluation are identical, so the bootstrap is paired by window. Under the pre-declared
+criterion, only SARIMA meets both conditions.
+\end{minipage}
+\end{table}

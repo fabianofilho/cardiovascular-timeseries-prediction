@@ -1,0 +1,32 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Effect of monthly minimum temperature as an exogenous covariate, under the
+leakage-free climatology policy, and the labelled ceiling scenario.}
+\label{tab:temperatura}
+\begin{tabular}{lrrrcrr}
+\toprule
+Model & Without & With temp. & Gain (pp) & 95\% CI & DM cells $p<0.05$ & Ceiling \\
+\midrule
+SARIMA & 4.80 & 4.66 & 0.136 & $[+0.034, +0.257]$ & 1 of 6 & 4.63 \\
+CatBoost & 6.59 & 6.33 & 0.258 & $[+0.073, +0.452]$ & 1 of 6 & 6.30 \\
+XGBoost & 6.94 & 6.55 & 0.382 & $[+0.222, +0.543]$ & 2 of 6 & 6.55 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+Under the climatology policy the future covariate is the month-of-year mean recomputed
+for each window from the exogenous series truncated at that window's training end, so no
+value from after the training end is visible. The ceiling column replaces it with the
+true observed future temperature, which leaks by construction and is reported only to
+bound what a perfect weather forecast could add. All three gains have intervals
+excluding zero, but none reaches the pre-declared threshold of DM significance in at
+least three horizons, so the effect is reported as suggestive and not established.
+Prophet and TimesFM do not accept exogenous regressors in this implementation and were
+excluded from this comparison rather than being given an input they would ignore.
+\end{minipage}
+\end{table}

@@ -1,0 +1,28 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\caption{Effect of training history on the same test dates (January 2021 to December
+2023). Only the amount of training data differs between columns.}
+\label{tab:serie}
+\begin{tabular}{lrrr}
+\toprule
+Model & sMAPE, 24--54 months & sMAPE, 132--168 months & Gain (pp) \\
+\midrule
+Prophet & 7.68 & 5.97 & 1.71 \\
+SARIMA & 7.45 & 6.18 & 1.27 \\
+TimesFM & 7.30 & 6.07 & 1.23 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+The short-history column reproduces our earlier round on 60 months of data
+($n=186$ forecasts per model); the long-history column is
+the subset of the present round falling on the same target dates
+($n=201$). Aggregate error across the two full rounds is
+not comparable, because the test period changes together with the training period; this
+restriction to shared dates is the comparison that isolates training length.
+\end{minipage}
+\end{table}

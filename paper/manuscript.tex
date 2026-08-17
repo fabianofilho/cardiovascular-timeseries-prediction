@@ -1,0 +1,513 @@
+\input{preamble}
+
+\title{\vspace{-2em}\large\bfseries Series length, not model choice, drives forecasting
+accuracy of cardiovascular mortality in S\~ao Paulo, Brazil: a benchmark of foundation,
+classical and boosting models with measured uncertainty}
+
+\author{Fabiano B. N. Filho\thanks{Faculdade de Sa\'ude P\'ublica, Universidade de
+S\~ao Paulo, S\~ao Paulo, Brazil. Corresponding author.} \and
+Isabela Venancio da Silva\footnotemark[1] \and
+Alexandre Chiavegatto Filho\footnotemark[1]}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent\textbf{Running title:} Uncertainty dissolves a forecasting ranking \\
+\textbf{Keywords:} cardiovascular mortality; time series forecasting; foundation models;
+forecast uncertainty; Diebold-Mariano test; epidemiological surveillance; Brazil
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\section*{Abstract}
+
+\noindent\textbf{Background.} Cardiovascular diseases are the leading cause of death in
+Brazil. Foundation models pre-trained on large time series corpora are increasingly
+reported as outperforming classical alternatives in health forecasting. Such rankings are
+usually reported as point estimates, without any measure of how much of the observed gap
+is sampling noise.
+
+\noindent\textbf{Methods.} We benchmarked five forecasting approaches, SARIMA, Prophet,
+TimesFM, XGBoost and CatBoost, on monthly cardiovascular mortality in the state of
+S\~ao Paulo, using 168 months of records from the Brazilian Mortality Information System
+(SIM/DataSUS, January 2010 to December 2023; 1{,}217{,}427 cardiovascular deaths).
+Rolling origin cross-validation with a 6-month horizon and a 60-month minimum training
+window produced 103 windows and 618 out-of-sample forecasts per model. Every comparison
+carries uncertainty, from a block bootstrap resampling entire windows ($B=10{,}000$) and
+from the Diebold-Mariano test with the Harvey correction at each horizon. A decision
+criterion was fixed before the analysis. We further varied training history while holding
+test dates fixed, and evaluated monthly minimum temperature as an exogenous covariate
+under a leakage-free design.
+
+\noindent\textbf{Results.} Prophet (sMAPE 4.70\%, 95\% CI 4.17 to 5.27), SARIMA (4.80\%,
+4.29 to 5.33) and TimesFM (4.83\%, 4.32 to 5.39) were statistically indistinguishable:
+the spread among them (0.13 percentage points, pp) was an order of magnitude smaller than
+the mean interval width (1.07 pp), all three paired differences contained zero
+($p=0.17$ to $0.77$), and none of the 18 Diebold-Mariano cells reached significance.
+Boosting models were detectably worse, with all 36 comparisons against a leading model at
+$p<0.05$. Holding test dates fixed, nine additional years of training reduced sMAPE by
+1.23 to 1.71 pp, roughly ten times any between-model difference. Truncating training
+history to 60 months cost SARIMA 0.66 pp and Prophet 0.69 pp while leaving TimesFM
+unaffected ($p=0.42$), and TimesFM then led.
+
+\noindent\textbf{Conclusions.} Model selection among these three families is an
+operational rather than a statistical decision. Extending the data delivered far more
+than substituting the model. The defensible advantage of a zero-shot foundation model
+here is robustness to short history, not superior accuracy.
+
+\vspace{1em}
+\hrule
+
+\section{Introduction}
+
+Cardiovascular diseases (CVDs) are the leading cause of death worldwide, responsible for
+approximately 17.9 million deaths per year \citep{roth2020}. In Brazil they have been the
+primary cause of mortality since the 1960s, accounting for roughly 30\% of all deaths in
+recent decades \citep{oliveira2020, brant2017}. S\~ao Paulo, the most populous state,
+accounted for 1{,}217{,}427 cardiovascular deaths over the fourteen years analysed here.
+Age-standardised CVD mortality rates
+have declined since the 1990s, attributed to improved risk factor control, expanded primary
+care and advances in acute treatment \citep{ribeiro2016}, yet the absolute number of deaths
+keeps rising with population growth and ageing \citep{brant2025}. In the series analysed
+here, annual cardiovascular deaths in S\~ao Paulo rose from 79{,}933 in 2010 to 95{,}538 in
+2023. Anticipating these trends informs resource allocation within Brazil's universal
+health system.
+
+Classical statistical models such as Seasonal ARIMA have long been used for disease
+incidence and mortality \citep{box2015}, and Prophet gained adoption for its interpretable
+decomposition of trend and seasonality \citep{taylor2018}. Foundation models are a
+different proposition: pre-trained on large and diverse time series corpora, they produce
+competitive zero-shot forecasts on unseen data without task-specific training. TimesFM, a
+decoder-only transformer with 200 million parameters, has shown strong zero-shot
+performance across benchmarks \citep{das2024}, as has Chronos \citep{ansari2024}, and
+health-specific variants are emerging \citep{li2025}.
+
+A methodological gap accompanies this promise. Applied comparisons commonly rank models by
+a point estimate of aggregate error and interpret the ordering as a finding. Backtesting
+forecasts, however, are not independent: they come from overlapping rolling windows, and
+within each window the horizons share a training origin. Treating them as independent
+understates uncertainty, and a ranking can then be entirely a product of sampling noise.
+Whether a gap of a few tenths of a percentage point constitutes evidence is an empirical
+question that requires an interval rather than a point.
+
+We address both questions. We compare five forecasting approaches on cardiovascular
+mortality in S\~ao Paulo from real SIM/DataSUS records, and attach a confidence interval to
+every comparison. We then decompose where accuracy actually comes from, by varying training
+history while holding test dates fixed, and by testing monthly temperature as an exogenous
+covariate under an explicitly leakage-free design. This work extends an earlier round of the
+same benchmark restricted to 60 months, in which TimesFM ranked first; that ranking did not
+survive the addition of data or of intervals, and we report why.
+
+\section{Methods}
+
+\subsection{Data source and preprocessing}
+
+We used individual death records from the Brazilian Mortality Information System (Sistema
+de Informa\c{c}\~oes sobre Mortalidade, SIM), maintained by the Ministry of Health and
+distributed through DataSUS \citep{datasus}. Records were extracted for the state of
+S\~ao Paulo (UF = SP) from January 2010 to December 2023 and filtered by underlying cause
+using ICD-10 codes I00--I99, diseases of the circulatory system \citep{icd10}.
+
+Of 4{,}317{,}224 raw mortality records, 1{,}217{,}427 were cardiovascular deaths, aggregated
+into a monthly series of 168 points. The series has a mean of 7{,}247 deaths per month
+(median 7{,}177), a minimum of 5{,}811 (February 2011) and a maximum of 9{,}582 (January
+2022).
+
+Extraction was audited by a validation script that verifies that the ICD column exists,
+that every retained record matches the requested prefix, that at least three distinct codes
+are present, that the aggregated series is non-degenerate, and that the extraction metadata
+is not flagged as synthetic; all nine checks passed. The aggregated series is versioned in
+the public repository; individual records are not redistributed.
+
+S\~ao Paulo has one of the highest death registration completeness rates in Brazil
+\missing{reference and figure for death registration completeness in S\~ao Paulo; the
+value stated in an earlier draft was above 95\%, but we could not locate the source and
+it is not asserted here without one}. We used raw SIM data without garbage code
+redistribution, which should be considered when comparing against Global Burden of
+Disease estimates.
+
+\subsection{Forecasting models}
+
+We evaluated five approaches. \textbf{SARIMA} with order $(1,1,1)$ and seasonal order
+$(0,1,1,12)$ \citep{box2015}. \textbf{Prophet} with yearly seasonality enabled and weekly
+and daily seasonalities disabled, appropriate for monthly data \citep{taylor2018}.
+\textbf{TimesFM}, using the public \texttt{timesfm-2.5-200m-pytorch} checkpoint with a
+512-point context window, applied zero-shot without fine-tuning \citep{das2024}.
+\textbf{XGBoost} \citep{chen2016} and \textbf{CatBoost} \citep{prokhorenkova2018}, wrapped
+in a recursive multi-step forecaster with lags 1 to 12.
+
+An earlier version of this pipeline clipped SARIMA and boosting forecasts to a range
+derived from the training window, a safeguard Prophet and TimesFM never received. Because
+that asymmetry contaminates any comparison between families, we removed the clip and
+replaced it with a diagnostic warning. On this series the change is inert: none of the
+9{,}888 forecasts produced across the four runs reported here fell outside the former
+bounds.
+
+\subsection{Backtesting}
+
+Models were evaluated by rolling origin cross-validation with an expanding window, a
+6-month horizon, a 60-month minimum training window and a one-month step, yielding 103
+windows and 618 out-of-sample forecasts per model. The 60-month minimum provides at least
+four effective seasonal cycles after the double differencing implied by the SARIMA
+specification. Every model saw identical windows and identical test dates, which is what
+makes the paired analysis below valid. Accuracy was summarised by mean absolute error
+(MAE), root mean squared error (RMSE) and symmetric mean absolute percentage error (sMAPE).
+
+\subsection{Uncertainty quantification}
+
+The 618 forecasts per model are not independent, so we used two complementary procedures.
+
+\textbf{Block bootstrap over windows.} Whole windows, with their six horizons kept
+together, were resampled with replacement, $B=10{,}000$ replicates, seed 20260817. In each
+replicate the same resampled windows were applied to every model, preserving pairing.
+Intervals are the 2.5th and 97.5th percentiles of the replicate distribution, and paired
+differences were computed within replicate, yielding an interval for the difference itself
+rather than a comparison of overlapping marginal intervals.
+
+\textbf{Diebold-Mariano test.} Equality of predictive accuracy was tested at each horizon
+using the Diebold-Mariano statistic \citep{diebold1995} with the small-sample correction of
+Harvey, Leybourne and Newbold \citep{harvey1997}, with absolute error as the loss function.
+
+\textbf{Pre-declared criterion.} To avoid selecting a favourable statistic after the fact,
+we declared before the analysis that an improvement counts as established only if the 95\%
+interval of the paired difference excludes zero \emph{and} the Diebold-Mariano test reaches
+$p<0.05$ in at least three of the six horizons. Results meeting the first condition but not
+the second are reported as suggestive and explicitly not established.
+
+\subsection{Series length experiments}
+
+Aggregate error is not comparable across rounds with different test periods, because
+periods differ in intrinsic difficulty. We used two designs. First, we extracted the subset
+of forecasts falling on the test dates shared with the earlier 60-month round (January 2021
+to December 2023) and compared them directly, holding targets fixed while training history
+differs. Second, we reran the full benchmark on the same 103 origins with training
+truncated to the most recent 60 months, so that the only difference between runs is how
+much past each model may use.
+
+\subsection{Exogenous temperature}
+
+Low ambient temperature is the principal candidate driver of cardiovascular seasonality,
+acting through elevated blood pressure and platelet aggregation \citep{analitis2008,
+phung2016}. We obtained monthly minimum temperature from the National Institute of
+Meteorology automatic station A701 (S\~ao Paulo, Mirante de Santana) \citep{inmet},
+aggregating hourly records to monthly means of daily minima, with 168 complete months and
+no gaps. Days with fewer than 18 valid hours and months with fewer than 20 valid days were
+discarded before aggregation.
+
+Using an observed future covariate would leak information unavailable at forecast time. We
+therefore implemented three policies and report two. Under \textbf{climatology}, the policy
+used for inference, the future covariate is the month-of-year mean recomputed for each
+window from the exogenous series truncated at that window's training end, so no value from
+after the training end is ever visible. Under \textbf{observed}, the true future value is
+supplied; this leaks by construction and is reported only as a labelled ceiling scenario
+that bounds what a perfect weather forecast could add. A third policy, using the observed
+value twelve months earlier, is available in the code but was not executed for this
+analysis and is not reported.
+
+Only models that natively accept exogenous regressors received the covariate (SARIMA,
+XGBoost, CatBoost). Prophet and TimesFM were excluded from that comparison rather than
+being given an input they would ignore.
+
+\subsection{Reproducibility}
+
+All tables and figures in this manuscript are generated programmatically from the forecast
+files by a single script, and every numerical value cited in the text is emitted by the
+same script to a machine-readable file against which the prose was checked. No value was
+transcribed by hand. Metrics and intervals are recomputed from the per-forecast records
+rather than read from stored summary files, so that an aggregation error would surface.
+
+\section{Results}
+
+\subsection{Aggregate performance}
+
+\input{tables/tab1_desempenho}
+
+Table~\ref{tab:desempenho} reports accuracy for all five models. With a mean of roughly
+7{,}250 deaths per month, the best MAE corresponds to a relative error near 4.9\%.
+Figure~\ref{fig:smape} shows the same result with intervals, which is the form in which the
+central finding is visible: the shaded band spanning the three leading models is narrow
+relative to any individual interval.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.86\textwidth]{fig2_smape_ic.pdf}
+\caption{sMAPE by model with 95\% bootstrap intervals over rolling origin windows. Points
+are the observed values, bars the intervals. The grey band spans the three leading models.
+Its width is the quantity usually reported as a ranking; the bars are the uncertainty of
+each estimate. Boosting models sit clearly apart, which is the one separation the data
+support.}
+\label{fig:smape}
+\end{figure}
+
+\subsection{The leading three models are indistinguishable}
+
+The spread in sMAPE among Prophet, SARIMA and TimesFM is 0.13 pp, against a mean interval
+width of 1.07 pp, a ratio of 0.12. Table~\ref{tab:pares} shows that all three paired
+differences contain zero and that no Diebold-Mariano cell reaches significance, 0 of 18.
+
+\input{tables/tab2_pares}
+
+In our earlier round on 60 months, the point ranking placed TimesFM first (7.30\%) and
+Prophet last (7.68\%), a spread of 0.38 pp against a mean interval width of 2.45 pp.
+Extending the series inverted that ordering while narrowing the intervals by a factor of
+2.3. An ordering that reverses when more data arrive, and whose intervals overlap in both
+rounds, is not a finding about the models.
+
+\subsection{Boosting is detectably worse}
+
+XGBoost and CatBoost sit 1.76 pp or more above the leading group. All 36 comparisons of a
+boosting model against one of the leading three reach $p<0.05$ on the Diebold-Mariano test,
+and the bootstrap $p$ for each pooled difference is below 0.001. Unlike the ordering within
+the leading group, this separation is established under the pre-declared criterion.
+Recursive boosting over lags, without exogenous information, is not competitive on this
+series.
+
+\subsection{Training history dominates model choice}
+
+\input{tables/tab3_serie}
+
+Table~\ref{tab:serie} restricts attention to the test dates shared with the earlier round.
+Nine additional years of training reduce error by 1.23 to 1.71 pp on identical targets,
+roughly ten times the 0.13 pp separating the models here and four times the 0.38 pp that
+separated them before. Within the options available to a practitioner, extending the series
+was worth far more than exchanging the model.
+
+\subsection{The foundation model's advantage is robustness to short history}
+
+\input{tables/tab4_janela}
+
+Table~\ref{tab:janela} and Figure~\ref{fig:janela} isolate the value of long history for
+each model. Discarding history beyond five years costs SARIMA 0.66 pp, the only comparison
+in this study that meets the pre-declared criterion in full, and costs Prophet 0.69 pp with
+an interval excluding zero but no horizon-level significance. TimesFM is unaffected
+($+0.09$ pp, $p=0.42$), consistent with a bounded context window, internal normalisation
+and knowledge acquired in pre-training rather than from the target series. In the truncated
+regime TimesFM leads at 4.74\% against 5.46\% for SARIMA.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.86\textwidth]{fig4_janela.pdf}
+\caption{Accuracy under an expanding training window and under a sliding 60-month window,
+on identical test origins. The classical models degrade when history is truncated; the
+foundation model does not, and overtakes them in that regime.}
+\label{fig:janela}
+\end{figure}
+
+Error decomposed by forecast horizon (Figure~\ref{fig:horizonte}) shows the leading three
+models interleaving at every horizon, with the boosting models separated throughout.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.86\textwidth]{fig3_horizonte.pdf}
+\caption{sMAPE by forecast horizon, $n=103$ windows per cell. The leading three models
+cross repeatedly, which is the horizon-level counterpart of the pooled result in
+Table~\ref{tab:pares}.}
+\label{fig:horizonte}
+\end{figure}
+
+\subsection{Temperature helps, below the confirmation threshold}
+
+\input{tables/tab5_temperatura}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{fig6_temperatura.pdf}
+\caption{Reduction in sMAPE from adding monthly minimum temperature as an exogenous
+covariate under the leakage-free climatology policy, with 95\% paired bootstrap intervals.
+Positive values favour the model with temperature. All three intervals exclude zero, which
+is why the effect is reported as suggestive rather than absent, and none clears the
+pre-declared horizon-level threshold, which is why it is not reported as established.}
+\label{fig:temp}
+\end{figure}
+
+All three gains in Table~\ref{tab:temperatura} and Figure~\ref{fig:temp} have intervals
+excluding zero, but none reaches significance in at least three horizons, so under the
+pre-declared criterion the effect is suggestive and not established. The ceiling scenario
+is more informative than the
+point gains: replacing the climatological future covariate with the true observed future
+temperature, which no operational forecast could access, improves SARIMA by a further
+0.03 pp only. The predictive content of monthly temperature in this series is therefore
+almost entirely its climatology, information a seasonal model already carries.
+
+\subsection{Seasonality}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.86\textwidth]{fig5_sazonal.pdf}
+\caption{Mean cardiovascular deaths by month of year (left axis) against mean monthly
+minimum temperature (right axis), 2010--2023. The mortality peak coincides with the
+temperature trough.}
+\label{fig:sazonal}
+\end{figure}
+
+The series shows a stable seasonal pattern across all fourteen years, peaking in July
+(mean 8{,}247 deaths) and reaching its trough in February (mean 6{,}273), an amplitude of
+27.2\% around the mean (Figure~\ref{fig:sazonal}). The COVID-19 period introduced level
+anomalies without disrupting the seasonal shape (Figure~\ref{fig:serie}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.94\textwidth]{fig1_serie.pdf}
+\caption{Monthly cardiovascular deaths in the state of S\~ao Paulo, January 2010 to
+December 2023 (168 months). The shaded region marks the test window shared with our
+earlier 60-month round, used for the paired comparison in Table~\ref{tab:serie}.}
+\label{fig:serie}
+\end{figure}
+
+\section{Discussion}
+
+Among Prophet, SARIMA and TimesFM there is no detectable difference in forecasting monthly
+cardiovascular mortality, and the ordering we ourselves reported on a shorter series
+survived neither more data nor the addition of intervals. What did move accuracy was the
+length of the training series, by roughly an order of magnitude more than the choice of
+model.
+
+\subsection{Rankings without intervals are not findings}
+
+Our earlier round reported TimesFM first by 0.38 pp of sMAPE. That gap was smaller than the
+interval of any single model by a factor of six, and the ordering reversed when the series
+was extended. Had it been published as a ranking, it would have made a claim that the same
+pipeline contradicted weeks later using more data.
+
+This is not specific to our series. Backtesting forecasts from overlapping windows are
+strongly dependent, and aggregate error over a few hundred such forecasts carries an
+interval on the order of a percentage point, while published gaps between modern
+forecasting methods are frequently a few tenths. Comparisons in this regime that report
+only point estimates are underpowered by construction. Reporting the width of the interval
+alongside the gap, and treating a gap smaller than the interval as what it is, costs little
+and would prevent a class of claims that do not replicate.
+
+\subsection{Where the accuracy came from}
+
+Holding test dates fixed, extending training from at most 54 to at most 168 months reduced
+error by 1.23 to 1.71 pp, roughly ten times the spread among models. For a surveillance
+team this reorders priorities: retrieving and validating a longer historical extraction
+dominates implementing a more sophisticated model, and the two are not close.
+
+It also reframes what such a benchmark should report. Our own aggregate figures, 7.3\% then
+and 4.8\% now, overstate the improvement because the test period changed with the training
+period. The paired comparison on shared dates is the only valid quantity, and it is smaller
+than the naive difference.
+
+\subsection{The operational role of foundation models}
+
+The sliding window experiment gives the foundation model a defensible role that the
+aggregate ranking obscured. TimesFM is indifferent to the amount of local history, which
+follows from its architecture; SARIMA and Prophet, which estimate their parameters from the
+target series alone, degrade measurably when history is truncated.
+
+The choice therefore depends on the deployment regime rather than on a global ranking. For a
+single well-established indicator with a long series, the classical models match the
+foundation model at far lower computational cost, and the decision should rest on cost,
+transparency and maintainability. For a surveillance system forecasting many indicators,
+municipalities or newly defined strata, where no individual series is long, zero-shot
+robustness is worth more than an aggregate table suggests, and it removes per-series model
+selection and tuning.
+
+\subsection{Temperature and the limits of monthly resolution}
+
+Temperature improved every model that received it, with intervals excluding zero, yet failed
+the pre-declared horizon-level criterion. Rather than report the favourable half of that
+result, we note that the ceiling scenario explains why the effect is small: a perfect future
+temperature adds only 0.03 pp over its climatology. At monthly aggregation, temperature
+carries little information beyond the seasonal shape a model already captures. Cold waves,
+the plausible mechanism for acute cardiovascular events, occur over days and are averaged
+out. Weekly or daily aggregation, not a better source of monthly temperature, is the
+condition under which this covariate could become informative.
+
+\subsection{Public health implications}
+
+A seasonal amplitude of 27.2\% between the July peak and the February trough is substantial
+for a subtropical setting with mild winters, and stable enough across fourteen years to
+support anticipatory planning: seasonal allocation of coronary and stroke unit capacity,
+emergency staffing and medication supply. The accuracy achieved here, near 4.7 to 4.8\%
+sMAPE at horizons up to six months, is compatible with planning at state level. It is not
+sufficient for fine-grained operational decisions, and the absence of prediction intervals
+discussed below is the binding limitation for that use.
+
+\subsection{Limitations}
+
+\textbf{No prediction intervals, and therefore no forecast calibration.} All five models
+here produce point forecasts, and all three metrics are point-forecast metrics. What we
+quantified is the uncertainty of the accuracy metric, not the uncertainty of an individual
+forecast. Empirical coverage against a nominal level was therefore never assessed. For a
+manager sizing capacity, the interval is the operative quantity, and its absence is the most
+consequential gap in this work. Enabling the intervals each model already supports natively
+and measuring coverage by horizon is the immediate next step.
+
+\textbf{Counts rather than rates.} The series models absolute deaths, so part of the trend
+that long history captures is population growth and ageing rather than epidemiological
+change. This most likely inflates the apparent benefit of long training history, since some
+of what the models learn is demography. Modelling rates per resident population would
+separate the two.
+
+\textbf{Single geographic unit.} State-level aggregation masks heterogeneity across
+municipalities and regional health departments, and the aggregate series is longer and
+smoother than any subunit series would be. This most likely flatters all models relative to
+their performance on disaggregated data.
+
+\textbf{No stratification.} Age group, sex and ICD-10 subcategory have distinct seasonal
+drivers that the aggregate obscures.
+
+\textbf{Zero-shot only.} TimesFM was not fine-tuned. The extended series now satisfies the
+data prerequisite for fine-tuning, which remains pending on hardware.
+
+\textbf{Pandemic period.} The series includes COVID-19, which introduced level shifts and
+possible cause-of-death misclassification.
+
+\textbf{Raw SIM data.} No garbage code redistribution was applied, which affects
+comparability with Global Burden of Disease estimates, and SIM records take months to
+consolidate, which constrains real-time application.
+
+\subsection{Conclusion}
+
+With uncertainty measured, a zero-shot foundation model and two classical models are
+indistinguishable for forecasting cardiovascular mortality in S\~ao Paulo across both series
+lengths we tested, and the ranking we previously reported reversed when more data arrived.
+Gradient boosting over lags is detectably worse. The variable that moved accuracy was the
+length of the training series, by roughly an order of magnitude more than the choice of
+model. The foundation model's defensible advantage is insensitivity to short history, which
+matters precisely where many series must be forecast and none of them is long. For a single
+long-running indicator the least expensive model suffices, and establishing that required
+measuring the uncertainty rather than reporting the ranking.
+
+\section*{Declarations}
+
+\textbf{Author contributions (CRediT).} \missing{author contribution statement per CRediT
+taxonomy, to be assigned by the authors}
+
+\textbf{Funding.} \missing{funding sources and grant numbers, or a statement that the work
+received no specific funding}
+
+\textbf{Ethics.} This study used publicly available, de-identified secondary mortality
+records distributed by the Brazilian Ministry of Health, with no individual identification
+and no contact with participants. \missing{confirmation of institutional review board waiver
+or approval number, if the institution requires one for public secondary data}
+
+\textbf{Competing interests.} The authors declare no competing interests.
+
+\textbf{Data availability.} The aggregated monthly series, the temperature series, all
+forecast files and all uncertainty outputs are available in the study repository at
+\url{https://github.com/fabianofilho/cardiovascular-timeseries-prediction}. Individual death
+records are not redistributed; the extraction script reproduces them from the public DataSUS
+source.
+
+\textbf{Code availability.} All analysis code, including the extraction pipeline, the
+benchmark, the uncertainty analysis and the script that generates every table and figure in
+this manuscript, is available in the same repository.
+
+\textbf{Use of artificial intelligence.} The authors used an AI coding assistant
+(Claude, Anthropic) to assist with code implementation, analysis scripting and manuscript
+drafting. The tool is not an author. The authors reviewed and verified all analyses, figures
+and numerical values reported here, and take full responsibility for the content.
+
+\textbf{Acknowledgements.} \missing{acknowledgements, including computational resources and
+any non-author contributors}
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs/references}
+
+\end{document}
