@@ -5,46 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CPT: o empate sobrevive à série longa</title>
 <style>
+  /* Tema escuro único — identidade visual sobre fundo azul-profundo.
+     --bone é o chão da página e --white a superfície dos cards (nomes mantidos,
+     valores escuros); --titulo é o tom claro dos títulos. */
   :root {
-    --slate: #3D5A80; --slate-dark: #1F3050; --slate-mid: #6B87AD;
-    --slate-pale: #E3EBF3; --coral: #EE6C4D; --amber: #F4A261;
-    --ink: #2B2B2B; --mute: #6B7280; --bone: #F6F2EE; --white: #FFFFFF;
-    --line: #E4DED6; --ok: #1D9E75;
+    --slate: #3D5A80; --slate-dark: #1F3050; --slate-mid: #8FB0D9;
+    --slate-pale: #2E4368; --coral: #EE6C4D; --amber: #F4A261;
+    --ink: #EDF2F8; --mute: #A9B7CC; --bone: #16233C; --white: #243858;
+    --line: #35496E; --ok: #3FBF8F; --titulo: #E3EBF3; --rotulo: #9FB6D4;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: 'Lato', 'Segoe UI', system-ui, sans-serif;
-    color: var(--ink); background: var(--bone); line-height: 1.7;
+    color: var(--ink); background: var(--bone); line-height: 1.95;
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-  header { background: var(--slate); color: var(--white); padding: 56px 0 48px; margin-bottom: 48px; }
-  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--slate-pale); margin-bottom: 14px; }
+  header { background: var(--slate-dark); color: #FFFFFF; padding: 56px 0 48px; margin-bottom: 48px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--titulo); margin-bottom: 14px; }
   header h1 { font-weight: 300; font-size: 40px; letter-spacing: 1px; line-height: 1.15; margin-bottom: 14px; text-wrap: balance; }
   header h1 strong { font-weight: 900; }
-  header p.lead { font-size: 16px; color: var(--slate-pale); font-weight: 300; max-width: 700px; }
+  header p.lead { font-size: 16px; color: var(--titulo); font-weight: 300; max-width: 700px; line-height: 1.95; }
   .coral-tick { display: inline-block; width: 56px; height: 5px; background: var(--coral); margin-top: 24px; border-radius: 2px; }
 
   section { margin-bottom: 56px; }
-  .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--slate); padding-bottom: 10px; border-bottom: 1px solid #C9D3DF; margin-bottom: 24px; }
-  h2.big { font-weight: 900; font-size: 26px; color: var(--slate-dark); letter-spacing: .5px; margin-bottom: 10px; text-wrap: balance; }
-  p.prosa { font-size: 15.5px; color: var(--ink); max-width: 760px; margin-bottom: 14px; }
+  .sec-label { font-size: 12px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--rotulo); padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  h2.big { font-weight: 900; font-size: 26px; color: var(--titulo); letter-spacing: .5px; margin-bottom: 10px; text-wrap: balance; }
+  p.prosa { font-size: 15.5px; color: var(--ink); max-width: 760px; margin-bottom: 16px; line-height: 1.95; }
   p.prosa .mute { color: var(--mute); }
   code { background: var(--slate-pale); border-radius: 4px; padding: 1px 6px; font-size: .88em; }
 
   .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 20px; }
   .num { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; border-top: 4px solid var(--slate); }
   .num.destaque { border-top-color: var(--coral); }
-  .num .v { font-size: 30px; font-weight: 900; color: var(--slate-dark); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .num .v { font-size: 30px; font-weight: 900; color: var(--titulo); font-variant-numeric: tabular-nums; line-height: 1.2; }
   .num.destaque .v { color: var(--coral); }
-  .num .k { font-size: 12.5px; color: var(--mute); margin-top: 6px; line-height: 1.45; }
+  .num .k { font-size: 12.5px; color: var(--mute); margin-top: 6px; line-height: 1.7; }
 
   .card { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 18px; }
   .legenda { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--mute); margin: 10px 0 4px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; }
   .box { width: 13px; height: 13px; border-radius: 4px; display: inline-block; }
   .bx-done { background: var(--slate); }
-  .bx-pend { background: var(--white); border: 2px dashed var(--slate-mid); }
+  .bx-pend { background: transparent; border: 2px dashed var(--slate-mid); }
   .sw-line { width: 20px; height: 0; border-top: 2.5px solid var(--slate-mid); display: inline-block; }
   .sw-neg { width: 20px; height: 0; border-top: 2.5px dashed var(--coral); display: inline-block; }
   .sw-pos { width: 20px; height: 0; border-top: 2.5px dashed var(--ok); display: inline-block; }
@@ -52,27 +55,27 @@
   .tabela-rolo { overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 780px; }
   th { text-align: left; font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--mute); padding: 8px 12px; border-bottom: 2px solid var(--slate-pale); }
-  td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  td.id { font-weight: 900; color: var(--slate); white-space: nowrap; }
+  td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.8; }
+  td.id { font-weight: 900; color: var(--rotulo); white-space: nowrap; }
   td.num-cell { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .pill { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 10px; border-radius: 12px; }
-  .p-done { background: var(--slate-pale); color: var(--slate-dark); }
-  .p-pend { background: #FBE9E2; color: #C24E2F; }
+  .p-done { background: var(--slate-pale); color: var(--titulo); }
+  .p-pend { background: #4A2C21; color: #F4A261; }
 
   .chart { width: 100%; height: auto; display: block; }
-  .chart-title { font-size: 13px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--slate-dark); margin-bottom: 4px; }
-  .chart-sub { font-size: 12.5px; color: var(--mute); margin-bottom: 12px; }
+  .chart-title { font-size: 13px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--titulo); margin-bottom: 4px; }
+  .chart-sub { font-size: 12.5px; color: var(--mute); margin-bottom: 14px; line-height: 1.75; }
 
-  h3 { font-size: 16.5px; font-weight: 900; color: var(--slate-dark); margin: 22px 0 6px; }
-  ul.lista { margin: 8px 0 8px 20px; font-size: 15px; }
-  ul.lista li { margin-bottom: 6px; }
+  h3 { font-size: 16.5px; font-weight: 900; color: var(--titulo); margin: 24px 0 6px; }
+  ul.lista { margin: 8px 0 8px 20px; font-size: 15px; line-height: 1.95; }
+  ul.lista li { margin-bottom: 12px; }
 
-  #modal { position: fixed; inset: 0; background: rgba(31,48,80,.45); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 50; }
+  #modal { position: fixed; inset: 0; background: rgba(10,17,31,.65); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 50; }
   #modal.on { display: flex; }
-  #modal .mbox { background: var(--white); border-radius: 14px; max-width: 620px; width: 100%; padding: 26px; max-height: 80vh; overflow-y: auto; }
+  #modal .mbox { background: var(--white); border: 1px solid var(--line); border-radius: 14px; max-width: 620px; width: 100%; padding: 26px; max-height: 80vh; overflow-y: auto; }
   #modal .mid { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--coral); text-transform: uppercase; }
-  #modal h2 { font-size: 20px; font-weight: 900; color: var(--slate-dark); margin: 4px 0 10px; }
-  #modal p { font-size: 14.5px; margin-bottom: 10px; }
+  #modal h2 { font-size: 20px; font-weight: 900; color: var(--titulo); margin: 4px 0 10px; }
+  #modal p { font-size: 14.5px; margin-bottom: 12px; line-height: 1.9; }
   #modal .fecha { margin-top: 8px; background: var(--slate); color: #fff; border: none; padding: 9px 20px; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; }
   .g-node { cursor: pointer; }
   .g-node:hover rect { stroke-width: 3; }
@@ -194,8 +197,9 @@
 <footer>Rodada 17/08/2026 · fork isasaade-23 · PR #2 sobre fabianofilho/incerteza-benchmark · paleta: identidade visual Isabela Venancio</footer>
 
 <script>
-const CORES = { slate:'#3D5A80', dark:'#1F3050', mid:'#6B87AD', pale:'#E3EBF3', coral:'#EE6C4D', amber:'#F4A261', ink:'#2B2B2B', mute:'#6B7280', line:'#E4DED6', ok:'#1D9E75' };
-const MC = { timesfm:CORES.dark, sarima:CORES.coral, prophet:CORES.mid, xgboost:CORES.amber, catboost:CORES.slate };
+const CORES = { slate:'#3D5A80', dark:'#1F3050', mid:'#8FB0D9', pale:'#E3EBF3', coral:'#EE6C4D', amber:'#F4A261', ink:'#EDF2F8', mute:'#A9B7CC', line:'#35496E', ok:'#3FBF8F', card:'#243858' };
+// Séries no fundo escuro: pares adjacentes validados (CVD, visão normal, contraste ≥3:1)
+const MC = { timesfm:'#DCE7F2', sarima:CORES.coral, prophet:'#8FB0D9', xgboost:CORES.amber, catboost:'#5B79A3' };
 const ML = { timesfm:'TimesFM', sarima:'SARIMA', prophet:'Prophet', xgboost:'XGBoost', catboost:'CatBoost' };
 
 /* ---------- nós ---------- */
@@ -238,9 +242,9 @@ const NW = 150, NH = 52;
     const done = n.s === 'done';
     g += `<g class="g-node" data-id="${n.id}">
       <rect x="${n.x}" y="${n.y}" width="${NW}" height="${NH}" rx="10"
-        fill="${done ? CORES.slate : '#FFFFFF'}" stroke="${done ? CORES.dark : CORES.mid}"
+        fill="${done ? CORES.slate : CORES.card}" stroke="${done ? CORES.pale : CORES.mid}"
         stroke-width="2" ${done ? '' : 'stroke-dasharray="7 5"'}/>
-      <text x="${n.x+12}" y="${n.y+21}" font-size="12" font-weight="900" fill="${done ? '#FFFFFF' : CORES.slate}">${n.id}</text>
+      <text x="${n.x+12}" y="${n.y+21}" font-size="12" font-weight="900" fill="${done ? '#FFFFFF' : CORES.mid}">${n.id}</text>
       <text x="${n.x+12}" y="${n.y+38}" font-size="10.5" fill="${done ? CORES.pale : CORES.mute}">${n.t.length > 24 ? n.t.slice(0,23)+'…' : n.t}</text>
     </g>`;
   }
@@ -292,7 +296,7 @@ const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
     const y = 55 + i * 44, c = MC[d.m];
     g += `<text x="${x0-12}" y="${y+4}" text-anchor="end" font-size="13" font-weight="700" fill="${CORES.ink}">${ML[d.m]}</text>
       <line x1="${esc(d.lo,min,max,x0,x1)}" y1="${y}" x2="${esc(d.hi,min,max,x0,x1)}" y2="${y}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="${esc(d.p,min,max,x0,x1)}" cy="${y}" r="7" fill="${c}" stroke="#fff" stroke-width="2"/>
+      <circle cx="${esc(d.p,min,max,x0,x1)}" cy="${y}" r="7" fill="${c}" stroke="${CORES.card}" stroke-width="2"/>
       <text x="${esc(d.hi,min,max,x0,x1)+12}" y="${y+4}" font-size="12" fill="${CORES.mute}" font-weight="700">${f2(d.p)} [${f2(d.lo)}, ${f2(d.hi)}]</text>`;
   });
   document.getElementById('ch-ci').innerHTML = g;
@@ -316,7 +320,7 @@ const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
     const y = 50 + i * 42, c = d.zero ? CORES.mid : CORES.coral;
     g += `<text x="${x0-12}" y="${y+4}" text-anchor="end" font-size="12.5" font-weight="700" fill="${CORES.ink}">${d.r}</text>
       <line x1="${esc(d.lo,min,max,x0,x1)}" y1="${y}" x2="${esc(d.hi,min,max,x0,x1)}" y2="${y}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="${esc(d.p,min,max,x0,x1)}" cy="${y}" r="6.5" fill="${c}" stroke="#fff" stroke-width="2"/>
+      <circle cx="${esc(d.p,min,max,x0,x1)}" cy="${y}" r="6.5" fill="${c}" stroke="${CORES.card}" stroke-width="2"/>
       <text x="${esc(d.hi,min,max,x0,x1)+10}" y="${y+4}" font-size="11.5" fill="${CORES.mute}" font-weight="700">${d.zero ? 'zero dentro' : 'exclui zero'}</text>`;
   });
   document.getElementById('ch-dif').innerHTML = g;
@@ -349,7 +353,7 @@ const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
   for (const [m, vs] of Object.entries(serie)) {
     const pts = vs.map((v,i) => [esc(i+1,1,6,x0,x1), esc(v,min,max,y0,y1)]);
     g += `<path d="M${pts.map(p=>p.join(',')).join(' L')}" fill="none" stroke="${MC[m]}" stroke-width="2.6"/>`;
-    pts.forEach(p => g += `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="${MC[m]}" stroke="#fff" stroke-width="1.5"/>`);
+    pts.forEach(p => g += `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="${MC[m]}" stroke="${CORES.card}" stroke-width="1.5"/>`);
     g += `<text x="${pts[5][0]+14}" y="${yfim[m]+4}" font-size="12" font-weight="700" fill="${MC[m]}">${ML[m]}</text>`;
   }
   document.getElementById('ch-hor').innerHTML = g;
@@ -396,9 +400,9 @@ const f1 = v => v.toFixed(1), f2 = v => v.toFixed(2);
     g += `<rect x="${x0}" y="${262+i*0}" width="0" height="0"/>`;
   });
   g += `<g font-size="11.5" fill="${CORES.mute}">
-    <rect x="${x0}" y="258" width="13" height="13" rx="3" fill="${CORES.slate}" opacity="1"/><text x="${x0+19}" y="269">${rot[0]}</text>
-    <rect x="${x0+150}" y="258" width="13" height="13" rx="3" fill="${CORES.slate}" opacity=".62"/><text x="${x0+169}" y="269">${rot[1]}</text>
-    <rect x="${x0+420}" y="258" width="13" height="13" rx="3" fill="${CORES.slate}" opacity=".3"/><text x="${x0+439}" y="269">${rot[2]}</text>
+    <rect x="${x0}" y="258" width="13" height="13" rx="3" fill="${CORES.mid}" opacity="1"/><text x="${x0+19}" y="269">${rot[0]}</text>
+    <rect x="${x0+150}" y="258" width="13" height="13" rx="3" fill="${CORES.mid}" opacity=".62"/><text x="${x0+169}" y="269">${rot[1]}</text>
+    <rect x="${x0+420}" y="258" width="13" height="13" rx="3" fill="${CORES.mid}" opacity=".3"/><text x="${x0+439}" y="269">${rot[2]}</text>
   </g>`;
   document.getElementById('ch-exog').innerHTML = g;
 })();
