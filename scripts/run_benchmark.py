@@ -32,6 +32,12 @@ def parse_args() -> argparse.Namespace:
         help="Janela mínima de treino (60 = 5 anos, >=4 ciclos sazonais efetivos)",
     )
     parser.add_argument(
+        "--max-train-size",
+        type=int,
+        default=0,
+        help="0 = janela expanding; k>0 = janela deslizante com os últimos k meses",
+    )
+    parser.add_argument(
         "--models",
         default="sarima,prophet,timesfm",
         help="Lista separada por vírgula (opções: sarima, prophet, timesfm, xgboost, catboost)",
@@ -159,6 +165,7 @@ def run_backtest(
     model_label: str | None = None,
     exog: pd.DataFrame | None = None,
     exog_policy: str = "climatology",
+    max_train_size: int | None = None,
 ):
     label = model_label or model.name
     y_true_all = []
@@ -166,7 +173,12 @@ def run_backtest(
     rows = []
 
     for window_id, (train, test) in enumerate(
-        rolling_origin_splits(series, horizon=horizon, min_train_size=min_train_size),
+        rolling_origin_splits(
+            series,
+            horizon=horizon,
+            min_train_size=min_train_size,
+            max_train_size=max_train_size,
+        ),
         start=1,
     ):
         try:
@@ -272,8 +284,16 @@ def main() -> None:
     metrics_rows = []
     preds_frames = []
 
+    max_train = args.max_train_size if args.max_train_size > 0 else None
+    if max_train is not None:
+        print(f"[INFO] Janela deslizante: treino limitado aos últimos {max_train} meses")
+
     for model in models:
-        label = f"{model.name}_temp" if exog is not None else model.name
+        label = model.name
+        if exog is not None:
+            label = f"{label}_temp"
+        if max_train is not None:
+            label = f"{label}_slide{max_train}"
         print(f"[INFO] Rodando backtest para: {label}")
         metric_row, pred_df = run_backtest(
             series=series,
@@ -283,6 +303,7 @@ def main() -> None:
             model_label=label,
             exog=exog,
             exog_policy=args.exog_policy,
+            max_train_size=max_train,
         )
         if metric_row is not None:
             metrics_rows.append(metric_row)

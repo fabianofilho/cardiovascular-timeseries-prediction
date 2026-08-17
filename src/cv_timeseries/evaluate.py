@@ -27,11 +27,24 @@ def smape(y_true: np.ndarray, y_pred: np.ndarray, eps: float = 1e-8) -> float:
     return float(np.mean(np.abs(y_true - y_pred) / denom) * 100.0)
 
 
-def rolling_origin_splits(series: pd.Series, horizon: int, min_train_size: int):
+def rolling_origin_splits(
+    series: pd.Series,
+    horizon: int,
+    min_train_size: int,
+    max_train_size: int | None = None,
+):
+    """Janelas de rolling origin.
+
+    max_train_size=None: janela expanding (treino começa no primeiro ponto).
+    max_train_size=k: janela deslizante; o treino é limitado aos últimos k
+    pontos antes da origem. As origens de teste são as mesmas nos dois modos,
+    o que mantém o pareamento entre execuções.
+    """
     n = len(series)
     last_train_end = n - horizon
     for train_end in range(min_train_size, last_train_end + 1):
-        train = series.iloc[:train_end]
+        start = 0 if max_train_size is None else max(0, train_end - max_train_size)
+        train = series.iloc[start:train_end]
         test = series.iloc[train_end : train_end + horizon]
         if len(test) == horizon:
             yield train, test
