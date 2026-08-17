@@ -151,7 +151,7 @@ Benchmark principal:
 PYTHONPATH=src python scripts/run_benchmark.py --input-csv results/series/serie_eventos_sp_sim_real_2010_2023.csv --horizon 6 --min-train-size 60 --models sarima,prophet,timesfm,xgboost,catboost --output-prefix results/benchmark_sim_real_sp_2010_2023
 ```
 
-Incerteza (a ordem dos modelos afeta os IC por horizonte, mantenha a mesma para reproduzir):
+Incerteza:
 
 ```bash
 PYTHONPATH=src python scripts/run_uncertainty.py --predictions-csv results/benchmark_sim_real_sp_2010_2023_predictions.csv --models timesfm,sarima,prophet,xgboost,catboost --seed 20260817 --output-prefix results/uncertainty_2010_2023

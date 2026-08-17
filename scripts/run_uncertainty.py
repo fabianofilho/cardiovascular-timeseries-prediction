@@ -190,7 +190,12 @@ def main() -> int:
     for m in models:
         for h in range(1, n_hor + 1):
             col = sm[m][:, h - 1]
-            boot_h = col[rng.integers(0, n_win, size=(B, n_win))].mean(axis=1)
+            # Reusa o MESMO sorteio de janelas do bloco pooled, em vez de sortear
+            # dentro do loop. Sortear aqui tornava o resultado dependente da ordem
+            # em que os modelos são passados, porque cada iteração consumia estado
+            # do gerador. Reusar `idx` também mantém as janelas pareadas entre
+            # modelos e horizontes, que é o mesmo desenho dos blocos N2 e N3.
+            boot_h = col[idx].mean(axis=1)
             lo, hi = np.percentile(boot_h, [2.5, 97.5])
             linhas.append({
                 "model": m, "horizon": h, "smape": col.mean(),
