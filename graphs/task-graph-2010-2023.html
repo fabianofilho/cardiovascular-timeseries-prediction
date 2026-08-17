@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CPT: o empate sobrevive à série longa</title>
 <style>
-  /* Tema escuro único — identidade visual sobre fundo azul-profundo.
+  /* Tema escuro, identidade visual sobre fundo azul-profundo.
      --bone é o chão da página e --white a superfície dos cards (nomes mantidos,
      valores escuros); --titulo é o tom claro dos títulos. */
   :root {
@@ -87,8 +87,8 @@
 <header>
   <div class="wrap">
     <div class="eyebrow">Cardiovascular Prediction Timeseries · rodada de 17/08/2026 · PR #2 · fork isasaade-23</div>
-    <h1>O empate sobrevive à série longa — <strong>com uma régua duas vezes mais fina</strong></h1>
-    <p class="lead">A rodada de 01/08 mostrou que, com 60 meses, o ranking era ruído e estender a série virou pré-requisito. Esta rodada estendeu: 168 meses reais do SIM (2010–2023), 103 janelas de rolling origin, temperatura como exógena sem vazamento, e os mesmos testes de incerteza. O empate entre Prophet, SARIMA e TimesFM persiste — e agora isso é um resultado, não uma limitação.</p>
+    <h1>O empate persiste com 168 meses, <strong>com intervalos 2,3 vezes menores</strong></h1>
+    <p class="lead">A rodada de 01/08 mediu que, com 60 meses, o ranking estava dentro do ruído, e definiu a extensão da série como pré-requisito. Esta rodada usa 168 meses do SIM (2010 a 2023), 103 janelas de rolling origin, temperatura como exógena sem vazamento e os mesmos testes de incerteza. O empate entre Prophet, SARIMA e TimesFM persiste.</p>
     <div class="coral-tick"></div>
   </div>
 </header>
@@ -97,20 +97,20 @@
 
   <section>
     <div class="sec-label">O resultado principal</div>
-    <h2 class="big">Nenhum vencedor no topo — afirmado com o dobro de precisão</h2>
-    <p class="prosa">Com 618 previsões por modelo (3,3× a rodada anterior), os intervalos caíram de ~2,45 pp para ~1,07 pp de largura. Ainda assim, as três diferenças pareadas do topo contêm zero e nenhum Diebold-Mariano fica abaixo de 0,05. O ranking pontual <strong>inverteu</strong> — o Prophet, último com 60 meses, agora lidera por 0,13 pp. A ordem antiga era ruído mesmo. O que ficou afirmável: boosting sem exógena é pior (p=0,000 em 6/6 horizontes), e a temperatura melhora quem a recebe — pouco, e por ser climatologia.</p>
+    <h2 class="big">Sem vencedor no topo do ranking</h2>
+    <p class="prosa">Cada modelo acumulou 618 previsões, 3,3 vezes o total da rodada anterior, e a largura média do IC95% caiu de 2,45 pp para 1,07 pp. As três diferenças pareadas do topo contêm zero e nenhum teste de Diebold-Mariano fica abaixo de 0,05. O ranking pontual <strong>inverteu</strong>: o Prophet, último com 60 meses, passou a liderar por 0,13 pp. Duas conclusões saem do ruído: boosting sem exógena tem erro maior, com p=0,000 em 6 de 6 horizontes, e a temperatura reduz o erro dos modelos que a recebem em 0,14 a 0,38 pp de sMAPE.</p>
     <div class="numeros">
       <div class="num destaque"><div class="v">0,13 pp</div><div class="k">amplitude entre o melhor e o pior do top-3 (Prophet 4,70 · SARIMA 4,80 · TimesFM 4,83)</div></div>
-      <div class="num destaque"><div class="v">1,07 pp</div><div class="k">largura média do IC95% no top-3 — era 2,45 pp com 60 meses</div></div>
-      <div class="num"><div class="v">1,2–1,7 pp</div><div class="k">o que 9 anos extras de treino compram, nas mesmas datas de teste da rodada anterior</div></div>
-      <div class="num"><div class="v">0,03 pp</div><div class="k">quanto a temperatura futura real ganha sobre a climatologia — o sinal é a sazonalidade</div></div>
+      <div class="num destaque"><div class="v">1,07 pp</div><div class="k">largura média do IC95% no top-3. Com 60 meses: 2,45 pp</div></div>
+      <div class="num"><div class="v">1,2–1,7 pp</div><div class="k">redução de sMAPE ao ampliar o treino de 24–54 para 132–168 meses, nas mesmas datas de teste</div></div>
+      <div class="num"><div class="v">0,03 pp</div><div class="k">ganho do cenário com temperatura futura observada sobre a climatologia</div></div>
     </div>
   </section>
 
   <section>
     <div class="sec-label">O grafo desta rodada</div>
     <h2 class="big">Nó a nó, do dado bruto ao Linear</h2>
-    <p class="prosa">Clique em um nó para ver a métrica de sucesso e o resultado medido. Arestas cheias são dependência; tracejadas são efeitos colaterais auditados — coral degrada uma métrica em tensão, verde melhora.</p>
+    <p class="prosa">Clique em um nó para ver a métrica de sucesso e o resultado medido. Arestas contínuas indicam dependência. Arestas tracejadas indicam efeitos colaterais auditados: coral tensiona uma métrica, verde melhora.</p>
     <div class="card">
       <svg id="grafo" class="chart" viewBox="0 0 940 360" role="img" aria-label="Grafo de dependências da rodada"></svg>
       <div class="legenda">
@@ -135,20 +135,20 @@
     <h2 class="big">Os números, com a incerteza junto</h2>
 
     <div class="card">
-      <div class="chart-title">sMAPE com IC95% — bootstrap de 10.000 réplicas por janela inteira</div>
+      <div class="chart-title">sMAPE com IC95%: bootstrap de 10.000 réplicas por janela inteira</div>
       <div class="chart-sub">103 janelas × 6 horizontes por modelo, série 2010–2023, min_train=60. A linha pontilhada marca o melhor sMAPE da rodada de 60 meses (7,30).</div>
       <svg id="ch-ci" class="chart" viewBox="0 0 900 300" role="img" aria-label="sMAPE com intervalo de confiança por modelo"></svg>
     </div>
 
     <div class="card">
-      <div class="chart-title">Diferenças pareadas — o zero está dentro?</div>
-      <div class="chart-sub">Bootstrap pareado sobre as mesmas janelas. Topo: os três pares do top-3, todos com zero dentro. Base: cada modelo contra si mesmo com temperatura (climatologia) — os três ICs excluem zero, ganho real porém pequeno.</div>
+      <div class="chart-title">Diferenças pareadas: o zero está dentro do intervalo?</div>
+      <div class="chart-sub">Bootstrap pareado sobre as mesmas janelas. Topo: os três pares do top-3, todos com zero dentro. Base: cada modelo contra si mesmo com temperatura por climatologia; os três ICs excluem zero, com ganho de 0,14 a 0,38 pp.</div>
       <svg id="ch-dif" class="chart" viewBox="0 0 900 330" role="img" aria-label="Diferenças pareadas com IC95%"></svg>
     </div>
 
     <div class="card">
       <div class="chart-title">sMAPE por horizonte de previsão</div>
-      <div class="chart-sub">O topo continua trocando de líder por horizonte (SARIMA h1, Prophet h2–h3 e h5–h6, TimesFM nunca) — mais um sinal de empate. Boosting fica acima em todos.</div>
+      <div class="chart-sub">O topo troca de líder por horizonte: SARIMA em h1, Prophet em h2, h3, h5 e h6, TimesFM em nenhum. Boosting fica acima em todos os horizontes.</div>
       <svg id="ch-hor" class="chart" viewBox="0 0 900 320" role="img" aria-label="sMAPE por horizonte"></svg>
     </div>
 
@@ -168,10 +168,10 @@
   <section>
     <div class="sec-label">Decisão humana</div>
     <h2 class="big">Achados que exigem decisão</h2>
-    <h3>A contribuição do paper agora tem forma final possível</h3>
-    <p class="prosa">Com 60 e com 168 meses, medido com IC, o empate do topo persiste e o ranking pontual até inverteu entre rodadas. A redação defensável para README e <code>paper.md</code> (LAB-64) é: <em>"com incerteza medida, foundation model zero-shot e clássicos empatam da série curta à longa; o baseline leve basta"</em>. Os dados desta rodada sustentam essa frase com 2× mais precisão que a anterior.</p>
+    <h3>Redação de README e paper.md (LAB-64)</h3>
+    <p class="prosa">Com 60 e com 168 meses, medido com IC, o empate do topo persiste e o ranking pontual inverteu entre rodadas. A redação que os dados sustentam para README e <code>paper.md</code> (LAB-64) é: <em>"com incerteza medida, foundation model zero-shot e modelos clássicos empatam nas duas extensões de série; o modelo de menor custo computacional atende ao uso"</em>. Esta rodada sustenta a frase com intervalos 2,3 vezes menores que os da anterior.</p>
     <h3>Versionamento da série (LAB-62)</h3>
-    <p class="prosa">A série agregada 2010–2023 está versionada em <code>results/series/</code> (168 linhas <code>date,value</code>, sem microdado) — benchmark reproduzível de clone limpo. Mover para <code>data/processed/</code> com exceção no <code>.gitignore</code> é decisão do dono do repositório.</p>
+    <p class="prosa">A série agregada 2010–2023 está versionada em <code>results/series/</code>, com 168 linhas <code>date,value</code> e sem microdado. O benchmark passa a ser reproduzível a partir de um clone do repositório. Mover a série para <code>data/processed/</code> com exceção no <code>.gitignore</code> é decisão do dono do repositório.</p>
     <h3>Figuras do paper</h3>
     <p class="prosa">As figs 1 e 7 antigas misturam 24 meses sintetizados (2019–2020) rotulados como observação. As substitutas <code>fig*_2010_2023.png</code> usam só dado observado, já na identidade visual da rodada. Adotar é decisão de LAB-64.</p>
   </section>
@@ -180,9 +180,9 @@
     <div class="sec-label">Pendências</div>
     <h2 class="big">O que ficou de fora, e por quê</h2>
     <ul class="lista">
-      <li><strong>Fine-tuning do TimesFM (Prioridade 3):</strong> adiado — sem GPU ≥8GB nesta máquina, um fine-tune por janela (necessário para não vazar futuro) é inviável em CPU. O pré-requisito da série longa agora está cumprido.</li>
-      <li><strong>Política <code>lag12</code>:</strong> implementada e disponível por flag, não rodada — a climatologia já respondeu a pergunta principal e o teto mostrou que não há mais o que extrair da temperatura mensal.</li>
-      <li><strong>Post no Linear (N9):</strong> aguardando aprovação humana antes de publicar — nada existente será editado.</li>
+      <li><strong>Fine-tuning do TimesFM (Prioridade 3):</strong> adiado. Sem GPU com 8GB ou mais nesta máquina, um fine-tune por janela, condição para não usar dados futuros, não termina em tempo de rodada em CPU. O pré-requisito de série com 168 meses está cumprido.</li>
+      <li><strong>Política <code>lag12</code>:</strong> implementada e disponível por flag, não executada. A climatologia respondeu a pergunta desta rodada e o cenário com temperatura futura observada mostrou ganho residual de 0,03 pp.</li>
+      <li><strong>Post no Linear (N9):</strong> aguardando aprovação antes de publicar. Nenhum conteúdo existente será editado.</li>
     </ul>
   </section>
 
@@ -207,7 +207,7 @@ const NOS = [
  {id:'N1', t:'série SIM 2010–2023', m:'168 meses contínuos, validador 9/9, reconciliação com a rodada anterior ≤1%', r:'168 meses sem gap, 9/9 checks, divergência 0,000% nos 36 meses comuns. Série agregada versionada em results/series/ (sem microdado).', s:'done', x:60, y:60},
  {id:'N2', t:'infra anti-vazamento', m:'predictions.csv com window/horizon/train_end; clamp assimétrico removido; run_uncertainty genérico reproduzindo a rodada de 01/08', r:'Reprodução exata dos números de 01/08 (TimesFM 7,30 [6,38, 8,34] etc.). Clamp removido; warning diagnóstico disparou 0 vezes nesta série.', s:'done', x:60, y:180},
  {id:'N3', t:'temperatura INMET A701', m:'tmin mensal 2010–2023 sem buraco, gates de qualidade (≥18h/dia, ≥20 dias/mês)', r:'168 meses só da A701, zero interpolação, zero fallback. tmin médio 16,8°C [11,0–21,2].', s:'done', x:60, y:300},
- {id:'N4', t:'benchmark baseline 5 modelos', m:'103 janelas × 6 = 618 previsões, n idêntico entre modelos', r:'Prophet 4,70 · SARIMA 4,80 · TimesFM 4,83 · CatBoost 6,59 · XGBoost 6,94. Zero falhas de janela, pareamento perfeito.', s:'done', x:300, y:120},
+ {id:'N4', t:'benchmark baseline 5 modelos', m:'103 janelas × 6 = 618 previsões, n idêntico entre modelos', r:'Prophet 4,70 · SARIMA 4,80 · TimesFM 4,83 · CatBoost 6,59 · XGBoost 6,94. Zero falhas de janela; n_predictions igual entre os 5 modelos.', s:'done', x:300, y:120},
  {id:'N5', t:'benchmark com temperatura', m:'políticas climatology (sem vazamento) e observed (teto rotulado), mesmas janelas', r:'sarima_temp 4,66 · catboost_temp 6,33 · xgboost_temp 6,55 (climatologia). Teto ganha só ~0,03 pp sobre a climatologia.', s:'done', x:300, y:250},
  {id:'N6', t:'incerteza e critérios', m:'bootstrap B=10.000 por janela + DM por horizonte, critérios declarados antes do resultado', r:'Top-3: 6/6 ICs pareados com zero dentro, DM ns. Boosting pior com p=0,000. Temperatura: melhoria sugestiva (IC exclui zero, DM só em 1–2/6 horizontes).', s:'done', x:540, y:180},
  {id:'N7', t:'figuras e docs', m:'figuras 100% dado observado, docs no padrão do repo, recálculo independente batendo', r:'6 figuras na identidade visual; 2 docs em docs/experiments/; recálculo de MAE/RMSE/sMAPE bateu nas 11 células.', s:'done', x:740, y:60},

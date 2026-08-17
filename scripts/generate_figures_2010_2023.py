@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Figuras da rodada 2010-2023 — dados 100% observados, sem síntese.
+"""Figuras da rodada 2010-2023 - dados 100% observados, sem síntese.
 
 Substitui, para a série estendida, o generate_paper_figures.py (cujas figs 1 e 7
 misturavam 24 meses sintéticos de 2019-2020 com dados reais). Aqui toda observação
@@ -51,7 +51,7 @@ plt.rcParams.update({
     "axes.titlepad":     10,
 })
 
-# Paleta por entidade — identidade visual Isabela Venancio (azul-ardósia + coral).
+# Paleta por entidade - identidade visual Isabela Venancio (azul-ardósia + coral).
 # Cores fixas por modelo; variantes _temp herdam a cor base; âmbar nunca fica
 # adjacente ao coral (par validado para visão normal e daltonismo).
 C = {
@@ -123,8 +123,8 @@ def fig1_time_series(obs, args):
     ax.set_xlabel("Month")
     ax.set_ylabel("Cardiovascular deaths / month")
     ax.set_title(
-        f"Monthly Cardiovascular Mortality — São Paulo State, Brazil "
-        f"({obs['date'].min().strftime('%b %Y')} – {obs['date'].max().strftime('%b %Y')}) — observed SIM data only",
+        f"Monthly Cardiovascular Mortality - São Paulo State, Brazil "
+        f"({obs['date'].min().strftime('%b %Y')} – {obs['date'].max().strftime('%b %Y')}) - observed SIM data only",
         fontweight="bold")
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     ax.set_xlim(obs["date"].min(), obs["date"].max())
@@ -173,7 +173,7 @@ def fig2_forecast_comparison(preds, metrics, args):
     n_win = int(preds["window"].max())
     fig.suptitle(
         "Observed vs Predicted Cardiovascular Mortality\n"
-        f"Rolling Origin Backtesting — São Paulo State ({n_win} windows, 2010–2023 series)",
+        f"Rolling Origin Backtesting - São Paulo State ({n_win} windows, 2010–2023 series)",
         fontweight="bold", y=1.005)
     fig.tight_layout()
     path = IMG / f"fig2_forecast_comparison{args.suffix}.png"
@@ -183,7 +183,7 @@ def fig2_forecast_comparison(preds, metrics, args):
 
 
 def fig3_metrics_ci(metrics, unc, preds, args):
-    """sMAPE com IC95% de bootstrap por janela — a barra sem IC induziu o claim antigo."""
+    """sMAPE com IC95% de bootstrap por janela - a barra sem IC induziu o claim antigo."""
     sub = unc[unc["metric"] == "smape"].copy() if unc is not None else None
     models = [m for m in LABELS if m in set(metrics["model"])]
 
@@ -207,7 +207,7 @@ def fig3_metrics_ci(metrics, unc, preds, args):
     ax.set_ylabel("sMAPE (%)")
     n_win = int(preds["window"].max())
     ax.set_title(
-        "sMAPE with 95% CI — bootstrap over whole rolling-origin windows\n"
+        "sMAPE with 95% CI - bootstrap over whole rolling-origin windows\n"
         f"São Paulo State, 2010–2023 series ({n_win} windows × 6 horizons)",
         fontweight="bold")
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.1f}%"))
@@ -236,7 +236,7 @@ def fig4_smape_by_horizon(preds, args):
     n_h = int(preds["horizon"].max())
     ax.set_xlabel("Forecast Horizon (months ahead)")
     ax.set_ylabel("sMAPE (%)")
-    ax.set_title("Forecast Accuracy by Horizon — São Paulo State (2010–2023 series)",
+    ax.set_title("Forecast Accuracy by Horizon - São Paulo State (2010–2023 series)",
                  fontweight="bold")
     ax.set_xticks(range(1, n_h + 1))
     ax.set_xticklabels([f"h={i}" for i in range(1, n_h + 1)])
@@ -283,7 +283,7 @@ def fig7_seasonal_profile(obs, args):
     y0, y1 = obs["date"].dt.year.min(), obs["date"].dt.year.max()
     ax.set_title(
         f"Average Monthly Cardiovascular Mortality Profile\n"
-        f"São Paulo State, Brazil ({y0}–{y1}, observed SIM data) — error bars = ±1 SD, shading = min–max",
+        f"São Paulo State, Brazil ({y0}–{y1}, observed SIM data) - error bars = ±1 SD, shading = min–max",
         fontweight="bold")
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
 
@@ -346,7 +346,7 @@ def main():
     metrics = pd.read_csv(BASE / args.metrics_csv)
     preds = pd.read_csv(BASE / args.predictions_csv, parse_dates=["date"])
     if "horizon" not in preds.columns:
-        raise SystemExit("predictions.csv sem coluna horizon — rode o run_benchmark.py atual.")
+        raise SystemExit("predictions.csv sem coluna horizon - rode o run_benchmark.py atual.")
     unc = None
     unc_path = BASE / args.uncertainty_csv
     if unc_path.exists():
