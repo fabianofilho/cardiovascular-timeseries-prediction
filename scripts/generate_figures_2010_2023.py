@@ -92,7 +92,7 @@ def fig1_time_series(obs, args):
                    alpha=0.12, color="#1565C0", zorder=0)
     ax.axvspan(pd.Timestamp("2020-03-01"), pd.Timestamp("2021-06-30"),
                alpha=0.07, color="red", zorder=0)
-    ax.text(pd.Timestamp("2020-09-01"), obs["value"].max() * 0.997, "COVID-19",
+    ax.text(pd.Timestamp("2020-08-01"), obs["value"].max() * 0.955, "COVID-19",
             color="#C62828", fontsize=9, ha="center", va="top", style="italic")
 
     start = pd.Timestamp(args.backtest_start)
@@ -107,11 +107,11 @@ def fig1_time_series(obs, args):
     idx_max, idx_min = obs["value"].idxmax(), obs["value"].idxmin()
     ax.annotate(f"Max: {obs.loc[idx_max,'value']:,.0f}\n{obs.loc[idx_max,'date'].strftime('%b %Y')}",
                 xy=(obs.loc[idx_max, "date"], obs.loc[idx_max, "value"]),
-                xytext=(18, 8), textcoords="offset points", fontsize=8.5, color="#1565C0",
+                xytext=(-78, -14), textcoords="offset points", fontsize=8.5, color="#1565C0",
                 arrowprops=dict(arrowstyle="->", color="#1565C0", lw=0.9))
     ax.annotate(f"Min: {obs.loc[idx_min,'value']:,.0f}\n{obs.loc[idx_min,'date'].strftime('%b %Y')}",
                 xy=(obs.loc[idx_min, "date"], obs.loc[idx_min, "value"]),
-                xytext=(20, -36), textcoords="offset points", fontsize=8.5, color="#C62828",
+                xytext=(14, 22), textcoords="offset points", fontsize=8.5, color="#C62828",
                 arrowprops=dict(arrowstyle="->", color="#C62828", lw=0.9))
 
     winter_patch = mpatches.Patch(color="#1565C0", alpha=0.25, label="Winter peak (Jun–Jul)")
@@ -328,7 +328,7 @@ def fig8_exog_effect(metrics, exog_clim, exog_obs, args):
     ax.set_title("Effect of Temperature Exogenous Variable by Policy\n"
                  "Same rolling-origin windows; opacity encodes scenario",
                  fontweight="bold")
-    ax.legend(framealpha=0.9)
+    ax.legend(loc="upper center", framealpha=0.9, fontsize=8.5)
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.1f}%"))
 
     fig.tight_layout()
