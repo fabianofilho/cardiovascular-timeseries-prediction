@@ -166,6 +166,42 @@
   </section>
 
   <section>
+    <div class="sec-label">Comparativo entre rodadas</div>
+    <h2 class="big">Esta rodada contra "O ranking do benchmark está dentro do ruído"</h2>
+    <p class="prosa">O artefato da rodada de 01/08, <a href="https://claude.ai/code/artifact/31cb4718-af40-4ce5-b488-0aec3d4bc276" style="color: var(--slate-mid);">"CPT: o ranking do benchmark está dentro do ruído"</a>, mediu 60 meses de série e concluiu empate sem poder de detecção. Esta rodada mediu 168 meses e um experimento de sensibilidade que liga as duas: a janela deslizante de 60 meses reexecuta o regime de histórico curto da rodada anterior sobre as mesmas 103 origens de teste da atual.</p>
+
+    <div class="card" style="border-top: 4px solid var(--coral);">
+      <div class="chart-title">Rodada a rodada</div>
+      <div class="tabela-rolo"><table>
+        <thead><tr><th></th><th>rodada 01/08 (60 meses)</th><th>esta rodada (168 meses)</th></tr></thead>
+        <tbody>
+          <tr><td class="id">janelas × horizontes</td><td>31 × 6 = 186 previsões</td><td>103 × 6 = 618 previsões</td></tr>
+          <tr><td class="id">menor sMAPE</td><td>TimesFM 7,30</td><td>Prophet 4,70</td></tr>
+          <tr><td class="id">largura média do IC95% (top-3)</td><td>2,45 pp</td><td>1,07 pp</td></tr>
+          <tr><td class="id">amplitude do top-3</td><td>0,38 pp</td><td>0,13 pp</td></tr>
+          <tr><td class="id">diferenças pareadas do top-3</td><td>3 de 3 contêm zero</td><td>3 de 3 contêm zero</td></tr>
+          <tr><td class="id">veredito</td><td>empate, sem poder de detecção</td><td>empate, com o dobro de precisão</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="chart-title" style="margin-top: 22px;">A ponte: sensibilidade ao tamanho da janela de treino</div>
+      <div class="chart-sub">Expanding (60 a 162 meses de treino) contra deslizante de 60 meses, nas mesmas 103 origens. Bootstrap pareado B=10.000 e Diebold-Mariano, critérios pré-declarados. Diferença negativa: expanding melhor.</div>
+      <div class="tabela-rolo"><table>
+        <thead><tr><th>modelo</th><th>expanding</th><th>deslizante 60m</th><th>diferença</th><th>p_bootstrap</th><th>veredito</th></tr></thead>
+        <tbody>
+          <tr><td class="id">SARIMA</td><td class="num-cell">4,80</td><td class="num-cell">5,46</td><td class="num-cell">−0,66 pp</td><td class="num-cell">0,000</td><td>histórico ajuda, confirmado (DM em h2–h4)</td></tr>
+          <tr><td class="id">Prophet</td><td class="num-cell">4,70</td><td class="num-cell">5,39</td><td class="num-cell">−0,69 pp</td><td class="num-cell">0,005</td><td>histórico ajuda, sugestivo</td></tr>
+          <tr><td class="id">TimesFM</td><td class="num-cell">4,83</td><td class="num-cell">4,74</td><td class="num-cell">+0,09 pp</td><td class="num-cell">0,424</td><td>indiferente ao histórico</td></tr>
+          <tr><td class="id">XGBoost</td><td class="num-cell">6,94</td><td class="num-cell">6,87</td><td class="num-cell">+0,07 pp</td><td class="num-cell">0,635</td><td>indiferente</td></tr>
+          <tr><td class="id">CatBoost</td><td class="num-cell">6,59</td><td class="num-cell">6,64</td><td class="num-cell">−0,05 pp</td><td class="num-cell">0,661</td><td>indiferente</td></tr>
+        </tbody>
+      </table></div>
+
+      <p class="prosa" style="margin-top: 16px; margin-bottom: 4px;">O que a ponte reconcilia: no regime de 60 meses, o TimesFM (4,74) fica à frente de SARIMA (5,46) e Prophet (5,39), com DM abaixo de 0,05 contra o SARIMA em h3–h5. A liderança numérica do TimesFM na rodada de 01/08, indistinguível do ruído lá, é consistente com esse regime de histórico curto. Com histórico longo, os clássicos alcançam e o empate se restabelece. A caracterização que sai das duas rodadas: <strong>o foundation model tem vantagem quando o histórico local é curto; com série longa, o modelo de menor custo computacional atende ao uso</strong>. Detalhes em <code>docs/experiments/benchmark_window_sensitivity.md</code>.</p>
+    </div>
+  </section>
+
+  <section>
     <div class="sec-label">Decisão humana</div>
     <h2 class="big">Achados que exigem decisão</h2>
     <h3>Redação de README e paper.md (LAB-64)</h3>
