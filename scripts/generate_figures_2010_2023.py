@@ -51,14 +51,16 @@ plt.rcParams.update({
     "axes.titlepad":     10,
 })
 
-# Paleta por entidade (cores fixas por modelo; variantes _temp herdam a cor base)
+# Paleta por entidade — identidade visual Isabela Venancio (azul-ardósia + coral).
+# Cores fixas por modelo; variantes _temp herdam a cor base; âmbar nunca fica
+# adjacente ao coral (par validado para visão normal e daltonismo).
 C = {
-    "timesfm":  "#1565C0",
-    "sarima":   "#E65100",
-    "prophet":  "#2E7D32",
-    "xgboost":  "#6A1B9A",
-    "catboost": "#00838F",
-    "obs":      "#212121",
+    "timesfm":  "#1F3050",   # azul-profundo
+    "sarima":   "#EE6C4D",   # coral
+    "prophet":  "#6B87AD",   # azul-médio
+    "xgboost":  "#F4A261",   # âmbar
+    "catboost": "#3D5A80",   # azul-ardósia
+    "obs":      "#2B2B2B",   # grafite
 }
 LABELS = {
     "timesfm": "TimesFM", "sarima": "SARIMA", "prophet": "Prophet",
@@ -89,11 +91,11 @@ def fig1_time_series(obs, args):
 
     for year in range(obs["date"].dt.year.min(), obs["date"].dt.year.max() + 1):
         ax.axvspan(pd.Timestamp(f"{year}-06-01"), pd.Timestamp(f"{year}-07-31"),
-                   alpha=0.12, color="#1565C0", zorder=0)
+                   alpha=0.12, color="#3D5A80", zorder=0)
     ax.axvspan(pd.Timestamp("2020-03-01"), pd.Timestamp("2021-06-30"),
-               alpha=0.07, color="red", zorder=0)
+               alpha=0.10, color="#EE6C4D", zorder=0)
     ax.text(pd.Timestamp("2020-08-01"), obs["value"].max() * 0.955, "COVID-19",
-            color="#C62828", fontsize=9, ha="center", va="top", style="italic")
+            color="#EE6C4D", fontsize=9, ha="center", va="top", style="italic")
 
     start = pd.Timestamp(args.backtest_start)
     ax.axvline(start, color="gray", linestyle=":", linewidth=1.5)
@@ -107,15 +109,15 @@ def fig1_time_series(obs, args):
     idx_max, idx_min = obs["value"].idxmax(), obs["value"].idxmin()
     ax.annotate(f"Max: {obs.loc[idx_max,'value']:,.0f}\n{obs.loc[idx_max,'date'].strftime('%b %Y')}",
                 xy=(obs.loc[idx_max, "date"], obs.loc[idx_max, "value"]),
-                xytext=(-78, -14), textcoords="offset points", fontsize=8.5, color="#1565C0",
-                arrowprops=dict(arrowstyle="->", color="#1565C0", lw=0.9))
+                xytext=(-78, -14), textcoords="offset points", fontsize=8.5, color="#3D5A80",
+                arrowprops=dict(arrowstyle="->", color="#3D5A80", lw=0.9))
     ax.annotate(f"Min: {obs.loc[idx_min,'value']:,.0f}\n{obs.loc[idx_min,'date'].strftime('%b %Y')}",
                 xy=(obs.loc[idx_min, "date"], obs.loc[idx_min, "value"]),
-                xytext=(14, 22), textcoords="offset points", fontsize=8.5, color="#C62828",
-                arrowprops=dict(arrowstyle="->", color="#C62828", lw=0.9))
+                xytext=(14, 22), textcoords="offset points", fontsize=8.5, color="#EE6C4D",
+                arrowprops=dict(arrowstyle="->", color="#EE6C4D", lw=0.9))
 
-    winter_patch = mpatches.Patch(color="#1565C0", alpha=0.25, label="Winter peak (Jun–Jul)")
-    covid_patch = mpatches.Patch(color="red", alpha=0.15, label="COVID-19 period")
+    winter_patch = mpatches.Patch(color="#3D5A80", alpha=0.25, label="Winter peak (Jun–Jul)")
+    covid_patch = mpatches.Patch(color="#EE6C4D", alpha=0.25, label="COVID-19 period")
     ax.legend(handles=[winter_patch, covid_patch], loc="upper left", framealpha=0.9)
 
     ax.set_xlabel("Month")
@@ -257,19 +259,19 @@ def fig7_seasonal_profile(obs, args):
 
     def bar_color(m):
         if m in (6, 7):
-            return "#1565C0"
+            return "#3D5A80"
         if m in (1, 2):
-            return "#C62828"
-        return "#78909C"
+            return "#EE6C4D"
+        return "#6B7280"
 
     fig, ax = plt.subplots(figsize=(11, 4.5))
     bars = ax.bar(monthly["month"], monthly["mean"],
                   color=[bar_color(m) for m in monthly["month"]],
                   alpha=0.85, width=0.72, edgecolor="white", linewidth=0.9)
     ax.errorbar(monthly["month"], monthly["mean"], yerr=monthly["std"], fmt="none",
-                ecolor="#37474F", elinewidth=1.4, capsize=5, capthick=1.4, alpha=0.7)
+                ecolor="#2B2B2B", elinewidth=1.4, capsize=5, capthick=1.4, alpha=0.7)
     ax.fill_between(monthly["month"], monthly["min"], monthly["max"],
-                    alpha=0.08, color="#37474F", step="mid")
+                    alpha=0.08, color="#2B2B2B", step="mid")
     for bar, mean_v in zip(bars, monthly["mean"]):
         ax.text(bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + monthly["std"].max() * 0.05,
@@ -285,9 +287,9 @@ def fig7_seasonal_profile(obs, args):
         fontweight="bold")
     ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
 
-    handles = [mpatches.Patch(color="#1565C0", alpha=0.85, label="Winter peak (Jun–Jul)"),
-               mpatches.Patch(color="#C62828", alpha=0.85, label="Summer trough (Jan–Feb)"),
-               mpatches.Patch(color="#78909C", alpha=0.85, label="Other months")]
+    handles = [mpatches.Patch(color="#3D5A80", alpha=0.85, label="Winter peak (Jun–Jul)"),
+               mpatches.Patch(color="#EE6C4D", alpha=0.85, label="Summer trough (Jan–Feb)"),
+               mpatches.Patch(color="#6B7280", alpha=0.85, label="Other months")]
     ax.legend(handles=handles, loc="upper right", framealpha=0.9)
 
     fig.tight_layout()
