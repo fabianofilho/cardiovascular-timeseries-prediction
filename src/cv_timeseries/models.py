@@ -127,8 +127,10 @@ class _SkforecastRecursiveForecaster(Forecaster):
         # Não usar mais lags do que o histórico permite.
         usable_lags = max(1, min(self.lags, len(y) - 1))
 
+        # Posicional para compatibilidade: o 1º argumento chama-se `regressor`
+        # até skforecast 0.16 e `estimator` a partir de versões mais novas.
         forecaster = ForecasterRecursive(
-            regressor=self._build_regressor(),
+            self._build_regressor(),
             lags=usable_lags,
         )
         forecaster.fit(y=y, exog=exog_train)
