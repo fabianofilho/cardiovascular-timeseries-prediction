@@ -150,8 +150,11 @@ em escala, com centenas de series curtas em vez de uma longa.
       `scripts/run_benchmark.py` para `src/cv_timeseries/exog.py` para o teste rodar sem
       statsmodels, prophet nem timesfm. Suite validada por mutacao: quebrar a truncagem da
       climatologia ou remover a guarda do lag12 faz a suite falhar
-- [ ] Estender a suite: `rolling_origin_splits` (contagem de janelas, modo deslizante) e
-      `smape`/`mae`/`rmse` contra valores calculados a mao. Hoje so a exogena tem teste
+- [x] Testes de `rolling_origin_splits` e das metricas: 28 testes em `tests/test_evaluate.py`,
+      incluindo a invariante de que expanding e deslizante produzem AS MESMAS origens, que e
+      pre-requisito do experimento de sensibilidade de janela. Suite total: 46 testes
+- [ ] Estender a suite para `load_and_aggregate_series` (`data.py`) e para o bootstrap por
+      bloco de `run_uncertainty.py`, que hoje so tem conferencia manual
 - [ ] `scripts/plot_stratified_results.py` para figuras por estrato
 - [x] Decidir o destino das figuras antigas `fig1_time_series.png` e `fig7_seasonal_profile.png`,
       que contem 24 meses sintetizados: movidas para `images/legacy/`, com README explicando o
