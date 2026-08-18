@@ -93,7 +93,11 @@ def build_models(model_names: list[str]):
     models = []
 
     if "sarima" in selected:
-        models.append(SarimaForecaster())
+        # try/except como nos outros quatro: dependencia ausente vira aviso, nao queda.
+        try:
+            models.append(SarimaForecaster())
+        except Exception as exc:
+            print(f"[WARN] SARIMA indisponível: {exc}")
 
     if "prophet" in selected:
         try:

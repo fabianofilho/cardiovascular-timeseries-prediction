@@ -134,6 +134,9 @@ em escala, com centenas de series curtas em vez de uma longa.
 
 ## Infraestrutura e qualidade
 
+- [x] Suite de testes cobrindo os cinco modulos de `src/cv_timeseries`: 117 testes,
+      `make test`. Validada por mutacao modulo a modulo, nao so por passar
+
 - [x] XGBoost e CatBoost em `requirements-optional.txt`
 - [x] Guarda em `lag12` para horizonte maior que 12 (falha explicita em vez de KeyError cru)
 - [x] `run_uncertainty.py` deixou de depender da ordem dos modelos nos IC por horizonte

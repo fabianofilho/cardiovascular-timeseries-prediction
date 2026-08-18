@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import pandas as pd
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 
 class Forecaster(ABC):
@@ -28,6 +27,13 @@ class SarimaForecaster(Forecaster):
     supports_exog = True
 
     def __init__(self, order=(1, 1, 1), seasonal_order=(0, 1, 1, 12)):
+        # Import preguicoso, como nos outros cinco modelos deste arquivo. Ansioso no
+        # topo, ele derrubava o modulo inteiro quando statsmodels faltava, e com ele
+        # qualquer execucao, mesmo uma que so pedisse timesfm. Aqui a falta so atinge
+        # quem instancia o SARIMA, e o build_models consegue avisar e seguir.
+        from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+        self._sarimax_cls = SARIMAX
         self.order = order
         self.seasonal_order = seasonal_order
 
@@ -38,7 +44,7 @@ class SarimaForecaster(Forecaster):
         exog_train: pd.DataFrame | None = None,
         exog_future: pd.DataFrame | None = None,
     ) -> np.ndarray:
-        model = SARIMAX(
+        model = self._sarimax_cls(
             train,
             exog=exog_train,
             order=self.order,
