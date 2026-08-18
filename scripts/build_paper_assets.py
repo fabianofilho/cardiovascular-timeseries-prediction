@@ -118,16 +118,66 @@ def escreve_tabela(nome, corpo):
     print(f"  tabela  paper/tables/{nome}.tex")
 
 
+GERADAS: list[str] = []
+
+
 def escreve_figura(nome, corpo):
     """Grava um tikzpicture que o manuscrito chama por \\input{figures/<nome>}."""
     FIG.mkdir(parents=True, exist_ok=True)
     (FIG / f"{nome}.tex").write_text(AVISO + corpo, encoding="utf-8")
+    GERADAS.append(nome)
     print(f"  figura  paper/figures/{nome}.tex")
 
 
 def defs_cor():
     """Paleta para o preambulo, definida uma vez em vez de por figura."""
     return "\n".join(f"\\definecolor{{c{k}}}{{HTML}}{{{v}}}" for k, v in COR.items())
+
+
+def rasteriza_figuras(dpi=200):
+    """Compila cada figura isolada e salva o PNG irmao.
+
+    O PNG nao entra no documento: ele existe para ser aberto e conferido, e para ser
+    o que se entrega a quem pediu "as figuras", porque PNG abre em qualquer lugar e
+    .tex de pgfplots so vira imagem depois de compilar.
+
+    Enquanto as figuras eram matplotlib isto saia de graca no savefig. Com figura em
+    codigo, o unico jeito de ter o PNG e compilar e rasterizar, entao o passo tem que
+    ser explicito: sem ele o gerador para de emitir PNG e ninguem percebe.
+    """
+    import shutil
+    import subprocess
+    import tempfile
+
+    if shutil.which("tectonic") is None:
+        print("  [AVISO] tectonic ausente: PNG das figuras nao gerado")
+        return
+    try:
+        import pymupdf
+    except ImportError:
+        print("  [AVISO] pymupdf ausente: PNG das figuras nao gerado")
+        return
+
+    preambulo = ("\\documentclass[11pt,border=2pt]{standalone}\n"
+                 "\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n"
+                 "\\usepackage{pgfplots}\n\\pgfplotsset{compat=1.18}\n"
+                 "\\usepackage{xcolor}\n" + defs_cor() + "\n\\begin{document}\n")
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        for nome in GERADAS:
+            corpo = (FIG / f"{nome}.tex").read_text(encoding="utf-8")
+            (td / f"{nome}.tex").write_text(preambulo + corpo + "\n\\end{document}\n",
+                                            encoding="utf-8")
+            r = subprocess.run(["tectonic", "-X", "compile", f"{nome}.tex"],
+                               cwd=td, capture_output=True, text=True)
+            if r.returncode != 0 or not (td / f"{nome}.pdf").exists():
+                print(f"  [AVISO] {nome}: falhou ao compilar isolada, sem PNG")
+                continue
+            doc = pymupdf.open(td / f"{nome}.pdf")
+            doc[0].get_pixmap(dpi=dpi).save(FIG / f"{nome}.png")
+            doc.close()
+            kb = (FIG / f"{nome}.png").stat().st_size / 1024
+            print(f"  png     paper/figures/{nome}.png ({kb:.0f} KB, {dpi} dpi)")
 
 
 # ------------------------------------------------------------------ main
@@ -678,6 +728,10 @@ excluded from this comparison rather than being given an input they would ignore
     (PAPER / "verified_numbers.json").write_text(
         json.dumps(V, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"  json    paper/verified_numbers.json ({len(json.dumps(V))} bytes)")
+
+    # PNG irmao de cada figura: nao entra no documento, serve para conferir com o Read
+    # e e a forma em que a figura se entrega a quem pede "as figuras".
+    rasteriza_figuras()
     print("\nConferencia rapida:")
     print(f"  top-3 {' < '.join(ROTULO[m] for m in V['derivados']['ordem_top3'])}, "
           f"amplitude {V['derivados']['amplitude_top3']:.3f} pp contra "
