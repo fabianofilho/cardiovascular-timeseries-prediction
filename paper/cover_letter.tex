@@ -1,0 +1,80 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{xurl}
+\usepackage{parskip}
+
+\newcommand{\missing}[1]{\textcolor{red}{\textbf{[MISSING: #1]}}}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\noindent
+Faculdade de Sa\'ude P\'ublica, Universidade de S\~ao Paulo, S\~ao Paulo, Brazil \\
+\missing{submission date}
+
+\vspace{1em}
+\noindent
+The Editors, \emph{International Journal of Forecasting}
+
+\vspace{1em}
+
+\noindent Dear Editors,
+
+\vspace{0.6em}
+
+We submit for your consideration ``Series length, not model choice, drives forecasting
+accuracy of cardiovascular mortality in S\~ao Paulo, Brazil: a benchmark of foundation,
+classical and boosting models with measured uncertainty'', as an original research article.
+
+Once uncertainty is measured, a zero-shot foundation model (TimesFM) and two classical
+models (SARIMA, Prophet) are statistically indistinguishable for forecasting monthly
+cardiovascular mortality, and what moved accuracy was the length of the training series
+rather than the choice of model. The spread among the three leading models is 0.13
+percentage points against a mean 95\% interval width of 1.07, while nine additional years
+of training reduced error by 1.23 to 1.71 points on identical test dates.
+
+The work fits your scope of forecasting mortality and forecasting for healthcare, and it is
+the kind of evaluation study the journal emphasises: 618 out-of-sample forecasts per model
+from 103 rolling origin windows, with every comparison carrying a block bootstrap interval
+over whole windows and a Diebold-Mariano test at each horizon, under a decision criterion
+fixed before the analysis.
+
+It is also, in part, a replication of our own earlier round on a shorter series, in which
+TimesFM ranked first by 0.38 percentage points of sMAPE. That ranking survived neither nine
+further years of data nor the addition of intervals, and the ordering reversed. We report
+this explicitly because the lesson generalises past our series: gaps of a few tenths of a
+point are routinely published as rankings in applied health forecasting, while the interval
+around aggregate error over a few hundred dependent forecasts is on the order of a full
+point.
+
+On your data and code policy and the reproducibility check, the aggregated series, every
+forecast file and every uncertainty output are already public at
+\url{https://github.com/fabianofilho/cardiovascular-timeseries-prediction}. Every table and
+figure is generated programmatically from the forecast files by one script, which also
+emits a machine-readable file of every value cited in the text; none was transcribed by
+hand. We verified that a clean clone reproduces the manuscript, including the compiled PDF,
+with no local data. Individual death records are not redistributed, as the included
+extraction script retrieves them from the public Ministry of Health source.
+
+The manuscript is original, unpublished, and not under consideration elsewhere. All authors
+approved the submission and declare no competing interests. As declared in the manuscript,
+an AI coding assistant was used for implementation, analysis scripting and drafting; it is
+not an author, and the authors verified all analyses and values and take responsibility for
+the content.
+
+\missing{suggested reviewers, if the submission system requests them; funding statement to
+match the manuscript declarations}
+
+\vspace{0.8em}
+
+\noindent Sincerely, \\[0.6em]
+Fabiano B. N. Filho, on behalf of the authors \\
+\missing{corresponding author email and ORCID}
+
+\end{document}
