@@ -137,12 +137,16 @@ em escala, com centenas de series curtas em vez de uma longa.
 - [x] XGBoost e CatBoost em `requirements-optional.txt`
 - [x] Guarda em `lag12` para horizonte maior que 12 (falha explicita em vez de KeyError cru)
 - [x] `run_uncertainty.py` deixou de depender da ordem dos modelos nos IC por horizonte
-- [ ] Adicionar `matplotlib` a `requirements.txt` (usado por `generate_paper_figures.py` e
-      `generate_figures_2010_2023.py`, hoje dependencia nao declarada)
+- [ ] Decidir o que fazer com o `matplotlib`: depois da migracao para pgfplots ele nao alimenta
+      mais o manuscrito, so os dois geradores legados em `images/legacy/`. Ou declarar em
+      `requirements-optional.txt` como dependencia de artefato historico, ou aposentar os
+      geradores. O pipeline atual precisa de `pymupdf` e `tectonic` para o PNG, nao dele
 - [ ] Alvos no Makefile para as rodadas novas: `benchmark-2010-2023`, `benchmark-exog`, `uncertainty`
 - [ ] Template padrao de registro de experimento em `docs/experiments/`
 - [ ] Testes automatizados para `build_exog_frames` (o teste de vazamento nas 103 janelas hoje
       e ad hoc, deveria estar no repo)
 - [ ] `scripts/plot_stratified_results.py` para figuras por estrato
-- [ ] Decidir se as figuras antigas `fig1_time_series.png` e `fig7_seasonal_profile.png`, que
-      contem 24 meses sintetizados, saem do repo ou ficam com aviso no nome
+- [x] Decidir o destino das figuras antigas `fig1_time_series.png` e `fig7_seasonal_profile.png`,
+      que contem 24 meses sintetizados: movidas para `images/legacy/`, com README explicando o
+      defeito e dizendo para nao reutilizar. Ficam versionadas porque os documentos historicos
+      apontam para elas

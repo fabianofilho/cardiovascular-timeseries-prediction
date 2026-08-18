@@ -30,7 +30,7 @@ import matplotlib.ticker as mticker
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
-IMG = BASE / "images"
+IMG = BASE / "images" / "legacy"
 IMG.mkdir(exist_ok=True)
 
 plt.rcParams.update({

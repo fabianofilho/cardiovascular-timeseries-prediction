@@ -50,6 +50,6 @@ Nove anos a mais de treino reduzem o sMAPE em 1,2 a 1,7 pp nas mesmas datas, aci
 
 ## Achados que exigem decisão
 
-- **Figuras do paper**: `images/fig1_time_series.png` e `fig7_seasonal_profile.png` da rodada anterior contêm 24 meses sintetizados (2019–2020, `generate_paper_figures.py:88-116`) rotulados como observação. As substitutas com dado 100% observado estão em `images/fig*_2010_2023.png` (`scripts/generate_figures_2010_2023.py`). Adotar nas próximas versões de README/paper.
+- **Figuras do paper**: `images/legacy/fig1_time_series.png` e `images/legacy/fig7_seasonal_profile.png` da rodada anterior contêm 24 meses sintetizados (2019–2020, `generate_paper_figures.py:88-116`) rotulados como observação. As substitutas com dado 100% observado estão em `images/legacy/fig*_2010_2023.png` (`scripts/generate_figures_2010_2023.py`). Adotar nas próximas versões de README/paper.
 - **Versionamento da série (LAB-62)**: a série agregada 2010–2023 está versionada em `results/series/` (168 linhas `date,value`, sem microdado). Mover para `data/processed/` com exceção no `.gitignore` é decisão do dono do repo.
 - **min_train_size**: padronizado em 60 nesta rodada; README/paper ainda descrevem 24 (LAB-64).

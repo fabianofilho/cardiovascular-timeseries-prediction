@@ -34,7 +34,7 @@ from pathlib import Path
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE = Path(__file__).resolve().parent.parent
-IMG  = BASE / "images"
+IMG  = BASE / "images" / "legacy"
 IMG.mkdir(exist_ok=True)
 
 # ── Global style ──────────────────────────────────────────────────────────────
