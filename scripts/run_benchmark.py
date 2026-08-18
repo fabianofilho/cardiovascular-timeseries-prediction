@@ -9,6 +9,7 @@ import pandas as pd
 
 from cv_timeseries.data import load_and_aggregate_series
 from cv_timeseries.evaluate import mae, rmse, rolling_origin_splits, smape
+from cv_timeseries.exog import build_exog_frames
 from cv_timeseries.models import (
     CatBoostForecaster,
     ProphetForecaster,
@@ -80,48 +81,6 @@ def load_exog(csv_path: str, date_col: str, cols: list[str], freq: str) -> pd.Da
     if exog.isna().any().any():
         raise ValueError("Exógena contém meses faltantes após alinhamento de frequência.")
     return exog
-
-
-def build_exog_frames(
-    exog: pd.DataFrame,
-    train_index: pd.DatetimeIndex,
-    test_index: pd.DatetimeIndex,
-    policy: str,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Monta exógenas de treino e de futuro para uma janela do rolling origin.
-
-    Regra anti-vazamento: para climatology/lag12, o futuro é construído a partir
-    da exógena truncada no fim do treino, nunca do CSV completo.
-    """
-    exog_train = exog.loc[train_index]
-    truncated = exog.loc[: train_index[-1]]
-
-    if policy == "climatology":
-        monthly = truncated.groupby(truncated.index.month).mean()
-        exog_future = pd.DataFrame(
-            [monthly.loc[d.month] for d in test_index], index=test_index
-        )
-    elif policy == "lag12":
-        # Com horizonte > 12 a defasagem de 12 meses alcançaria datas posteriores ao
-        # fim do treino, o que seria vazamento. Falha explicitamente em vez de deixar
-        # o KeyError cru do pandas, que não diz qual é o problema.
-        needed = [d - pd.DateOffset(months=12) for d in test_index]
-        missing = [d for d in needed if d not in truncated.index]
-        if missing:
-            raise ValueError(
-                f"Política lag12 exige o valor de 12 meses antes de cada data prevista, "
-                f"mas {len(missing)} não estão no treino (ex: {missing[0]:%Y-%m}). "
-                f"Com horizonte {len(test_index)} maior que 12 a defasagem alcançaria o "
-                f"futuro. Use --exog-policy climatology."
-            )
-        exog_future = pd.DataFrame([truncated.loc[d] for d in needed], index=test_index)
-    elif policy == "observed":
-        # Vazamento deliberado e rotulado: cenário-teto de "previsão meteorológica perfeita".
-        exog_future = exog.loc[test_index]
-    else:
-        raise ValueError(f"Política de exógena desconhecida: {policy}")
-
-    return exog_train, exog_future
 
 
 def build_models(model_names: list[str]):

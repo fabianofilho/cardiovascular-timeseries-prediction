@@ -3,7 +3,7 @@ PIP ?= pip
 VENV ?= .venv
 ACTIVATE = . $(VENV)/bin/activate
 
-.PHONY: venv setup-base setup-full sample-pysus smoke-baseline benchmark-all
+.PHONY: venv setup-base setup-full sample-pysus smoke-baseline benchmark-all test
 
 venv:
 	$(PYTHON) -m venv $(VENV)
@@ -46,3 +46,6 @@ benchmark-all:
 		--min-train-size 24 \
 		--models sarima,prophet,timesfm \
 		--output-prefix results/benchmark_sp_sample_full
+
+test:
+	$(ACTIVATE) && PYTHONPATH=src $(PYTHON) -m pytest

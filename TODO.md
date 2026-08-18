@@ -145,8 +145,13 @@ em escala, com centenas de series curtas em vez de uma longa.
       que por isso segue fora do `requirements.txt` do pipeline
 - [ ] Alvos no Makefile para as rodadas novas: `benchmark-2010-2023`, `benchmark-exog`, `uncertainty`
 - [ ] Template padrao de registro de experimento em `docs/experiments/`
-- [ ] Testes automatizados para `build_exog_frames` (o teste de vazamento nas 103 janelas hoje
-      e ad hoc, deveria estar no repo)
+- [x] Testes automatizados para `build_exog_frames`: 18 testes em `tests/test_exog.py`, com a
+      invariante anti-vazamento exercitada nas 103 janelas do desenho real. A funcao saiu de
+      `scripts/run_benchmark.py` para `src/cv_timeseries/exog.py` para o teste rodar sem
+      statsmodels, prophet nem timesfm. Suite validada por mutacao: quebrar a truncagem da
+      climatologia ou remover a guarda do lag12 faz a suite falhar
+- [ ] Estender a suite: `rolling_origin_splits` (contagem de janelas, modo deslizante) e
+      `smape`/`mae`/`rmse` contra valores calculados a mao. Hoje so a exogena tem teste
 - [ ] `scripts/plot_stratified_results.py` para figuras por estrato
 - [x] Decidir o destino das figuras antigas `fig1_time_series.png` e `fig7_seasonal_profile.png`,
       que contem 24 meses sintetizados: movidas para `images/legacy/`, com README explicando o

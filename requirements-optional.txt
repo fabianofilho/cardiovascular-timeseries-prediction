@@ -4,3 +4,8 @@ timesfm @ git+https://github.com/google-research/timesfm.git
 skforecast>=0.14.0
 xgboost>=2.0.0
 catboost>=1.2.0
+
+# Testes. A suite nao precisa de statsmodels, prophet nem timesfm de proposito:
+# a politica de exogena mora em src/cv_timeseries/exog.py justamente para o teste de
+# vazamento rodar em qualquer maquina.
+pytest>=8.0.0
