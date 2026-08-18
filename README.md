@@ -157,6 +157,23 @@ Incerteza:
 PYTHONPATH=src python scripts/run_uncertainty.py --predictions-csv results/benchmark_sim_real_sp_2010_2023_predictions.csv --models timesfm,sarima,prophet,xgboost,catboost --seed 20260817 --output-prefix results/uncertainty_2010_2023
 ```
 
+## Manuscrito
+
+O manuscrito está em [`paper/manuscript.tex`](paper/manuscript.tex), com tabelas, figuras e o JSON de conferência gerados dos dados brutos por um script só:
+
+```bash
+PYTHONPATH=src python scripts/build_paper_assets.py
+cd paper && tectonic -X compile manuscript.tex --outdir ../build
+```
+
+Nenhum número entra no manuscrito por digitação: todo valor citado na prosa sai de `paper/verified_numbers.json`, emitido pelo mesmo gerador que produz as tabelas e as figuras. As figuras são código pgfplots, não binário, então o manuscrito cabe num `.tex` único e pode ser movido para qualquer editor.
+
+Para os coautores revisarem, com figuras embutidas no ponto do texto e tabelas nativas do Word:
+
+```bash
+python scripts/build_docx.py
+```
+
 ## Próximos passos
 
 1. Fine-tuning do TimesFM na série estendida (pendente de GPU)
