@@ -134,12 +134,14 @@ def defs_cor():
     return "\n".join(f"\\definecolor{{c{k}}}{{HTML}}{{{v}}}" for k, v in COR.items())
 
 
-def rasteriza_figuras(dpi=200):
+def rasteriza_figuras(dpi=300):
     """Compila cada figura isolada e salva o PNG irmao.
 
-    O PNG nao entra no documento: ele existe para ser aberto e conferido, e para ser
-    o que se entrega a quem pediu "as figuras", porque PNG abre em qualquer lugar e
-    .tex de pgfplots so vira imagem depois de compilar.
+    O PNG nao entra no documento: ele existe para ser aberto e conferido, para ser o
+    que se entrega a quem pediu "as figuras", porque PNG abre em qualquer lugar e .tex
+    de pgfplots so vira imagem depois de compilar, e para ser embutido no .docx de
+    revisao. 300 dpi porque esse ultimo uso e impressao, e e o unico dos tres que tem
+    exigencia de resolucao: o menor denominador comum mandaria no conjunto todo.
 
     Enquanto as figuras eram matplotlib isto saia de graca no savefig. Com figura em
     codigo, o unico jeito de ter o PNG e compilar e rasterizar, entao o passo tem que
