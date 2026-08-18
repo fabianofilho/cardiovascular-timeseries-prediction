@@ -29,9 +29,3 @@ data/processed/*
 # `cd paper && tectonic -X compile manuscript.tex --outdir ../build`; as tabelas e
 # figuras de paper/ ficam versionadas porque sao a entrada dele.
 build/
-
-# Saida compilada e imagens de conferencia das figuras alternativas em pgfplots.
-# O codigo das figuras (paper/figures_pgf/*.tex) fica versionado; o PDF de teste e
-# as comparacoes sao regeraveis com scripts/build_pgf_figures.py.
-paper/figures_pgf/teste.pdf
-paper/figures_pgf/_comparacao/

@@ -1,0 +1,19 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.80\textwidth, height=5.2cm,
+  xlabel={Forecast horizon (months)}, ylabel={sMAPE (\%)},
+  xmin=0.7, xmax=6.3, xtick={1,2,3,4,5,6},
+  axis lines=left, tick align=outside, tick pos=left,
+  legend style={at={(0.02,0.98)}, anchor=north west, draw=none, fill=none,
+                 font=\scriptsize, legend columns=3, column sep=4pt},
+  ymax=8.6,
+]
+\addplot[draw=cprophet, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=cprophet, fill=cprophet}] coordinates {(1,4.3538) (2,4.4520) (3,4.6456) (4,4.8209) (5,4.9294) (6,5.0041)};
+\addplot[draw=csarima, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=csarima, fill=csarima}] coordinates {(1,4.1625) (2,4.6971) (3,4.7652) (4,4.8096) (5,5.1129) (6,5.2266)};
+\addplot[draw=ctimesfm, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=ctimesfm, fill=ctimesfm}] coordinates {(1,4.2967) (2,4.6208) (3,4.8998) (4,5.1074) (5,4.9729) (6,5.0975)};
+\addplot[draw=ccatboost, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=ccatboost, fill=ccatboost}] coordinates {(1,5.7154) (2,6.3801) (3,6.7560) (4,6.9079) (5,6.8022) (6,6.9744)};
+\addplot[draw=cxgboost, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=cxgboost, fill=cxgboost}] coordinates {(1,6.0227) (2,6.7419) (3,7.1606) (4,7.3219) (5,7.1422) (6,7.2208)};
+\legend{Prophet,SARIMA,TimesFM,CatBoost,XGBoost}
+\end{axis}
+\end{tikzpicture}

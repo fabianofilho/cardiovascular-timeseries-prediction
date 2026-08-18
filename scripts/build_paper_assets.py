@@ -19,9 +19,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -40,19 +37,14 @@ ROTULO = {
     "prophet": "Prophet", "sarima": "SARIMA", "timesfm": "TimesFM",
     "xgboost": "XGBoost", "catboost": "CatBoost",
 }
+# HEX sem '#': entram em \definecolor{...}{HTML}{...} no preambulo
 COR = {
-    "prophet": "#4C72B0", "sarima": "#DD8452", "timesfm": "#55A868",
-    "xgboost": "#C44E52", "catboost": "#8172B3",
+    "prophet": "4C72B0", "sarima": "DD8452", "timesfm": "55A868",
+    "xgboost": "C44E52", "catboost": "8172B3",
 }
 TOP3 = ["prophet", "sarima", "timesfm"]
 ORDEM = ["prophet", "sarima", "timesfm", "catboost", "xgboost"]
 
-plt.rcParams.update({
-    "font.size": 9, "axes.titlesize": 10, "axes.labelsize": 9,
-    "xtick.labelsize": 8, "ytick.labelsize": 8, "legend.fontsize": 8,
-    "axes.spines.top": False, "axes.spines.right": False,
-    "figure.dpi": 110, "savefig.bbox": "tight",
-})
 
 
 # ------------------------------------------------------------------ metricas
@@ -103,6 +95,10 @@ def ic(v):
 
 # ------------------------------------------------------------------ LaTeX
 
+def coords(pares):
+    return " ".join(f"({x},{y})" for x, y in pares)
+
+
 def num(x, casas=2):
     return f"{x:.{casas}f}"
 
@@ -122,12 +118,16 @@ def escreve_tabela(nome, corpo):
     print(f"  tabela  paper/tables/{nome}.tex")
 
 
-def salva_fig(fig, nome):
+def escreve_figura(nome, corpo):
+    """Grava um tikzpicture que o manuscrito chama por \\input{figures/<nome>}."""
     FIG.mkdir(parents=True, exist_ok=True)
-    fig.savefig(FIG / f"{nome}.pdf")
-    fig.savefig(FIG / f"{nome}.png", dpi=150)
-    plt.close(fig)
-    print(f"  figura  paper/figures/{nome}.pdf (+ .png)")
+    (FIG / f"{nome}.tex").write_text(AVISO + corpo, encoding="utf-8")
+    print(f"  figura  paper/figures/{nome}.tex")
+
+
+def defs_cor():
+    """Paleta para o preambulo, definida uma vez em vez de por figura."""
+    return "\n".join(f"\\definecolor{{c{k}}}{{HTML}}{{{v}}}" for k, v in COR.items())
 
 
 # ------------------------------------------------------------------ main
@@ -154,6 +154,7 @@ def main() -> int:
     teto = pd.read_csv(RES / "benchmark_exog_temp_observed_predictions.csv", parse_dates=["date"])
     slide = pd.read_csv(RES / "benchmark_slide60_2010_2023_predictions.csv", parse_dates=["date"])
     antigo = pd.read_csv(RES / "benchmark_sim_real_sp_2019_2023_predictions.csv", parse_dates=["date"])
+    hor = pd.read_csv(RES / "uncertainty_2010_2023_error_by_horizon.csv")
 
     print("Gerando assets do manuscrito")
 
@@ -481,105 +482,197 @@ excluded from this comparison rather than being given an input they would ignore
         "smape": {m: float(sm_a[m].mean()) for m in TOP3},
     }
 
-    # ---------- Figura 1: serie ----------
-    fig, ax = plt.subplots(figsize=(7.0, 2.8))
-    ax.plot(serie.index, serie.values, lw=1.0, color="#333333")
-    ax.set_ylabel("Deaths per month")
-    ax.set_xlabel("")
-    ax.axvspan(pd.Timestamp("2021-01-01"), pd.Timestamp("2023-12-31"),
-               color="#4C72B0", alpha=0.10, lw=0)
-    # Rotulo acima da serie, dentro da folga criada no ylim: encostado na linha ele
-    # sai cortado pela margem do PDF.
-    ax.set_ylim(serie.min() * 0.93, serie.max() * 1.16)
-    ax.annotate("test window shared with the earlier round",
-                xy=(pd.Timestamp("2022-06-15"), serie.max() * 1.09),
-                fontsize=7.5, color="#3A5A8C", ha="center", va="center")
-    salva_fig(fig, "fig1_serie")
+    # ---------- figuras, em pgfplots ----------
+    # Figura e codigo, nao binario: cada uma sai como tikzpicture em
+    # paper/figures/figN_nome.tex e entra no manuscrito por \input pelo nome,
+    # igual as tabelas. Assim o manuscrito cabe num .tex unico e a figura herda
+    # a fonte do documento em vez de carregar a do matplotlib.
+    # ---------- fig1: serie ----------
+    pts = coords([(f"{d.year + (d.month - 1) / 12:.4f}", f"{v:.0f}") for d, v in serie.items()])
+    escreve_figura("fig1_serie", rf"""\begin{{tikzpicture}}
+\begin{{axis}}[
+  width=0.95\textwidth, height=5.0cm,
+  xlabel={{}}, ylabel={{Deaths per month}},
+  xmin=2009.8, xmax=2024.2, ymin=5400, ymax=11100,
+  xtick={{2010,2012,2014,2016,2018,2020,2022,2024}},
+  xticklabel style={{/pgf/number format/1000 sep=}},
+  % sem isto o pgfplots troca o eixo por \cdot 10^4, que e ilegivel aqui
+  scaled y ticks=false,
+  ytick={{6000,7000,8000,9000,10000,11000}},
+  yticklabel style={{/pgf/number format/fixed, /pgf/number format/1000 sep={{,}}}},
+  axis lines=left, tick align=outside, tick pos=left,
+  every axis plot/.append style={{line width=0.5pt}},
+]
+\addplot[draw=black!80, mark=none] coordinates {{{pts}}};
+\addplot[draw=none, fill=cprophet, fill opacity=0.10, forget plot]
+  coordinates {{(2021.0,5400) (2024.0,5400) (2024.0,11100) (2021.0,11100)}} \closedcycle;
+% ancorado a direita e dentro do limite do eixo: centralizado em 2022.5 o rotulo
+% estourava a borda e saia cortado
+\node[anchor=east, font=\scriptsize, text=cprophet!80!black]
+  at (axis cs:2023.9,10500) {{test window shared with the earlier round}};
+\end{{axis}}
+\end{{tikzpicture}}""")
 
-    # ---------- Figura 2: sMAPE com IC (o achado principal) ----------
-    fig, ax = plt.subplots(figsize=(6.2, 2.9))
-    y = np.arange(len(ORDEM))[::-1]
+    # ---------- fig2: sMAPE com IC ----------
+    linhas = []
     for i, m in enumerate(ORDEM):
+        y = len(ORDEM) - i
         d = V["tabela1"][m]
-        ax.plot([d["ic_low"], d["ic_high"]], [y[i], y[i]], lw=2.4, color=COR[m], solid_capstyle="round")
-        ax.plot(d["smape"], y[i], "o", ms=6, color=COR[m], zorder=3)
-    ax.axvspan(min(pontos3), max(pontos3), color="#888888", alpha=0.16, lw=0, zorder=0)
-    ax.set_yticks(y)
-    ax.set_yticklabels([ROTULO[m] for m in ORDEM])
-    ax.set_xlabel("sMAPE (\\%)" if False else "sMAPE (%)")
-    amp = V["derivados"]["amplitude_top3"]
-    lm = V["derivados"]["largura_media_top3"]
-    ax.set_title(f"Spread among the leading three: {amp:.2f} pp; mean interval width: {lm:.2f} pp",
-                 loc="left", fontsize=8.5)
-    salva_fig(fig, "fig2_smape_ic")
+        linhas.append(
+            f"\\addplot[draw=c{m}, line width=2.0pt, mark=none] "
+            f"coordinates {{({d['ic_low']:.4f},{y}) ({d['ic_high']:.4f},{y})}};\n"
+            f"\\addplot[only marks, mark=*, mark size=2.2pt, draw=c{m}, fill=c{m}] "
+            f"coordinates {{({d['smape']:.4f},{y})}};")
+    p3 = [V["tabela1"][m]["smape"] for m in TOP3]
+    amp, larg = V["derivados"]["amplitude_top3"], V["derivados"]["largura_media_top3"]
+    ticks = ",".join(str(len(ORDEM) - i) for i in range(len(ORDEM)))
+    labs = ",".join(ROTULO[m] for m in ORDEM)
+    escreve_figura("fig2_smape_ic", rf"""\begin{{tikzpicture}}
+\begin{{axis}}[
+  width=0.80\textwidth, height=5.2cm,
+  xlabel={{sMAPE (\%)}}, xmin=4.0, xmax=7.8,
+  xtick={{4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5}},
+  xticklabel style={{/pgf/number format/fixed, /pgf/number format/precision=1,
+                     /pgf/number format/zerofill}},
+  ymin=0.4, ymax=5.6, ytick={{{ticks}}}, yticklabels={{{labs}}},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={{align=left, font=\small}},
+  title={{Spread among the leading three: {amp:.2f} pp; mean interval width: {larg:.2f} pp}},
+]
+\addplot[draw=none, fill=black, fill opacity=0.14, forget plot]
+  coordinates {{({min(p3):.4f},0.4) ({max(p3):.4f},0.4) ({max(p3):.4f},5.6) ({min(p3):.4f},5.6)}}
+  \closedcycle;
+{chr(10).join(linhas)}
+\end{{axis}}
+\end{{tikzpicture}}""")
 
-    # ---------- Figura 3: erro por horizonte ----------
-    fig, ax = plt.subplots(figsize=(6.2, 2.9))
+    # ---------- fig3: erro por horizonte ----------
+    series_h, leg = [], []
     for m in ORDEM:
-        ax.plot(range(1, nh + 1), sm[m].mean(axis=0), "o-", ms=4, lw=1.4,
-                color=COR[m], label=ROTULO[m])
-    ax.set_xlabel("Forecast horizon (months)")
-    ax.set_ylabel("sMAPE (%)")
-    ax.legend(ncol=3, frameon=False, loc="upper left")
-    ax.set_ylim(top=ax.get_ylim()[1] * 1.16)
-    salva_fig(fig, "fig3_horizonte")
+        g = hor[hor.model == m].sort_values("horizon")
+        # mark options e obrigatorio: `mark=*` NAO herda o `draw` da serie, e sem isto
+        # o ponto sai preto sobre a linha colorida. So aparece ampliando o PDF.
+        series_h.append(f"\\addplot[draw=c{m}, mark=*, mark size=1.6pt, line width=0.9pt, "
+                        f"mark options={{draw=c{m}, fill=c{m}}}] "
+                        f"coordinates {{{coords(zip(g.horizon, [f'{v:.4f}' for v in g.smape]))}}};")
+        leg.append(ROTULO[m])
+    escreve_figura("fig3_horizonte", rf"""\begin{{tikzpicture}}
+\begin{{axis}}[
+  width=0.80\textwidth, height=5.2cm,
+  xlabel={{Forecast horizon (months)}}, ylabel={{sMAPE (\%)}},
+  xmin=0.7, xmax=6.3, xtick={{1,2,3,4,5,6}},
+  axis lines=left, tick align=outside, tick pos=left,
+  legend style={{at={{(0.02,0.98)}}, anchor=north west, draw=none, fill=none,
+                 font=\scriptsize, legend columns=3, column sep=4pt}},
+  ymax=8.6,
+]
+{chr(10).join(series_h)}
+\legend{{{','.join(leg)}}}
+\end{{axis}}
+\end{{tikzpicture}}""")
 
-    # ---------- Figura 4: expanding vs deslizante ----------
-    # Halteres, nao barras: as diferencas sao de 0,05 a 0,69 pp sobre um nivel de 4,7 a
-    # 6,9, entao barras a partir do zero deixariam invisivel justamente o efeito que a
-    # figura existe para mostrar. Truncar o eixo de barras seria enganoso; o haltere
-    # mostra a mudanca sem truncar nada.
-    fig, ax = plt.subplots(figsize=(6.4, 3.0))
-    y = np.arange(len(ORDEM))[::-1]
+    # ---------- fig4: expanding vs deslizante ----------
+    linhas = []
     for i, m in enumerate(ORDEM):
+        y = len(ORDEM) - i
         e, s = V["tabela4"][m]["expanding"], V["tabela4"][m]["deslizante"]
-        piora = s > e
-        ax.plot([e, s], [y[i], y[i]], lw=1.6, color="#BBBBBB", zorder=1)
-        ax.plot(e, y[i], "o", ms=7, color="#4C72B0", zorder=3,
-                label="Expanding window" if i == 0 else None)
-        ax.plot(s, y[i], "o", ms=7, color="#DD8452", zorder=3,
-                label="Sliding 60 months" if i == 0 else None)
-        ax.annotate(f"{s - e:+.2f} pp", xy=(max(e, s) + 0.12, y[i]), va="center",
-                    fontsize=7.5, color="#C44E52" if piora else "#55A868")
-    ax.set_yticks(y)
-    ax.set_yticklabels([ROTULO[m] for m in ORDEM])
-    ax.set_xlabel("sMAPE (%)")
-    ax.set_xlim(4.3, 7.7)
-    # Canto superior direito: as linhas de cima ficam entre 4,7 e 5,6, entao a area
-    # esta livre ali. No inferior direito a legenda cobria a linha do XGBoost.
-    ax.legend(frameon=False, ncol=1, loc="upper right")
-    ax.set_title("Cost of discarding history beyond five years", loc="left", fontsize=8.5)
-    salva_fig(fig, "fig4_janela")
+        dif = s - e
+        cor = "C44E52" if dif > 0 else "55A868"
+        linhas.append(
+            f"\\addplot[draw=black!28, line width=1.2pt, mark=none] "
+            f"coordinates {{({e:.4f},{y}) ({s:.4f},{y})}};\n"
+            f"\\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] "
+            f"coordinates {{({e:.4f},{y})}};\n"
+            f"\\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] "
+            f"coordinates {{({s:.4f},{y})}};\n"
+            f"\\definecolor{{d{i}}}{{HTML}}{{{cor}}}\n"
+            f"\\node[anchor=west, font=\\scriptsize, text=d{i}] "
+            f"at (axis cs:{max(e, s) + 0.10:.4f},{y}) {{{dif:+.2f} pp}};")
+    ticks = ",".join(str(len(ORDEM) - i) for i in range(len(ORDEM)))
+    labs = ",".join(ROTULO[m] for m in ORDEM)
+    escreve_figura("fig4_janela", rf"""\begin{{tikzpicture}}
+\begin{{axis}}[
+  width=0.80\textwidth, height=5.4cm,
+  xlabel={{sMAPE (\%)}}, xmin=4.3, xmax=7.7,
+  xtick={{4.5,5.0,5.5,6.0,6.5,7.0,7.5}},
+  xticklabel style={{/pgf/number format/fixed, /pgf/number format/precision=1,
+                     /pgf/number format/zerofill}},
+  ymin=0.4, ymax=5.7, ytick={{{ticks}}}, yticklabels={{{labs}}},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={{align=left, font=\small}},
+  title={{Cost of discarding history beyond five years}},
+]
+{chr(10).join(linhas)}
+\node[anchor=east, font=\scriptsize] at (axis cs:7.65,5.35)
+  {{\textcolor{{cprophet}}{{$\bullet$}} Expanding \quad
+    \textcolor{{csarima}}{{$\bullet$}} Sliding 60}};
+\end{{axis}}
+\end{{tikzpicture}}""")
 
-    # ---------- Figura 5: perfil sazonal ----------
-    fig, ax = plt.subplots(figsize=(6.2, 2.6))
-    meses = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"]
-    ax.plot(range(1, 13), perfil.values, "o-", color="#C44E52", lw=1.6, ms=5)
-    ax2 = ax.twinx()
-    ax2.plot(range(1, 13), temp.groupby(temp.index.month).tmin.mean().values, "s--",
-             color="#4C72B0", lw=1.2, ms=4)
-    ax2.set_ylabel("Mean minimum temperature (C)", color="#4C72B0")
-    ax2.tick_params(axis="y", colors="#4C72B0")
-    ax2.spines["top"].set_visible(False)
-    ax.set_xticks(range(1, 13))
-    ax.set_xticklabels(meses)
-    ax.set_ylabel("Mean deaths per month", color="#C44E52")
-    ax.tick_params(axis="y", colors="#C44E52")
-    salva_fig(fig, "fig5_sazonal")
+    # ---------- fig5: sazonal com eixo duplo ----------
+    perfil = serie.groupby(serie.index.month).mean()
+    tmin = temp.groupby(temp.index.month).tmin.mean()
+    cm = coords(zip(range(1, 13), [f"{v:.1f}" for v in perfil]))
+    ct = coords(zip(range(1, 13), [f"{v:.2f}" for v in tmin]))
+    meses = "J,F,M,A,M,J,J,A,S,O,N,D"
+    escreve_figura("fig5_sazonal", rf"""\begin{{tikzpicture}}
+\begin{{axis}}[
+  width=0.80\textwidth, height=4.8cm,
+  axis y line*=left, axis x line*=bottom,
+  xmin=0.5, xmax=12.5, xtick={{1,...,12}}, xticklabels={{{meses}}},
+  ylabel={{Mean deaths per month}}, ylabel style={{text=cxgboost}},
+  scaled y ticks=false, ytick={{6500,7000,7500,8000}},
+  yticklabel style={{text=cxgboost, /pgf/number format/fixed,
+                     /pgf/number format/1000 sep={{,}}}},
+  tick align=outside,
+]
+\addplot[draw=cxgboost, mark=*, mark size=2.0pt, line width=1.1pt]
+  coordinates {{{cm}}};
+\end{{axis}}
+\begin{{axis}}[
+  width=0.80\textwidth, height=4.8cm,
+  axis y line*=right, axis x line=none,
+  xmin=0.5, xmax=12.5,
+  ylabel={{Mean minimum temperature (C)}}, ylabel style={{text=cprophet}},
+  yticklabel style={{text=cprophet}},
+  tick align=outside,
+]
+\addplot[draw=cprophet, mark=square*, mark size=1.7pt, line width=0.9pt, dashed]
+  coordinates {{{ct}}};
+\end{{axis}}
+\end{{tikzpicture}}""")
 
-    # ---------- Figura 6: efeito da temperatura ----------
-    fig, ax = plt.subplots(figsize=(6.2, 2.5))
+    # ---------- fig6: efeito da temperatura ----------
     mods = ["sarima", "catboost", "xgboost"]
-    y = np.arange(len(mods))[::-1]
+    linhas = []
     for i, m in enumerate(mods):
+        y = len(mods) - i
         d = V["tabela5"][m]
-        ax.plot([d["ic_low"], d["ic_high"]], [y[i], y[i]], lw=2.4, color=COR[m])
-        ax.plot(d["ganho"], y[i], "o", ms=6, color=COR[m], zorder=3)
-    ax.axvline(0, color="#999999", lw=0.9, ls="--")
-    ax.set_yticks(y)
-    ax.set_yticklabels([ROTULO[m] for m in mods])
-    ax.set_xlabel("Reduction in sMAPE from the temperature covariate (pp)")
-    salva_fig(fig, "fig6_temperatura")
+        linhas.append(
+            f"\\addplot[draw=c{m}, line width=2.0pt, mark=none] "
+            f"coordinates {{({d['ic_low']:.4f},{y}) ({d['ic_high']:.4f},{y})}};\n"
+            f"\\addplot[only marks, mark=*, mark size=2.2pt, draw=c{m}, fill=c{m}] "
+            f"coordinates {{({d['ganho']:.4f},{y})}};")
+    ticks = ",".join(str(len(mods) - i) for i in range(len(mods)))
+    labs = ",".join(ROTULO[m] for m in mods)
+    escreve_figura("fig6_temperatura", rf"""\begin{{tikzpicture}}
+\begin{{axis}}[
+  width=0.78\textwidth, height=3.8cm,
+  xlabel={{Reduction in sMAPE from the temperature covariate (pp)}},
+  xmin=-0.06, xmax=0.62,
+  % com valores pequenos o pgfplots gera tick automatico em notacao cientifica
+  % (-5 \cdot 10^{-2}) e os rotulos colidem. Tick e formato explicitos.
+  xtick={{0,0.1,0.2,0.3,0.4,0.5,0.6}},
+  scaled x ticks=false,
+  xticklabel style={{/pgf/number format/fixed, /pgf/number format/precision=1}},
+  ymin=0.4, ymax=3.6, ytick={{{ticks}}}, yticklabels={{{labs}}},
+  axis lines=left, tick align=outside, tick pos=left,
+]
+\draw[black!45, dashed, line width=0.6pt]
+  (axis cs:0,0.4) -- (axis cs:0,3.6);
+{chr(10).join(linhas)}
+\end{{axis}}
+\end{{tikzpicture}}""")
 
     # ---------- JSON ----------
     (PAPER / "verified_numbers.json").write_text(

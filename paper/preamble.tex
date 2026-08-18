@@ -12,6 +12,8 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{graphicx}
+\usepackage{pgfplots}      % figura como codigo: entra por \input, nao como anexo
+\pgfplotsset{compat=1.18}
 \usepackage{xurl}
 \usepackage{xcolor}
 \usepackage{caption}
@@ -20,6 +22,14 @@
 
 \captionsetup{font=small,labelfont=bf}
 \graphicspath{{figures/}}
+
+% Paleta das figuras, definida uma vez aqui em vez de repetida em cada uma.
+% Mesmos HEX de COR em scripts/build_paper_assets.py.
+\definecolor{cprophet}{HTML}{4C72B0}
+\definecolor{csarima}{HTML}{DD8452}
+\definecolor{ctimesfm}{HTML}{55A868}
+\definecolor{cxgboost}{HTML}{C44E52}
+\definecolor{ccatboost}{HTML}{8172B3}
 
 % Marcador de dado ainda indisponivel. Sai vermelho e em negrito de proposito:
 % e para ser impossivel submeter sem ver.

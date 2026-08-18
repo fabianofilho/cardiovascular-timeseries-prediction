@@ -1,9 +1,14 @@
-% gerado por scripts/build_pgf_figures.py -- nao editar a mao
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
 \begin{tikzpicture}
 \begin{axis}[
   width=0.78\textwidth, height=3.8cm,
   xlabel={Reduction in sMAPE from the temperature covariate (pp)},
-  xmin=-0.06, xmax=0.60,
+  xmin=-0.06, xmax=0.62,
+  % com valores pequenos o pgfplots gera tick automatico em notacao cientifica
+  % (-5 \cdot 10^-2) e os rotulos colidem. Tick e formato explicitos.
+  xtick={0,0.1,0.2,0.3,0.4,0.5,0.6},
+  scaled x ticks=false,
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
   ymin=0.4, ymax=3.6, ytick={3,2,1}, yticklabels={SARIMA,CatBoost,XGBoost},
   axis lines=left, tick align=outside, tick pos=left,
 ]

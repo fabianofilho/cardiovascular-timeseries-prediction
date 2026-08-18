@@ -233,7 +233,7 @@ relative to any individual interval.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig2_smape_ic.pdf}
+\input{figures/fig2_smape_ic}
 \caption{sMAPE by model with 95\% bootstrap intervals over rolling origin windows. Points
 are the observed values, bars the intervals. The grey band spans the three leading models.
 Its width is the quantity usually reported as a ranking; the bars are the uncertainty of
@@ -289,7 +289,7 @@ regime TimesFM leads at 4.74\% against 5.46\% for SARIMA.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig4_janela.pdf}
+\input{figures/fig4_janela}
 \caption{Accuracy under an expanding training window and under a sliding 60-month window,
 on identical test origins. The classical models degrade when history is truncated; the
 foundation model does not, and overtakes them in that regime.}
@@ -301,7 +301,7 @@ models interleaving at every horizon, with the boosting models separated through
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig3_horizonte.pdf}
+\input{figures/fig3_horizonte}
 \caption{sMAPE by forecast horizon, $n=103$ windows per cell. The leading three models
 cross repeatedly, which is the horizon-level counterpart of the pooled result in
 Table~\ref{tab:pares}.}
@@ -314,7 +314,7 @@ Table~\ref{tab:pares}.}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.8\textwidth]{fig6_temperatura.pdf}
+\input{figures/fig6_temperatura}
 \caption{Reduction in sMAPE from adding monthly minimum temperature as an exogenous
 covariate under the leakage-free climatology policy, with 95\% paired bootstrap intervals.
 Positive values favour the model with temperature. All three intervals exclude zero, which
@@ -336,7 +336,7 @@ almost entirely its climatology, information a seasonal model already carries.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig5_sazonal.pdf}
+\input{figures/fig5_sazonal}
 \caption{Mean cardiovascular deaths by month of year (left axis) against mean monthly
 minimum temperature (right axis), 2010--2023. The mortality peak coincides with the
 temperature trough.}
@@ -350,7 +350,7 @@ anomalies without disrupting the seasonal shape (Figure~\ref{fig:serie}).
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.94\textwidth]{fig1_serie.pdf}
+\input{figures/fig1_serie}
 \caption{Monthly cardiovascular deaths in the state of S\~ao Paulo, January 2010 to
 December 2023 (168 months). The shaded region marks the test window shared with our
 earlier 60-month round, used for the paired comparison in Table~\ref{tab:serie}.}
