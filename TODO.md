@@ -137,10 +137,12 @@ em escala, com centenas de series curtas em vez de uma longa.
 - [x] XGBoost e CatBoost em `requirements-optional.txt`
 - [x] Guarda em `lag12` para horizonte maior que 12 (falha explicita em vez de KeyError cru)
 - [x] `run_uncertainty.py` deixou de depender da ordem dos modelos nos IC por horizonte
-- [ ] Decidir o que fazer com o `matplotlib`: depois da migracao para pgfplots ele nao alimenta
-      mais o manuscrito, so os dois geradores legados em `images/legacy/`. Ou declarar em
-      `requirements-optional.txt` como dependencia de artefato historico, ou aposentar os
-      geradores. O pipeline atual precisa de `pymupdf` e `tectonic` para o PNG, nao dele
+- [x] Aposentar os geradores legados de figura: `generate_paper_figures.py` e
+      `generate_figures_2010_2023.py` sairam de `scripts/` para `images/legacy/`, ao lado das
+      figuras que produzem. Ficam versionados porque o registro do defeito cita
+      `generate_paper_figures.py:88-116` como evidencia; a numeracao de linha foi preservada
+      para a citacao continuar valida. Sao a unica coisa no repo que ainda pede `matplotlib`,
+      que por isso segue fora do `requirements.txt` do pipeline
 - [ ] Alvos no Makefile para as rodadas novas: `benchmark-2010-2023`, `benchmark-exog`, `uncertainty`
 - [ ] Template padrao de registro de experimento em `docs/experiments/`
 - [ ] Testes automatizados para `build_exog_frames` (o teste de vazamento nas 103 janelas hoje

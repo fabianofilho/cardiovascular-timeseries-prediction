@@ -6,7 +6,7 @@ misturavam 24 meses sintéticos de 2019-2020 com dados reais). Aqui toda observa
 vem da série extraída do SIM e versionada em results/series/.
 
 Uso:
-  python scripts/generate_figures_2010_2023.py \
+  python images/legacy/generate_figures_2010_2023.py \
     --series-csv results/series/serie_eventos_sp_sim_real_2010_2023.csv \
     --metrics-csv results/benchmark_sim_real_sp_2010_2023_metrics.csv \
     --predictions-csv results/benchmark_sim_real_sp_2010_2023_predictions.csv \
@@ -29,7 +29,7 @@ import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parent.parent
+BASE = Path(__file__).resolve().parents[2]
 IMG = BASE / "images" / "legacy"
 IMG.mkdir(exist_ok=True)
 

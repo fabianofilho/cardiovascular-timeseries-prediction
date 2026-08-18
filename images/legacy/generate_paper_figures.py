@@ -16,7 +16,7 @@ Figures produced:
   fig7_seasonal_profile.png   — Average monthly mortality profile (seasonal bar chart)
 
 Usage:
-  python scripts/generate_paper_figures.py
+  python images/legacy/generate_paper_figures.py
 """
 
 import warnings
@@ -33,7 +33,7 @@ import matplotlib.ticker as mticker
 from pathlib import Path
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-BASE = Path(__file__).resolve().parent.parent
+BASE = Path(__file__).resolve().parents[2]
 IMG  = BASE / "images" / "legacy"
 IMG.mkdir(exist_ok=True)
 
