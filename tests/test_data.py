@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from cv_timeseries.data import load_and_aggregate_series
+from cv_timeseries.data import checa_serie_agregada, load_and_aggregate_series
 
 
 def escreve(tmp_path: Path, conteudo: str, nome: str = "s.csv") -> str:
@@ -168,3 +168,69 @@ def test_le_a_serie_real_do_manuscrito():
     assert s.min() == 5811 and s.max() == 9582
     assert s.mean() == pytest.approx(7246.589, abs=0.01)
     assert (s > 0).all(), "nenhum mes zerado: se aparecer um, ver test_mes_sem_registro_vira_zero"
+
+
+# --------------------------------------------------------------------------- #
+# checa_serie_agregada: a rede que o validador ganhou
+# --------------------------------------------------------------------------- #
+def _serie(pares):
+    idx = pd.to_datetime([d for d, _ in pares])
+    return pd.Series([v for _, v in pares], index=idx, dtype=float)
+
+
+def test_serie_sadia_passa_nas_duas_checagens():
+    r = checa_serie_agregada(_serie([
+        ("2020-01-01", 100), ("2020-02-01", 110), ("2020-03-01", 120)]))
+    assert r["series_no_zero_period"] and r["series_no_date_gap"]
+    assert r["_detalhe"]["periodos_zerados"] == []
+    assert r["_detalhe"]["periodos_ausentes"] == []
+
+
+def test_mes_zerado_e_reprovado_e_nomeado():
+    """O caso exato que as checagens antigas do validador deixavam passar.
+
+    Numero de pontos e soma maior que zero continuam verdadeiros com um mes zerado no
+    meio, e mes zerado em mortalidade e falha de extracao, nao ausencia de obito.
+    """
+    r = checa_serie_agregada(_serie([
+        ("2020-01-01", 100), ("2020-02-01", 0), ("2020-03-01", 120)]))
+    assert r["series_no_zero_period"] is False
+    assert r["_detalhe"]["periodos_zerados"] == ["2020-02-01"]
+    # a serie continua com 3 pontos e soma positiva: por isso as checagens antigas passavam
+    assert r["_detalhe"]["n_periodos"] == 3
+
+
+def test_mes_ausente_do_indice_e_reprovado_e_nomeado():
+    r = checa_serie_agregada(_serie([
+        ("2020-01-01", 100), ("2020-02-01", 110), ("2020-04-01", 120)]))
+    assert r["series_no_date_gap"] is False
+    assert r["_detalhe"]["periodos_ausentes"] == ["2020-03-01"]
+
+
+def test_reporta_todos_os_culpados_nao_so_o_primeiro():
+    r = checa_serie_agregada(_serie([
+        ("2020-01-01", 0), ("2020-02-01", 110), ("2020-03-01", 0), ("2020-04-01", 0)]))
+    assert r["_detalhe"]["periodos_zerados"] == ["2020-01-01", "2020-03-01", "2020-04-01"]
+
+
+def test_zero_na_borda_tambem_e_pego():
+    """Zero no primeiro ou no ultimo periodo e tao suspeito quanto no meio."""
+    assert not checa_serie_agregada(_serie([
+        ("2020-01-01", 0), ("2020-02-01", 110)]))["series_no_zero_period"]
+    assert not checa_serie_agregada(_serie([
+        ("2020-01-01", 100), ("2020-02-01", 0)]))["series_no_zero_period"]
+
+
+def test_detalhe_traz_extremos_para_leitura_rapida():
+    r = checa_serie_agregada(_serie([
+        ("2020-01-01", 100), ("2020-02-01", 300), ("2020-03-01", 200)]))
+    assert r["_detalhe"]["min"] == 100.0 and r["_detalhe"]["max"] == 300.0
+
+
+@pytest.mark.skipif(not SERIE_REAL.exists(), reason="serie versionada ausente")
+def test_a_serie_real_passa_nas_duas_checagens():
+    """Se um dia falhar aqui, a extracao quebrou e o benchmark nao deve rodar."""
+    s = load_and_aggregate_series(str(SERIE_REAL), "date", "value")
+    r = checa_serie_agregada(s)
+    assert r["series_no_zero_period"], r["_detalhe"]["periodos_zerados"]
+    assert r["series_no_date_gap"], r["_detalhe"]["periodos_ausentes"]

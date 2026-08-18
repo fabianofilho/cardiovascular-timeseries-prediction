@@ -161,15 +161,13 @@ em escala, com centenas de series curtas em vez de uma longa.
 - [x] Testes de `load_and_aggregate_series`: 17 testes em `tests/test_data.py`, cobrindo
       agregacao, ordenacao, frequencia, as quatro validacoes de entrada, e a leitura da
       serie real do manuscrito. Suite total: 83 testes, todo o pipeline coberto
-- [ ] **Buraco de mes vira zero, e ninguem percebe.** `load_and_aggregate_series` faz
-      `.sum(min_count=1).fillna(0.0)`, entao um mes sem NENHUMA linha na entrada sai como
-      0 obitos, nao como faltante. Para esta serie isso e falha de extracao, nao ausencia
-      de evento: o minimo real e 5.811. O zero entraria como outlier extremo que o modelo
-      tenta ajustar, e nada acusa, porque `validate_real_dataset.py` so confere numero de
-      pontos e soma maior que zero. Hoje a serie de 168 meses nao tem buraco, entao o risco
-      e latente. Decidir entre: (a) manter NaN e falhar explicito, (b) manter o zero mas
-      adicionar checagem de mes zerado no validador. Comportamento fixado em
-      `tests/test_data.py::test_mes_sem_registro_vira_zero`
+- [x] **Buraco de mes vira zero**: resolvido pelo lado do validador, opcao (b).
+      `checa_serie_agregada` em `data.py` reprova serie com periodo zerado ou ausente e
+      NOMEIA os periodos culpados; `validate_real_dataset.py` passa a rodar as duas
+      checagens e sai com codigo 1. As checagens antigas (numero de pontos, soma maior
+      que zero) passavam nos dois casos, o que foi medido antes de mudar. O
+      comportamento de `load_and_aggregate_series` continua o mesmo de proposito: quem
+      barra agora e o validador, que roda antes do benchmark
 - [ ] `scripts/plot_stratified_results.py` para figuras por estrato
 - [x] Decidir o destino das figuras antigas `fig1_time_series.png` e `fig7_seasonal_profile.png`,
       que contem 24 meses sintetizados: movidas para `images/legacy/`, com README explicando o

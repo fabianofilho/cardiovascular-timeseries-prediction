@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from cv_timeseries.data import checa_serie_agregada
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -17,6 +19,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--meta-json", default="", help="Metadado de extração")
     parser.add_argument("--min-series-points", type=int, default=24)
     parser.add_argument("--expected-cid-prefix", default="I")
+    parser.add_argument("--series-freq", default="MS",
+                        help="Frequencia esperada da serie, para detectar periodo ausente")
     parser.add_argument("--report-output", default="results/data_reality_report.json")
     return parser.parse_args()
 
@@ -45,6 +49,21 @@ def main() -> None:
     checks["series_points_min"] = len(series) >= args.min_series_points
     checks["series_value_sum_gt_0"] = float(series["value"].sum()) > 0 if "value" in series.columns else False
 
+    # Periodo zerado e periodo ausente. As checagens acima passam com um mes zerado no
+    # meio da serie, e mes zerado em mortalidade e falha de extracao, nao ausencia de
+    # obito. Ver checa_serie_agregada e tests/test_data.py.
+    detalhe_serie = {}
+    if checks["series_has_columns"]:
+        s = series.copy()
+        s["date"] = pd.to_datetime(s["date"])
+        s = s.set_index("date")["value"].sort_index()
+        res = checa_serie_agregada(s, freq=args.series_freq)
+        detalhe_serie = res.pop("_detalhe")
+        checks.update(res)
+    else:
+        checks["series_no_zero_period"] = False
+        checks["series_no_date_gap"] = False
+
     if args.meta_json:
         meta_path = Path(args.meta_json)
         if meta_path.exists():
@@ -62,6 +81,7 @@ def main() -> None:
         "checks": checks,
         "raw_csv": args.raw_csv,
         "series_csv": args.series_csv,
+        "series_detail": detalhe_serie,
     }
 
     out = Path(args.report_output)
