@@ -1,0 +1,43 @@
+% gerado por scripts/build_pgf_figures.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.80\textwidth, height=5.4cm,
+  xlabel={sMAPE (\%)}, xmin=4.3, xmax=7.7,
+  xtick={4.5,5.0,5.5,6.0,6.5,7.0,7.5},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1,
+                     /pgf/number format/zerofill},
+  ymin=0.4, ymax=5.7, ytick={5,4,3,2,1}, yticklabels={Prophet,SARIMA,TimesFM,CatBoost,XGBoost},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={Cost of discarding history beyond five years},
+]
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(4.7010,5) (5.3909,5)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] coordinates {(4.7010,5)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] coordinates {(5.3909,5)};
+\definecolor{d0}{HTML}{C44E52}
+\node[anchor=west, font=\scriptsize, text=d0] at (axis cs:5.4909,5) {+0.69 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(4.7957,4) (5.4588,4)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] coordinates {(4.7957,4)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] coordinates {(5.4588,4)};
+\definecolor{d1}{HTML}{C44E52}
+\node[anchor=west, font=\scriptsize, text=d1] at (axis cs:5.5588,4) {+0.66 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(4.8325,3) (4.7447,3)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] coordinates {(4.8325,3)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] coordinates {(4.7447,3)};
+\definecolor{d2}{HTML}{55A868}
+\node[anchor=west, font=\scriptsize, text=d2] at (axis cs:4.9325,3) {-0.09 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.5893,2) (6.6424,2)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] coordinates {(6.5893,2)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] coordinates {(6.6424,2)};
+\definecolor{d3}{HTML}{C44E52}
+\node[anchor=west, font=\scriptsize, text=d3] at (axis cs:6.7424,2) {+0.05 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.9350,1) (6.8657,1)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] coordinates {(6.9350,1)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] coordinates {(6.8657,1)};
+\definecolor{d4}{HTML}{55A868}
+\node[anchor=west, font=\scriptsize, text=d4] at (axis cs:7.0350,1) {-0.07 pp};
+\node[anchor=east, font=\scriptsize] at (axis cs:7.65,5.35)
+  {\textcolor{cprophet}{$\bullet$} Expanding \quad
+    \textcolor{csarima}{$\bullet$} Sliding 60};
+\end{axis}
+\end{tikzpicture}

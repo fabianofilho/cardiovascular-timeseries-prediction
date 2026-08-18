@@ -1,0 +1,27 @@
+% gerado por scripts/build_pgf_figures.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.80\textwidth, height=4.8cm,
+  axis y line*=left, axis x line*=bottom,
+  xmin=0.5, xmax=12.5, xtick={1,...,12}, xticklabels={J,F,M,A,M,J,J,A,S,O,N,D},
+  ylabel={Mean deaths per month}, ylabel style={text=cxgboost},
+  scaled y ticks=false, ytick={6500,7000,7500,8000},
+  yticklabel style={text=cxgboost, /pgf/number format/fixed,
+                     /pgf/number format/1000 sep={,}},
+  tick align=outside,
+]
+\addplot[draw=cxgboost, mark=*, mark size=2.0pt, line width=1.1pt]
+  coordinates {(1,6969.9) (2,6272.8) (3,6856.3) (4,6764.0) (5,7678.1) (6,7971.6) (7,8247.2) (8,7893.4) (9,7268.9) (10,7201.0) (11,6817.7) (12,7018.1)};
+\end{axis}
+\begin{axis}[
+  width=0.80\textwidth, height=4.8cm,
+  axis y line*=right, axis x line=none,
+  xmin=0.5, xmax=12.5,
+  ylabel={Mean minimum temperature (C)}, ylabel style={text=cprophet},
+  yticklabel style={text=cprophet},
+  tick align=outside,
+]
+\addplot[draw=cprophet, mark=square*, mark size=1.7pt, line width=0.9pt, dashed]
+  coordinates {(1,19.72) (2,19.79) (3,19.16) (4,17.54) (5,15.07) (6,14.06) (7,13.44) (8,13.83) (9,15.76) (10,16.93) (11,17.33) (12,19.14)};
+\end{axis}
+\end{tikzpicture}

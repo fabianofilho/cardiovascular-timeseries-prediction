@@ -1,0 +1,28 @@
+% gerado por scripts/build_pgf_figures.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.80\textwidth, height=5.2cm,
+  xlabel={sMAPE (\%)}, xmin=4.0, xmax=7.8,
+  xtick={4.0,4.5,5.0,5.5,6.0,6.5,7.0,7.5},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1,
+                     /pgf/number format/zerofill},
+  ymin=0.4, ymax=5.6, ytick={5,4,3,2,1}, yticklabels={Prophet,SARIMA,TimesFM,CatBoost,XGBoost},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={Spread among the leading three: 0.13 pp; mean interval width: 1.07 pp},
+]
+\addplot[draw=none, fill=black, fill opacity=0.14, forget plot]
+  coordinates {(4.7010,0.4) (4.8325,0.4) (4.8325,5.6) (4.7010,5.6)}
+  \closedcycle;
+\addplot[draw=cprophet, line width=2.0pt, mark=none] coordinates {(4.1709,5) (5.2675,5)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cprophet, fill=cprophet] coordinates {(4.7010,5)};
+\addplot[draw=csarima, line width=2.0pt, mark=none] coordinates {(4.2890,4) (5.3270,4)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=csarima, fill=csarima] coordinates {(4.7957,4)};
+\addplot[draw=ctimesfm, line width=2.0pt, mark=none] coordinates {(4.3245,3) (5.3851,3)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ctimesfm, fill=ctimesfm] coordinates {(4.8325,3)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(5.9248,2) (7.2734,2)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(6.5893,2)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(6.2614,1) (7.6465,1)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(6.9350,1)};
+\end{axis}
+\end{tikzpicture}

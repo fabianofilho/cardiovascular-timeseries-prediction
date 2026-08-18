@@ -1,0 +1,19 @@
+% gerado por scripts/build_pgf_figures.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.78\textwidth, height=3.8cm,
+  xlabel={Reduction in sMAPE from the temperature covariate (pp)},
+  xmin=-0.06, xmax=0.60,
+  ymin=0.4, ymax=3.6, ytick={3,2,1}, yticklabels={SARIMA,CatBoost,XGBoost},
+  axis lines=left, tick align=outside, tick pos=left,
+]
+\draw[black!45, dashed, line width=0.6pt]
+  (axis cs:0,0.4) -- (axis cs:0,3.6);
+\addplot[draw=csarima, line width=2.0pt, mark=none] coordinates {(0.0340,3) (0.2573,3)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=csarima, fill=csarima] coordinates {(0.1358,3)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(0.0728,2) (0.4519,2)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(0.2581,2)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(0.2218,1) (0.5427,1)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.3822,1)};
+\end{axis}
+\end{tikzpicture}
