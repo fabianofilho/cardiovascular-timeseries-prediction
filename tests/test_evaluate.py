@@ -15,6 +15,8 @@ publicado com quatro casas decimais e cara de precisao.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -246,3 +248,42 @@ def test_smape_do_pacote_concorda_com_a_forma_usada_nas_analises():
         yp = yt + rng.normal(0, 400, size=60)
         vetorial = float(np.mean(200.0 * np.abs(yp - yt) / (np.abs(yt) + np.abs(yp))))
         assert smape(yt, yp) == pytest.approx(vetorial, rel=1e-9)
+
+
+# --------------------------------------------------------------------------- #
+# MASE
+# --------------------------------------------------------------------------- #
+from cv_timeseries.evaluate import mase, mase_denominador  # noqa: E402
+
+
+def test_mase_denominador_e_o_mae_do_snaive_em_amostra(serie):
+    d = mase_denominador(serie, m=12)
+    esperado = float(np.mean(np.abs(serie.values[12:] - serie.values[:-12])))
+    assert d == pytest.approx(esperado)
+
+
+def test_mase_igual_a_um_quando_o_erro_iguala_a_referencia():
+    """A leitura do MASE depende disso: 1,0 e a fronteira."""
+    yt = np.array([10.0, 20.0, 30.0])
+    yp = yt + 5.0
+    assert mase(yt, yp, denominador=5.0) == pytest.approx(1.0)
+
+
+def test_mase_menor_que_um_vence_a_referencia():
+    yt = np.array([10.0, 20.0, 30.0])
+    assert mase(yt, yt + 2.0, denominador=5.0) == pytest.approx(0.4)
+
+
+def test_mase_denominador_exige_serie_maior_que_a_sazonalidade():
+    curta = pd.Series(np.arange(10.0), index=pd.date_range("2020-01-01", periods=10, freq="MS"))
+    with pytest.raises(ValueError, match="defasagem sazonal"):
+        mase_denominador(curta, m=12)
+
+
+def test_mase_da_serie_real_reproduz_o_valor_do_benchmark(serie):
+    """Ancora numerica: 412,85 e o denominador que o manuscrito vai citar."""
+    real = Path(__file__).resolve().parents[1] / "results/series/serie_eventos_sp_sim_real_2010_2023.csv"
+    if not real.exists():
+        pytest.skip("serie versionada ausente")
+    s = pd.read_csv(real, parse_dates=["date"]).set_index("date")["value"]
+    assert mase_denominador(s, m=12) == pytest.approx(412.8525641025641, abs=1e-9)

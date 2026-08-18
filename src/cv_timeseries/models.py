@@ -265,3 +265,46 @@ class TimesFMForecaster(Forecaster):
             "Interface TimesFM não reconhecida para esta versão. "
             "Ajuste o wrapper em src/cv_timeseries/models.py"
         )
+
+
+class NaiveForecaster(Forecaster):
+    """Ultimo valor observado, repetido. A referencia mais crua que existe."""
+
+    name = "naive"
+
+    def forecast(self, train, horizon, exog_train=None, exog_future=None):
+        return np.full(horizon, float(train.iloc[-1]))
+
+
+class SeasonalNaiveForecaster(Forecaster):
+    """Mesmo mes do ano anterior. A referencia que importa em serie sazonal.
+
+    E a barra que qualquer modelo precisa passar para justificar existir: se ele nao
+    vence repetir o ano passado, ele nao aprendeu sazonalidade, so a reproduziu pior.
+    """
+
+    name = "snaive"
+    m = 12
+
+    def forecast(self, train, horizon, exog_train=None, exog_future=None):
+        if len(train) < self.m:
+            return np.full(horizon, float(train.iloc[-1]))
+        return np.array([float(train.iloc[-self.m + i % self.m]) for i in range(horizon)])
+
+
+class SeasonalNaiveDriftForecaster(SeasonalNaiveForecaster):
+    """Naive sazonal mais a tendencia do ultimo ano, distribuida no horizonte.
+
+    Existe porque a serie tem tendencia de alta (79.933 obitos em 2010, 95.538 em 2023):
+    sem o drift, a referencia sazonal pura subestima sistematicamente, e vencer uma
+    referencia enviesada nao prova nada.
+    """
+
+    name = "snaive_drift"
+
+    def forecast(self, train, horizon, exog_train=None, exog_future=None):
+        base = super().forecast(train, horizon)
+        if len(train) <= self.m + 1:
+            return base
+        drift = float(train.iloc[-1]) - float(train.iloc[-self.m - 1])
+        return base + drift * np.arange(1, horizon + 1) / self.m

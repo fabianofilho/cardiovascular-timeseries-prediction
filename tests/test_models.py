@@ -200,3 +200,67 @@ def test_forecast_aceita_os_argumentos_de_exogena(cls):
         assert p in params, f"{cls.name}.forecast nao aceita {p}"
     assert params["exog_train"].default is None
     assert params["exog_future"].default is None
+
+
+# --------------------------------------------------------------------------- #
+# baselines ingenuas
+# --------------------------------------------------------------------------- #
+from cv_timeseries.models import (  # noqa: E402
+    NaiveForecaster,
+    SeasonalNaiveDriftForecaster,
+    SeasonalNaiveForecaster,
+)
+
+BASELINES = [NaiveForecaster, SeasonalNaiveForecaster, SeasonalNaiveDriftForecaster]
+
+
+def _serie(n=36):
+    idx = pd.date_range("2020-01-01", periods=n, freq="MS")
+    return pd.Series(np.arange(1.0, n + 1.0), index=idx)
+
+
+@pytest.mark.parametrize("cls", BASELINES, ids=lambda c: c.name)
+def test_baseline_nao_precisa_de_dependencia_externa(cls):
+    """O ponto das baselines: rodam em qualquer maquina.
+
+    Uma referencia que so roda onde statsmodels esta instalado nao serve de referencia,
+    porque some justamente quando o benchmark e reproduzido em outro lugar.
+    """
+    m = cls()
+    out = m.forecast(_serie(), horizon=6)
+    assert isinstance(out, np.ndarray) and len(out) == 6
+    assert np.all(np.isfinite(out))
+
+
+def test_naive_repete_o_ultimo_valor():
+    out = NaiveForecaster().forecast(_serie(36), horizon=4)
+    assert list(out) == [36.0] * 4
+
+
+def test_snaive_repete_o_mesmo_mes_do_ano_anterior():
+    s = _serie(36)
+    out = SeasonalNaiveForecaster().forecast(s, horizon=6)
+    # ultimos 12 pontos sao 25..36; o horizonte pega 25,26,27,...
+    assert list(out) == [25.0, 26.0, 27.0, 28.0, 29.0, 30.0]
+
+
+def test_snaive_com_serie_curta_cai_para_o_naive():
+    """Menos de 12 pontos nao permite defasagem sazonal; nao pode quebrar."""
+    s = _serie(5)
+    assert list(SeasonalNaiveForecaster().forecast(s, horizon=3)) == [5.0] * 3
+
+
+def test_snaive_drift_soma_tendencia_ao_snaive():
+    """Sem drift a referencia sazonal subestima serie em alta, e vencer referencia
+    enviesada nao prova nada."""
+    s = _serie(36)                       # cresce 1 por mes, entao 12 por ano
+    base = SeasonalNaiveForecaster().forecast(s, horizon=6)
+    com = SeasonalNaiveDriftForecaster().forecast(s, horizon=6)
+    assert np.all(com > base)
+    # drift anual = 36 - 24 = 12; no horizonte h soma 12*h/12 = h
+    assert np.allclose(com - base, np.arange(1, 7))
+
+
+def test_baselines_nao_aceitam_exogena():
+    for cls in BASELINES:
+        assert cls.supports_exog is False

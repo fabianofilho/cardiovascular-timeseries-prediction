@@ -12,6 +12,9 @@ from cv_timeseries.evaluate import mae, rmse, rolling_origin_splits, smape
 from cv_timeseries.exog import build_exog_frames
 from cv_timeseries.models import (
     CatBoostForecaster,
+    NaiveForecaster,
+    SeasonalNaiveDriftForecaster,
+    SeasonalNaiveForecaster,
     ProphetForecaster,
     SarimaForecaster,
     TimesFMForecaster,
@@ -41,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         default="sarima,prophet,timesfm",
-        help="Lista separada por vírgula (opções: sarima, prophet, timesfm, xgboost, catboost)",
+        help="Lista separada por vírgula (opções: sarima, prophet, timesfm, xgboost, catboost, naive, snaive, snaive_drift)",
     )
     parser.add_argument("--output-prefix", default="results/benchmark", help="Prefixo de saída")
     parser.add_argument(
@@ -85,7 +88,8 @@ def load_exog(csv_path: str, date_col: str, cols: list[str], freq: str) -> pd.Da
 
 def build_models(model_names: list[str]):
     selected = {m.strip().lower() for m in model_names if m.strip()}
-    valid = {"sarima", "prophet", "timesfm", "xgboost", "catboost"}
+    valid = {"sarima", "prophet", "timesfm", "xgboost", "catboost",
+             "naive", "snaive", "snaive_drift"}
     invalid = selected - valid
     if invalid:
         raise ValueError(f"Modelos inválidos: {sorted(invalid)}")
@@ -122,6 +126,15 @@ def build_models(model_names: list[str]):
             models.append(CatBoostForecaster())
         except Exception as exc:
             print(f"[WARN] CatBoost indisponível: {exc}")
+
+    # Baselines ingenuas: sem dependencia externa, entao nao precisam de try/except.
+    # Rodam em qualquer maquina, que e parte do ponto: a referencia tem que estar
+    # sempre disponivel para o benchmark nunca ser reportado sem ela.
+    for nome, cls in (("naive", NaiveForecaster),
+                      ("snaive", SeasonalNaiveForecaster),
+                      ("snaive_drift", SeasonalNaiveDriftForecaster)):
+        if nome in selected:
+            models.append(cls())
 
     if not models:
         raise RuntimeError("Nenhum modelo disponível para rodar.")

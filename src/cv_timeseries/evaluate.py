@@ -48,3 +48,29 @@ def rolling_origin_splits(
         test = series.iloc[train_end : train_end + horizon]
         if len(test) == horizon:
             yield train, test
+
+
+def mase(y_true: np.ndarray, y_pred: np.ndarray, denominador: float) -> float:
+    """Mean Absolute Scaled Error: MAE dividido pelo MAE do naive sazonal em amostra.
+
+    Metrica padrao da literatura de forecasting, e a que responde a pergunta que sMAPE
+    e MAE nao respondem: o modelo vale mais que a regra ingenua? MASE < 1 vence o naive
+    sazonal, MASE > 1 perde para ele.
+
+    Um benchmark sem baseline ingenua nao diz se os modelos aprenderam algo ou apenas
+    reproduziram a sazonalidade. Em revista de forecasting essa ausencia e a primeira
+    coisa que o revisor cobra.
+    """
+    return float(mae(y_true, y_pred) / denominador)
+
+
+def mase_denominador(series: pd.Series, m: int = 12) -> float:
+    """MAE do naive sazonal EM AMOSTRA, o denominador canonico do MASE.
+
+    Calculado sobre a serie inteira, nao por janela: e uma constante de escala da serie,
+    para que o MASE de modelos diferentes seja comparavel entre si.
+    """
+    v = np.asarray(series, dtype=float)
+    if len(v) <= m:
+        raise ValueError(f"serie com {len(v)} pontos nao permite defasagem sazonal de {m}")
+    return float(np.mean(np.abs(v[m:] - v[:-m])))
