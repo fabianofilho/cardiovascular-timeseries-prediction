@@ -153,8 +153,13 @@ em escala, com centenas de series curtas em vez de uma longa.
 - [x] Testes de `rolling_origin_splits` e das metricas: 28 testes em `tests/test_evaluate.py`,
       incluindo a invariante de que expanding e deslizante produzem AS MESMAS origens, que e
       pre-requisito do experimento de sensibilidade de janela. Suite total: 46 testes
-- [ ] Estender a suite para `load_and_aggregate_series` (`data.py`) e para o bootstrap por
-      bloco de `run_uncertainty.py`, que hoje so tem conferencia manual
+- [x] Testes do bootstrap por bloco e do Diebold-Mariano: 20 testes em
+      `tests/test_uncertainty.py`. As funcoes sairam de `scripts/run_uncertainty.py` para
+      `src/cv_timeseries/uncertainty.py`, e o refactor foi provado neutro comparando 4.856
+      celulas das quatro rodadas de incerteza contra os CSVs publicados: divergencia 0,00.
+      Suite total: 66 testes
+- [ ] Estender a suite para `load_and_aggregate_series` (`data.py`), a unica peca do
+      pipeline que ainda nao tem teste
 - [ ] `scripts/plot_stratified_results.py` para figuras por estrato
 - [x] Decidir o destino das figuras antigas `fig1_time_series.png` e `fig7_seasonal_profile.png`,
       que contem 24 meses sintetizados: movidas para `images/legacy/`, com README explicando o

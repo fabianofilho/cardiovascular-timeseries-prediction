@@ -28,7 +28,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy import stats
+from cv_timeseries.uncertainty import (
+    bootstrap_metrica,
+    dm_test,
+    ic_percentil,
+    p_bicaudal,
+    sortear_janelas,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -77,29 +83,6 @@ def to_matrices(df: pd.DataFrame, models: list[str], n_win: int, n_hor: int) -> 
     return out
 
 
-def dm_test(d: np.ndarray, h: int) -> tuple[float, float]:
-    """Diebold-Mariano com correção de Harvey, Leybourne e Newbold para amostra pequena.
-
-    d é a série do diferencial de perda por janela, para um horizonte fixo.
-    A variância de longo prazo usa truncamento em h-1 defasagens, que é o padrão para
-    previsão h passos à frente.
-    """
-    n = len(d)
-    d_bar = d.mean()
-    gamma0 = np.sum((d - d_bar) ** 2) / n
-    var = gamma0
-    for lag in range(1, h):
-        cov = np.sum((d[lag:] - d_bar) * (d[:-lag] - d_bar)) / n
-        var += 2.0 * cov
-    if var <= 0:  # variância de longo prazo negativa, truncamento não confiável
-        return float("nan"), float("nan")
-    dm = d_bar / np.sqrt(var / n)
-    correcao = np.sqrt((n + 1 - 2 * h + h * (h - 1) / n) / n)
-    dm_corrigido = dm * correcao
-    p = 2 * (1 - stats.t.cdf(abs(dm_corrigido), df=n - 1))
-    return float(dm_corrigido), float(p)
-
-
 def main() -> int:
     args = parse_args()
     df = pd.read_csv(args.predictions_csv, parse_dates=["date"])
@@ -117,7 +100,6 @@ def main() -> int:
     n_win = int(df.window.max())
     n_hor = int(df.horizon.max())
     mats = to_matrices(df, models, n_win, n_hor)
-    rng = np.random.default_rng(args.seed)
     B = args.n_boot
 
     out_prefix = Path(args.output_prefix)
@@ -131,9 +113,9 @@ def main() -> int:
     ae = {m: np.abs(mats[m]["y_pred"] - mats[m]["y_true"]) for m in models}
 
     # ---------- N2 e N3: bootstrap pareado de janelas ----------
-    idx = rng.integers(0, n_win, size=(B, n_win))
-    boot_sm = {m: sm[m][idx].mean(axis=(1, 2)) for m in models}
-    boot_ae = {m: ae[m][idx].mean(axis=(1, 2)) for m in models}
+    idx = sortear_janelas(n_win, B, args.seed)
+    boot_sm = {m: bootstrap_metrica(sm[m], idx) for m in models}
+    boot_ae = {m: bootstrap_metrica(ae[m], idx) for m in models}
 
     linhas = []
     for m in models:
@@ -141,7 +123,7 @@ def main() -> int:
             ("smape", sm[m].mean(), boot_sm[m]),
             ("mae", ae[m].mean(), boot_ae[m]),
         ):
-            lo, hi = np.percentile(boot, [2.5, 97.5])
+            lo, hi = ic_percentil(boot)
             linhas.append({
                 "model": m, "metric": nome, "point": pontual,
                 "ci_low": lo, "ci_high": hi, "ci_width": hi - lo,
@@ -159,13 +141,12 @@ def main() -> int:
         ):
             dif = mat[a].mean() - mat[b].mean()
             boot_dif = boot[a] - boot[b]
-            lo, hi = np.percentile(boot_dif, [2.5, 97.5])
-            # p-valor bicaudal do bootstrap: fração de réplicas do outro lado do zero
-            p_boot = 2 * min((boot_dif >= 0).mean(), (boot_dif <= 0).mean())
+            lo, hi = ic_percentil(boot_dif)
+            p_boot = p_bicaudal(boot_dif)
             linhas.append({
                 "pair": f"{a}_menos_{b}", "metric": nome, "diff_point": dif,
                 "ci_low": lo, "ci_high": hi, "ci_contains_zero": bool(lo <= 0 <= hi),
-                "p_bootstrap": min(p_boot, 1.0), "B": B,
+                "p_bootstrap": p_boot, "B": B,
             })
     pair_df = pd.DataFrame(linhas)
 
@@ -196,7 +177,7 @@ def main() -> int:
             # do gerador. Reusar `idx` também mantém as janelas pareadas entre
             # modelos e horizontes, que é o mesmo desenho dos blocos N2 e N3.
             boot_h = col[idx].mean(axis=1)
-            lo, hi = np.percentile(boot_h, [2.5, 97.5])
+            lo, hi = ic_percentil(boot_h)
             linhas.append({
                 "model": m, "horizon": h, "smape": col.mean(),
                 "ci_low": lo, "ci_high": hi,
