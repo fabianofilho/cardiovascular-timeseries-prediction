@@ -1,0 +1,46 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Feature engineering variants for the two gradient boosting models, evaluated under
+the same protocol as Table~\ref{tab:desempenho}. The last two columns test the CatBoost
+variant against the seasonal naive method.}
+\label{tab:variantes}
+\begin{tabular}{lrrrrcc}
+\toprule
+& \multicolumn{2}{c}{CatBoost} & \multicolumn{2}{c}{XGBoost}
+& \multicolumn{2}{c}{CatBoost vs seasonal naive} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Variant & sMAPE & MASE & sMAPE & MASE & 95\% CI of $\Delta$ & DM \\
+\midrule
+Lags only (as reported) & 6.59 & 1.213 & 6.83 & 1.254 & $[-0.06, +0.72]$ & 0/6 \\
++ rolling window statistics & 6.79 & 1.248 & 6.98 & 1.281 & $[+0.16, +0.90]$ & 0/6 \\
++ Fourier calendar terms & 6.27 & 1.150 & 6.66 & 1.223 & $[-0.37, +0.39]$ & 0/6 \\
+Seasonal differencing & 6.20 & 1.142 & 6.28 & 1.154 & $[-0.37, +0.23]$ & 0/6 \\
+Differencing + windows + calendar & 6.14 & 1.129 & 6.43 & 1.180 & $[-0.43, +0.14]$ & 0/6 \\
+As above, direct multi-step & 6.09 & 1.126 & 6.39 & 1.183 & $[-0.45, +0.10]$ & 0/6 \\
+\midrule
+Seasonal naive (benchmark) & \multicolumn{4}{c}{6.27 \quad 1.148} & --- & --- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+The first row is the configuration reported in Table~\ref{tab:desempenho} and reproduces it.
+Each subsequent row changes one thing. Adding rolling window statistics makes both models
+worse. Replacing the raw level by the seasonal difference $y_t - y_{t-12}$ is the single
+change that helps, and it helps because it hands the models the annual cycle instead of
+requiring them to learn it. The best variant, CatBoost with differencing, calendar terms and
+one model per horizon, reaches 6.09\% against
+6.27\% for the seasonal naive method. That difference does not meet the
+criterion declared in Section~\ref{sec:metodos}: the paired bootstrap interval is
+$[-0.45,
++0.10]$ and contains zero, and no
+Diebold-Mariano cell of six reaches significance. $\Delta$ is the difference in sMAPE
+against the seasonal naive method, so negative favours the variant. Every variant remains
+more than one percentage point behind the three leading models of
+Table~\ref{tab:desempenho}.
+\end{minipage}
+\end{table}

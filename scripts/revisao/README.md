@@ -11,6 +11,7 @@ depender disso. Os resultados correspondentes estão em `results/revisao/`.
 |---|---|
 | `run_optuna.py` | O desempenho fraco dos boosters é falta de ajuste de hiperparâmetros? |
 | `run_intervals.py` | SARIMA e Prophet produzem intervalo de previsão; ele é calibrado? |
+| `variants.py`, `run_variants.py` | Engenharia de atributos resolve o que o tuning não resolveu? |
 
 ## `run_optuna.py`
 
@@ -70,6 +71,37 @@ Conclusão: os dois subcobrem, o SARIMA por 10,5 pp e o Prophet por 17,8 pp. E o
 tem o melhor sMAPE dos cinco, tem o pior dos dois intervalos. Está no manuscrito, na subseção
 "The prediction intervals are not calibrated".
 
+## `variants.py` e `run_variants.py`
+
+Seis variantes, mudando uma coisa de cada vez: `base` (o do paper), `roll` (estatísticas de
+janela), `cal` (Fourier sobre mês do ano), `diff12` (alvo em diferença sazonal), `full` e
+`direct` (um modelo por horizonte).
+
+### Reproduzido
+
+Rodei a grade inteira. Os hiperparâmetros do `base` dele são os mesmos de
+`src/cv_timeseries/models.py`, então o `base` funciona como controle da bancada, e passou:
+
+| controle | esperado | obtido |
+|---|---:|---:|
+| `catboost_base` | 6,5893 | **6,5893** |
+| `xgboost_base` | 6,8324 (xgboost 3.2.0) | **6,8324** |
+
+E o número dele reproduz: `catboost_direct` = **6,0921**.
+
+### Mas o 6,09 não é o que parece
+
+Submetido ao critério pré-declarado do paper (IC do bootstrap pareado excluindo zero **e**
+Diebold-Mariano p<0,05 em ao menos 3 de 6 horizontes), o 6,09 **não bate** o naive sazonal
+de 6,27: o intervalo é [-0,45, +0,10] e o DM dá 0 de 6. Nenhuma das doze combinações passa.
+
+Análise em `scripts/analisa_variantes.py`, resultado em
+`results/revisao/variants_vs_snaive.json`.
+
+O padrão do que ajuda vale mais que o total: estatística de janela **piora** os dois
+modelos, e o ganho vem da diferença sazonal. Ou seja, o que faltava aos boosters era
+representação do ciclo anual, não capacidade.
+
 ## Adaptações feitas ao versionar
 
 Marcadas no código com `# ADAPTADO`:
@@ -85,6 +117,5 @@ Fora isso, o código é o dele, sem alteração.
 
 ## O que ainda falta trazer do Drive
 
-`variants.py`, `run_variants.py` (variantes com engenharia de atributos, que batem o Optuna:
-CatBoost 6,09), `run_covid.py`, `run_prophet_exog.py`, `run_temp_melhorado.py`,
-`check_dm_variance.py` e `build_revisao_assets.py`.
+`run_covid.py`, `run_prophet_exog.py`, `run_temp_melhorado.py`, `check_dm_variance.py` e
+`build_revisao_assets.py`.

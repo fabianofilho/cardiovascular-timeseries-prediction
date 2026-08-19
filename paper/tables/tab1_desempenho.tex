@@ -29,9 +29,11 @@ Naive & 810.7 & 1003.0 & 10.74 & 1.964 & $[9.81, 11.68]$ \\
 \footnotesize
 Bold marks the best value in each metric column among the forecasting models; the three
 rows below the rule are naive references, not competitors. MASE is the MAE divided by the
-in-sample MAE of the seasonal naive method (412.9 deaths), so MASE below 1 beats
-repeating the same month of the previous year and MASE above 1 loses to it. MAE and RMSE
-are in deaths per month;
+in-sample one-step MAE of the seasonal naive method (412.9 deaths). Because the
+forecasts scored here are one to six steps ahead and out of sample, unity is not the
+relevant threshold: the out-of-sample seasonal naive method itself attains
+1.148, and that row, not the value 1, is the benchmark the
+models have to beat. MAE and RMSE are in deaths per month;
 sMAPE is symmetric mean absolute percentage error. Intervals are percentile bootstrap
 with $B=10,000$ replicates (seed 20260817) resampling whole rolling origin windows rather
 than individual forecasts, because the six horizons within a window share a training

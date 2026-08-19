@@ -101,7 +101,7 @@ covariate under an explicitly leakage-free design. This work extends an earlier 
 same benchmark restricted to 60 months, in which TimesFM ranked first; that ranking did not
 survive the addition of data or of intervals, and we report why.
 
-\section{Methods}
+\section{Methods}\label{sec:metodos}
 
 \subsection{Data source and preprocessing}
 
@@ -257,19 +257,26 @@ support.}
 \subsection{Two models fail to beat a naive benchmark}
 
 A forecast is informative only relative to a rule that requires no model, and the scaled
-error in Table~\ref{tab:desempenho} makes that comparison explicit. Prophet, SARIMA and
-TimesFM reach MASE values of 0.860, 0.880 and 0.887, each reducing the error of the
-seasonal naive method by roughly 11 to 14\%. CatBoost and XGBoost reach 1.213 and 1.275:
-both are worse than simply repeating the same month of the previous year.
+error in Table~\ref{tab:desempenho} makes that comparison explicit. The seasonal naive
+method, which simply repeats the same calendar month of the previous year, attains an sMAPE
+of 6.27\% and a MASE of 1.148; adding a drift term brings it to 6.18\%. Prophet, SARIMA and
+TimesFM sit far below that, at MASE 0.860, 0.880 and 0.887, reducing the error of the
+seasonal benchmark by roughly a quarter. CatBoost and XGBoost sit above it, at 1.213 and
+1.275, or 6.59\% and 6.94\% in sMAPE.
 
-The size of that gap is easier to read in the original units. The seasonal naive method
-attains an sMAPE of 6.27\%, and adding a drift term brings it to 6.18\%, while CatBoost and
-XGBoost record 6.59\% and 6.94\%. The two gradient boosting models are therefore not merely
-the weakest of the five; they fall below the benchmark that any model has to clear to
-justify being fitted at all. The unstructured naive method, which repeats the last observed
-month and ignores the annual cycle, is far behind everything else at 10.74\%, and the
-distance between it and the seasonal naive method measures how much of this series is
-seasonal.
+The unstructured naive method, which repeats the last observed month and ignores the annual
+cycle, is far behind everything else at 10.74\%. The distance between it and the seasonal
+naive method measures how much of this series is simply the annual cycle, and it is most of
+what there is to forecast.
+
+The claim these numbers support is that the two boosting models fail to improve on a rule
+that requires no model, not that they are reliably worse than it. Applying the criterion
+declared in Section~\ref{sec:metodos} to the comparison against the seasonal naive method,
+neither difference qualifies: for CatBoost the paired interval is $[-0.056, +0.716]$ and no
+Diebold-Mariano cell reaches significance, and for XGBoost the interval excludes zero but
+again no cell does. The honest reading is that a decision maker offered these two models has
+no evidence that either would beat repeating last year, which is a sufficient reason not to
+pay for the complexity.
 
 This does not follow from an unlucky hyperparameter choice. A separate tuning study using
 Bayesian optimisation over 40 trials, with the search restricted to the first sixty months
@@ -279,6 +286,33 @@ worse than its own untuned configuration. Repeating the CatBoost search over 60 
 the test windows deliberately exposed, an upper bound that no honest procedure can attain,
 yields 6.35\%. Even that leaked ceiling remains behind the seasonal naive method and some
 1.5 pp behind the three leading approaches. The limitation is not the size of the search.
+
+\subsection{Feature engineering does not rescue the boosting models}
+
+\input{tables/tab7_variantes}
+
+The configuration in Table~\ref{tab:desempenho} gives the boosting models twelve lags of the
+target and nothing else, which is a thin representation for a series whose dominant structure
+is an annual cycle. Table~\ref{tab:variantes} asks whether a richer one changes the verdict,
+changing one thing at a time under the same protocol.
+
+It does not, and the pattern of what helps is more informative than the totals. Adding
+rolling window statistics, the most common reflex when a tree model underperforms on a time
+series, makes both models worse. Adding Fourier calendar terms helps. The largest single
+gain comes from forecasting the seasonal difference $y_t - y_{t-12}$ and reconstructing the
+level afterwards, which improves CatBoost from 6.59\% to 6.20\%. The interpretation is
+direct: what the boosting models were failing at was representing the annual cycle, and the
+transformations that help are the ones that supply it rather than the ones that add capacity.
+
+The best variant combines all of it with one model per horizon and reaches 6.09\%,
+against 6.27\% for the seasonal naive method. Taken as a point estimate that reverses the
+comparison, and it is the number a reader would quote. It does not survive the criterion
+this paper applies everywhere else: the paired bootstrap interval on the difference is
+$[-0.45, +0.10]$, which contains zero, and none of the six Diebold-Mariano
+cells reaches significance. After six variants and two model families, there is still no
+configuration of gradient boosting here that can be shown to beat repeating the previous
+year, and every one of them remains more than a percentage point behind Prophet, SARIMA and
+TimesFM.
 
 \subsection{The prediction intervals are not calibrated}
 

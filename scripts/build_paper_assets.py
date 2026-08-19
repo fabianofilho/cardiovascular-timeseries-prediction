@@ -312,9 +312,11 @@ Model & MAE & RMSE & sMAPE (\\%) & MASE & 95\\% CI of sMAPE \\\\
 \\footnotesize
 Bold marks the best value in each metric column among the forecasting models; the three
 rows below the rule are naive references, not competitors. MASE is the MAE divided by the
-in-sample MAE of the seasonal naive method ({den_mase:.1f} deaths), so MASE below 1 beats
-repeating the same month of the previous year and MASE above 1 loses to it. MAE and RMSE
-are in deaths per month;
+in-sample one-step MAE of the seasonal naive method ({den_mase:.1f} deaths). Because the
+forecasts scored here are one to six steps ahead and out of sample, unity is not the
+relevant threshold: the out-of-sample seasonal naive method itself attains
+{V['tabela1']['snaive']['mase']:.3f}, and that row, not the value 1, is the benchmark the
+models have to beat. MAE and RMSE are in deaths per month;
 sMAPE is symmetric mean absolute percentage error. Intervals are percentile bootstrap
 with $B={B:,}$ replicates (seed {SEED}) resampling whole rolling origin windows rather
 than individual forecasts, because the six horizons within a window share a training
@@ -827,6 +829,69 @@ from {V["calibracao"]["prophet"]["picp_h1"]:.3f} at one month to
 The point forecasts underlying this table were verified to be the same ones reported in
 Table~\\ref{{tab:desempenho}}, so the calibration measured here describes those models and
 not merely models of the same name.
+\\end{{minipage}}
+\\end{{table}}""")
+
+    # ---------- Tabela 7: variantes de engenharia de atributos -------------------
+    var_json = RES / "revisao" / "variants_vs_snaive.json"
+    if var_json.exists():
+        vj = json.loads(var_json.read_text(encoding="utf-8"))
+        V["variantes"] = vj["modelos"]
+        ROT_VAR = {
+            "base": "Lags only (as reported)", "roll": "+ rolling window statistics",
+            "cal": "+ Fourier calendar terms", "diff12": "Seasonal differencing",
+            "full": "Differencing + windows + calendar", "direct": "As above, direct multi-step",
+        }
+        linhas_var = []
+        for v in ("base", "roll", "cal", "diff12", "full", "direct"):
+            cel = []
+            for kind in ("catboost", "xgboost"):
+                d = vj["modelos"][f"{kind}_{v}"]
+                cel.append(num(d["smape"], 2))
+                cel.append(num(d["mase"], 3))
+            d = vj["modelos"][f"catboost_{v}"]
+            cel.append(f"$[{d['ic_low']:+.2f}, {d['ic_high']:+.2f}]$")
+            cel.append(f"{d['dm_significativos']}/6")
+            linhas_var.append(f"{ROT_VAR[v]} & " + " & ".join(cel) + " \\\\")
+        ref = vj["modelos"]["snaive"]
+        escreve_tabela("tab7_variantes", f"""\\begin{{table}}[htbp]
+\\centering
+\\small
+\\setlength{{\\tabcolsep}}{{4pt}}
+\\caption{{Feature engineering variants for the two gradient boosting models, evaluated under
+the same protocol as Table~\\ref{{tab:desempenho}}. The last two columns test the CatBoost
+variant against the seasonal naive method.}}
+\\label{{tab:variantes}}
+\\begin{{tabular}}{{lrrrrcc}}
+\\toprule
+& \\multicolumn{{2}}{{c}}{{CatBoost}} & \\multicolumn{{2}}{{c}}{{XGBoost}}
+& \\multicolumn{{2}}{{c}}{{CatBoost vs seasonal naive}} \\\\
+\\cmidrule(lr){{2-3}} \\cmidrule(lr){{4-5}} \\cmidrule(lr){{6-7}}
+Variant & sMAPE & MASE & sMAPE & MASE & 95\\% CI of $\\Delta$ & DM \\\\
+\\midrule
+{chr(10).join(linhas_var)}
+\\midrule
+Seasonal naive (benchmark) & \\multicolumn{{4}}{{c}}{{{ref['smape']:.2f} \\quad {ref['mase']:.3f}}} & --- & --- \\\\
+\\bottomrule
+\\end{{tabular}}
+
+\\vspace{{0.5em}}
+\\begin{{minipage}}{{\\textwidth}}
+\\footnotesize
+The first row is the configuration reported in Table~\\ref{{tab:desempenho}} and reproduces it.
+Each subsequent row changes one thing. Adding rolling window statistics makes both models
+worse. Replacing the raw level by the seasonal difference $y_t - y_{{t-12}}$ is the single
+change that helps, and it helps because it hands the models the annual cycle instead of
+requiring them to learn it. The best variant, CatBoost with differencing, calendar terms and
+one model per horizon, reaches {vj['modelos']['catboost_direct']['smape']:.2f}\\% against
+{ref['smape']:.2f}\\% for the seasonal naive method. That difference does not meet the
+criterion declared in Section~\\ref{{sec:metodos}}: the paired bootstrap interval is
+$[{vj['modelos']['catboost_direct']['ic_low']:+.2f},
+{vj['modelos']['catboost_direct']['ic_high']:+.2f}]$ and contains zero, and no
+Diebold-Mariano cell of six reaches significance. $\\Delta$ is the difference in sMAPE
+against the seasonal naive method, so negative favours the variant. Every variant remains
+more than one percentage point behind the three leading models of
+Table~\\ref{{tab:desempenho}}.
 \\end{{minipage}}
 \\end{{table}}""")
 
