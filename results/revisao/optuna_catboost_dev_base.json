@@ -1,0 +1,16 @@
+{
+  "kind": "catboost",
+  "mode": "dev",
+  "variant": "base",
+  "objective": 3.3214648651,
+  "smape_benchmark": 6.4162903089,
+  "lags": 16,
+  "trials": 40,
+  "seconds": 823,
+  "iterations": 1100,
+  "depth": 3,
+  "learning_rate": 0.0068450253,
+  "l2_leaf_reg": 1.2134146906,
+  "random_strength": 2.0086316467,
+  "bagging_temperature": 1.9646333079
+}

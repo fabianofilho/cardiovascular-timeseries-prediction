@@ -21,6 +21,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from cv_timeseries.evaluate import mase_denominador
 from scipy import stats
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,8 @@ AVISO = "% gerado por scripts/build_paper_assets.py -- nao editar a mao\n"
 ROTULO = {
     "prophet": "Prophet", "sarima": "SARIMA", "timesfm": "TimesFM",
     "xgboost": "XGBoost", "catboost": "CatBoost",
+    "naive": "Naive", "snaive": "Seasonal naive",
+    "snaive_drift": "Seasonal naive + drift",
 }
 # HEX sem '#': entram em \definecolor{...}{HTML}{...} no preambulo
 COR = {
@@ -44,6 +47,9 @@ COR = {
 }
 TOP3 = ["prophet", "sarima", "timesfm"]
 ORDEM = ["prophet", "sarima", "timesfm", "catboost", "xgboost"]
+# Referencias ingenuas. Ficam separadas de ORDEM porque nao competem: elas sao a
+# barra que os modelos precisam passar, e aparecem num bloco proprio da Tabela 1.
+BASELINES = ["snaive_drift", "snaive", "naive"]
 
 
 
@@ -207,6 +213,8 @@ def main() -> int:
     slide = pd.read_csv(RES / "benchmark_slide60_2010_2023_predictions.csv", parse_dates=["date"])
     antigo = pd.read_csv(RES / "benchmark_sim_real_sp_2019_2023_predictions.csv", parse_dates=["date"])
     hor = pd.read_csv(RES / "uncertainty_2010_2023_error_by_horizon.csv")
+    base_ing = pd.read_csv(RES / "benchmark_baselines_2010_2023_predictions.csv",
+                           parse_dates=["date"])
 
     print("Gerando assets do manuscrito")
 
@@ -243,25 +251,45 @@ def main() -> int:
 
     V["backtest"] = {"n_janelas": int(nw), "n_horizontes": int(nh),
                      "n_previsoes_por_modelo": int(nw * nh), "min_train": 60, "horizonte": 6}
+    # Baselines ingenuas nas MESMAS janelas, para o bootstrap ser pareado com elas.
+    for m in BASELINES:
+        yt, yp = matriz(base_ing, m)
+        sm[m] = smape_vec(yt, yp)
+        ae[m] = np.abs(yp - yt)
+        se[m] = (yp - yt) ** 2
+    boot = bootstrap_janelas(sm, nw)
+
+    # Denominador do MASE: MAE do naive sazonal EM AMOSTRA sobre a serie inteira.
+    # Constante de escala, para o MASE ser comparavel entre modelos.
+    den_mase = mase_denominador(serie, m=12)
+    V["mase_denominador"] = float(den_mase)
+
+    TODAS = ORDEM + BASELINES
     V["tabela1"] = {}
-    for m in ORDEM:
+    for m in TODAS:
         lo, hi = ic(boot[m])
         V["tabela1"][m] = {
             "mae": float(ae[m].mean()), "rmse": float(np.sqrt(se[m].mean())),
             "smape": float(sm[m].mean()), "ic_low": lo, "ic_high": hi, "ic_width": hi - lo,
+            "mase": float(ae[m].mean() / den_mase),
         }
-    melhor = {k: min(ORDEM, key=lambda m: V["tabela1"][m][k]) for k in ("mae", "rmse", "smape")}
+    # O melhor valor por coluna considera SO os modelos, nao as referencias: negrito numa
+    # baseline leria como se ela fosse concorrente, e ela e a regua.
+    melhor = {k: min(ORDEM, key=lambda m: V["tabela1"][m][k])
+              for k in ("mae", "rmse", "smape", "mase")}
 
-    linhas = []
-    for m in ORDEM:
+    def linha_tab1(m):
         d = V["tabela1"][m]
         cel = []
-        for k, casas in (("mae", 1), ("rmse", 1), ("smape", 2)):
+        for k, casas in (("mae", 1), ("rmse", 1), ("smape", 2), ("mase", 3)):
             s = num(d[k], casas)
             cel.append(f"\\textbf{{{s}}}" if melhor[k] == m else s)
         cel.append(f"$[{d['ic_low']:.2f}, {d['ic_high']:.2f}]$")
-        cel.append(num(d["ic_width"]))
-        linhas.append(f"{ROTULO[m]} & " + " & ".join(cel) + " \\\\")
+        return f"{ROTULO[m]} & " + " & ".join(cel) + " \\\\"
+
+    linhas = [linha_tab1(m) for m in ORDEM]
+    linhas.append("\\midrule")
+    linhas += [linha_tab1(m) for m in BASELINES]
     escreve_tabela("tab1_desempenho", f"""\\begin{{table}}[htbp]
 \\centering
 \\small
@@ -271,9 +299,9 @@ S\\~ao Paulo, Brazil, 2010--2023. All models were evaluated on the same
 {nw * nh} out-of-sample forecasts from {nw} rolling origin windows with a
 {nh}-month horizon.}}
 \\label{{tab:desempenho}}
-\\begin{{tabular}}{{lrrrcr}}
+\\begin{{tabular}}{{lrrrrc}}
 \\toprule
-Model & MAE & RMSE & sMAPE (\\%) & 95\\% CI of sMAPE & Width \\\\
+Model & MAE & RMSE & sMAPE (\\%) & MASE & 95\\% CI of sMAPE \\\\
 \\midrule
 {chr(10).join(linhas)}
 \\bottomrule
@@ -282,7 +310,11 @@ Model & MAE & RMSE & sMAPE (\\%) & 95\\% CI of sMAPE & Width \\\\
 \\vspace{{0.5em}}
 \\begin{{minipage}}{{\\textwidth}}
 \\footnotesize
-Bold marks the best value in each metric column. MAE and RMSE are in deaths per month;
+Bold marks the best value in each metric column among the forecasting models; the three
+rows below the rule are naive references, not competitors. MASE is the MAE divided by the
+in-sample MAE of the seasonal naive method ({den_mase:.1f} deaths), so MASE below 1 beats
+repeating the same month of the previous year and MASE above 1 loses to it. MAE and RMSE
+are in deaths per month;
 sMAPE is symmetric mean absolute percentage error. Intervals are percentile bootstrap
 with $B={B:,}$ replicates (seed {SEED}) resampling whole rolling origin windows rather
 than individual forecasts, because the six horizons within a window share a training

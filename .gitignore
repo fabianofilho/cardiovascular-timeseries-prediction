@@ -29,3 +29,4 @@ data/processed/*
 # `cd paper && tectonic -X compile manuscript.tex --outdir ../build`; as tabelas e
 # figuras de paper/ ficam versionadas porque sao a entrada dele.
 build/
+paper/manuscript.pdf

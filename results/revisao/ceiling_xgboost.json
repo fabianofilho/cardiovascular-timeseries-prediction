@@ -1,0 +1,24 @@
+{
+  "xgboost": {
+    "baseline_reproduzida": 6.8535,
+    "baseline_esperada": 6.8324,
+    "ceiling_smape": 6.2244,
+    "ganho_pp": 0.629,
+    "best_params": {
+      "n_estimators": 1350,
+      "max_depth": 8,
+      "learning_rate": 0.007050194075901503,
+      "subsample": 0.5004852259032829,
+      "colsample_bytree": 0.6774005912388466,
+      "min_child_weight": 8,
+      "reg_lambda": 22.96597265312771,
+      "reg_alpha": 0.013708455885086304,
+      "lags": 24
+    },
+    "trials_completados": 60,
+    "trials_teto": 60,
+    "orcamento_s": 18000,
+    "segundos": 2206
+  },
+  "_nota": "Valores COM VAZAMENTO. Limite superior do tuning, nao desempenho. Modelos lideres: Prophet 4.70, SARIMA 4.80, TimesFM 4.83. Seasonal naive: 6.27."
+}

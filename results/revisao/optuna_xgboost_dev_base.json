@@ -1,0 +1,18 @@
+{
+  "kind": "xgboost",
+  "mode": "dev",
+  "variant": "base",
+  "objective": 3.7110728392,
+  "smape_benchmark": 7.064875187,
+  "lags": 16,
+  "trials": 40,
+  "seconds": 1779,
+  "n_estimators": 900,
+  "max_depth": 9,
+  "learning_rate": 0.0310279213,
+  "subsample": 0.5446910613,
+  "colsample_bytree": 0.8531596335,
+  "min_child_weight": 5,
+  "reg_lambda": 1.3552382246,
+  "reg_alpha": 0.3223374176
+}

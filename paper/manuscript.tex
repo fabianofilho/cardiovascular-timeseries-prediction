@@ -219,14 +219,26 @@ same script to a machine-readable file against which the prose was checked. No v
 transcribed by hand. Metrics and intervals are recomputed from the per-forecast records
 rather than read from stored summary files, so that an aggregation error would surface.
 
+One caveat applies to a single row of Table~\ref{tab:desempenho}. XGBoost is deterministic
+within a fixed environment, but its accuracy on this task shifts with the library version
+and with the number of threads used for fitting: across six released versions and five
+thread counts, holding the code, the data and the seed constant, its sMAPE ranged from
+6.83\% to 6.98\%. CatBoost was stable to the tenth of a basis point under the same
+variation. The XGBoost figure reported here should therefore be read as accurate to roughly
+a tenth of a percentage point rather than to the digits shown. No conclusion depends on
+that precision: in every environment tested, XGBoost remained the weakest of the five
+models, remained worse than the seasonal naive benchmark, and remained more than two
+percentage points behind the leading three.
+
 \section{Results}
 
 \subsection{Aggregate performance}
 
 \input{tables/tab1_desempenho}
 
-Table~\ref{tab:desempenho} reports accuracy for all five models. With a mean of roughly
-7{,}250 deaths per month, the best MAE corresponds to a relative error near 4.9\%.
+Table~\ref{tab:desempenho} reports accuracy for all five models and for the three naive
+references. With a mean of roughly 7{,}250 deaths per month, the best MAE corresponds to a
+relative error near 4.9\%.
 Figure~\ref{fig:smape} shows the same result with intervals, which is the form in which the
 central finding is visible: the shaded band spanning the three leading models is narrow
 relative to any individual interval.
@@ -241,6 +253,32 @@ each estimate. Boosting models sit clearly apart, which is the one separation th
 support.}
 \label{fig:smape}
 \end{figure}
+
+\subsection{Two models fail to beat a naive benchmark}
+
+A forecast is informative only relative to a rule that requires no model, and the scaled
+error in Table~\ref{tab:desempenho} makes that comparison explicit. Prophet, SARIMA and
+TimesFM reach MASE values of 0.860, 0.880 and 0.887, each reducing the error of the
+seasonal naive method by roughly 11 to 14\%. CatBoost and XGBoost reach 1.213 and 1.275:
+both are worse than simply repeating the same month of the previous year.
+
+The size of that gap is easier to read in the original units. The seasonal naive method
+attains an sMAPE of 6.27\%, and adding a drift term brings it to 6.18\%, while CatBoost and
+XGBoost record 6.59\% and 6.94\%. The two gradient boosting models are therefore not merely
+the weakest of the five; they fall below the benchmark that any model has to clear to
+justify being fitted at all. The unstructured naive method, which repeats the last observed
+month and ignores the annual cycle, is far behind everything else at 10.74\%, and the
+distance between it and the seasonal naive method measures how much of this series is
+seasonal.
+
+This does not follow from an unlucky hyperparameter choice. A separate tuning study using
+Bayesian optimisation over 40 trials, with the search restricted to the first sixty months
+so that no validation data enters any test window, moved CatBoost from 6.59\% to 6.42\%.
+The same procedure applied to XGBoost moved it 0.23 pp in the wrong direction, leaving it
+worse than its own untuned configuration. Repeating the CatBoost search over 60 trials with
+the test windows deliberately exposed, an upper bound that no honest procedure can attain,
+yields 6.35\%. Even that leaked ceiling remains behind the seasonal naive method and some
+1.5 pp behind the three leading approaches. The limitation is not the size of the search.
 
 \subsection{The leading three models are indistinguishable}
 

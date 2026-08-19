@@ -1,0 +1,22 @@
+{
+  "catboost": {
+    "baseline_reproduzida": 6.5893,
+    "baseline_esperada": 6.5893,
+    "ceiling_smape": 6.3471,
+    "ganho_pp": 0.2422,
+    "best_params": {
+      "iterations": 850,
+      "depth": 6,
+      "learning_rate": 0.02224813197621424,
+      "l2_leaf_reg": 22.410817278880092,
+      "random_strength": 4.596077231954323,
+      "bagging_temperature": 4.875282126753238,
+      "lags": 24
+    },
+    "trials_completados": 60,
+    "trials_teto": 60,
+    "orcamento_s": 18000,
+    "segundos": 6883
+  },
+  "_nota": "Valores COM VAZAMENTO. Limite superior do tuning, nao desempenho. Modelos lideres: Prophet 4.70, SARIMA 4.80, TimesFM 4.83. Seasonal naive: 6.27."
+}

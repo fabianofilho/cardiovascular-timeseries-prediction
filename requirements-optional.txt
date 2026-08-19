@@ -2,7 +2,10 @@ prophet>=1.1.5
 torch>=2.5.0
 timesfm @ git+https://github.com/google-research/timesfm.git
 skforecast>=0.14.0
-xgboost>=2.0.0
+# Fixado, nao afrouxar: o resultado do XGBoost muda entre versoes da biblioteca
+# (6.83 a 6.98 de sMAPE com o mesmo codigo e os mesmos dados). Ver
+# docs/xgboost_reprodutibilidade.md. O CatBoost nao tem esse comportamento.
+xgboost==3.2.0
 catboost>=1.2.0
 
 # Testes. A suite nao precisa de statsmodels, prophet nem timesfm de proposito:
