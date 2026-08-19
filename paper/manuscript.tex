@@ -280,6 +280,31 @@ the test windows deliberately exposed, an upper bound that no honest procedure c
 yields 6.35\%. Even that leaked ceiling remains behind the seasonal naive method and some
 1.5 pp behind the three leading approaches. The limitation is not the size of the search.
 
+\subsection{The prediction intervals are not calibrated}
+
+\input{tables/tab6_calibracao}
+
+Two of the five models produce prediction intervals natively, and Table~\ref{tab:calibracao}
+reports what those intervals are worth. At a nominal 95\%, SARIMA covers 84.5\% of
+observations and Prophet 77.2\%. Both undercover, by 10.5 and 17.8 percentage points
+respectively, so an interval presented to a manager as containing the outcome nineteen times
+in twenty would in fact contain it roughly seventeen times in twenty for SARIMA and fifteen
+for Prophet.
+
+The two failures are not the same failure. Prophet's intervals are the narrower of the two,
+1045 against 1288 deaths per month, and they are not better placed, so it pays for the width
+with misses: its interval score is 4468 against SARIMA's 3500. Its coverage also decays with
+the forecast horizon, from 0.796 at one month to 0.748 at six, while SARIMA stays close to
+flat between 0.854 and 0.835. Prophet has the lowest sMAPE of all five models and the worse
+of the two intervals; ranking by point accuracy and ranking by interval quality disagree,
+which is a reason not to select a model for operational use on point accuracy alone.
+
+These intervals come from the same fitted models reported in
+Table~\ref{tab:desempenho}: the point forecasts produced alongside the intervals were checked
+against the stored benchmark forecasts before the coverage was computed. What is measured
+here is therefore the calibration of the models this paper reports, not of models sharing
+their names.
+
 \subsection{The leading three models are indistinguishable}
 
 The spread in sMAPE among Prophet, SARIMA and TimesFM is 0.13 pp, against a mean interval
@@ -463,18 +488,22 @@ for a subtropical setting with mild winters, and stable enough across fourteen y
 support anticipatory planning: seasonal allocation of coronary and stroke unit capacity,
 emergency staffing and medication supply. The accuracy achieved here, near 4.7 to 4.8\%
 sMAPE at horizons up to six months, is compatible with planning at state level. It is not
-sufficient for fine-grained operational decisions, and the absence of prediction intervals
+sufficient for fine-grained operational decisions, and the miscalibration of the intervals
 discussed below is the binding limitation for that use.
 
 \subsection{Limitations}
 
-\textbf{No prediction intervals, and therefore no forecast calibration.} All five models
-here produce point forecasts, and all three metrics are point-forecast metrics. What we
-quantified is the uncertainty of the accuracy metric, not the uncertainty of an individual
-forecast. Empirical coverage against a nominal level was therefore never assessed. For a
-manager sizing capacity, the interval is the operative quantity, and its absence is the most
-consequential gap in this work. Enabling the intervals each model already supports natively
-and measuring coverage by horizon is the immediate next step.
+\textbf{The intervals that exist are miscalibrated, and three models have none.} The
+accuracy metrics in Table~\ref{tab:desempenho} are point-forecast metrics, and the intervals
+attached to them quantify the uncertainty of the metric rather than of an individual
+forecast. Where a genuine forecast interval was available, Table~\ref{tab:calibracao} shows
+it undercovers by 10 to 18 percentage points, so neither can be handed to a decision maker
+at its nominal level without correction. TimesFM, XGBoost and CatBoost as configured here
+produce no interval at all. For a manager sizing capacity the interval is the operative
+quantity, and this remains the most consequential gap in the work, though it is now a
+measured gap rather than an unexamined one. Conformal prediction, which wraps any point
+forecaster and gives finite-sample coverage guarantees under exchangeability, would address
+both halves of the problem and is the immediate next step.
 
 \textbf{Counts rather than rates.} The series models absolute deaths, so part of the trend
 that long history captures is population growth and ageing rather than epidemiological

@@ -80,3 +80,67 @@ ser decidida, não aplicada por conta própria.
 
 Enquanto isso, `requirements-optional.txt` fixa a versão, para que ao menos execuções
 futuras concordem entre si.
+
+---
+
+# Apêndice: o que a rodada de calibração encontrou nos outros dois modelos
+
+Ao reproduzir os intervalos de previsão (`scripts/run_calibracao.py`), a checagem de
+procedência comparou a previsão pontual gerada ali contra a guardada em `results/`. O
+resultado separa os três modelos em três comportamentos diferentes.
+
+## Prophet: ponto determinístico, banda estocástica
+
+A previsão pontual reproduz o benchmark com divergência `9.09e-13`, ou seja, é determinística.
+
+A **banda**, não. O Prophet gera o intervalo por amostragem posterior e não semeia esse
+sorteio. Três ajustes na mesma janela, com os mesmos dados:
+
+| execução | limite inferior (h=1) | limite superior (h=1) | largura média |
+|---|---:|---:|---:|
+| 1 | 6111,08 | 6895,20 | 781,3 |
+| 2 | 6107,68 | 6883,35 | 764,4 |
+| 3 | 6087,41 | 6858,28 | 777,1 |
+
+Divergência máxima entre execuções: 31 óbitos no limite inferior e 48 no superior. Isso move
+o PICP em cerca de meio ponto percentual por execução, e explica a diferença entre os 77,0%
+reportados pelo Victor e os 77,5% da primeira reprodução aqui.
+
+`np.random.seed()` antes do ajuste resolve: com semente fixa a divergência cai para
+`0.00e+00`. O script agora semeia a cada janela, e não uma vez no início, para que rodar um
+subconjunto das janelas dê o mesmo número.
+
+## SARIMA: quase reprodutível, com duas janelas fora
+
+A previsão pontual diverge da guardada, mas o perfil é muito diferente do XGBoost:
+
+| medida | valor |
+|---|---:|
+| divergência mediana | 0,0044 óbitos |
+| divergência média | 1,1464 óbitos |
+| divergência máxima | 127,8208 óbitos |
+| janelas com divergência acima de 1 óbito | 2 de 103 |
+| sMAPE guardado | 4,795652 |
+| sMAPE agora | 4,808559 |
+
+Ou seja, 101 das 103 janelas são idênticas até a quarta casa. Em duas janelas o otimizador
+de máxima verossimilhança converge para um ótimo local diferente, o que é coerente com os
+avisos de `Non-invertible starting seasonal moving average` emitidos durante o ajuste.
+
+Confirmado que a causa não é o script novo: a própria classe `SarimaForecaster` do
+repositório, rodada sem alteração, produz a mesma divergência.
+
+Efeito sobre o paper: o sMAPE do SARIMA passa de 4,7957 para 4,8086, ou seja, muda de 4,80
+para 4,81 no arredondamento da Tabela 1. Menor que a diferença entre XGBoost e o valor
+guardado, e sem efeito sobre a calibração, porque 101 das 103 janelas são as mesmas.
+
+## Resumo dos três
+
+| Modelo | Ponto reproduz? | Causa quando não |
+|---|---|---|
+| Prophet | sim, `9e-13` | banda precisava de semente, já corrigido |
+| SARIMA | quase, 2 janelas de 103 | ótimo local do otimizador de verossimilhança |
+| XGBoost | não | versão da biblioteca e contagem de threads |
+
+Só o XGBoost tem divergência estrutural. Os outros dois são casos localizados, e o do
+Prophet já está fechado.

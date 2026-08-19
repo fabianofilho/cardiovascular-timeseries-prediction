@@ -321,8 +321,9 @@ than individual forecasts, because the six horizons within a window share a trai
 origin and are not independent; resampling forecast by forecast would understate the
 interval. The same resampled windows were applied to every model in each replicate,
 which preserves pairing for the comparisons in Table~\\ref{{tab:pares}}. The interval
-describes the uncertainty of the metric, not of an individual forecast: none of these
-models produces a prediction interval, so forecast calibration was not assessed.
+describes the uncertainty of the metric, not of an individual forecast. Two of the five
+models do produce genuine forecast intervals; their calibration is reported separately in
+Table~\ref{{tab:calibracao}}.
 \\end{{minipage}}
 \\end{{table}}
 """.replace("{,}", "{,}"))
@@ -759,6 +760,76 @@ excluded from this comparison rather than being given an input they would ignore
 \end{{tikzpicture}}""")
 
     # ---------- JSON ----------
+    # ---------- Tabela 6: calibracao dos intervalos ------------------------------
+    # Recalculada das previsoes, como as demais, e nao lida do JSON de metricas.
+    cal_csv = RES / "calibracao_2010_2023_predictions.csv"
+    if cal_csv.exists():
+        cal = pd.read_csv(cal_csv)
+        cal["dentro"] = (cal.y_true >= cal.lo) & (cal.y_true <= cal.hi)
+        cal["largura"] = cal.hi - cal.lo
+        alpha = 0.05
+        cal["is"] = (cal.largura
+                     + (2.0 / alpha) * np.clip(cal.lo - cal.y_true, 0, None)
+                     + (2.0 / alpha) * np.clip(cal.y_true - cal.hi, 0, None))
+        V["calibracao"] = {"nominal": 1 - alpha}
+        linhas_cal = []
+        for m in ("sarima", "prophet"):
+            g = cal[cal.model == m]
+            if g.empty:
+                continue
+            V["calibracao"][m] = {
+                "picp": float(g.dentro.mean()), "mpiw": float(g.largura.mean()),
+                "is": float(g["is"].mean()), "n": int(len(g)),
+                "picp_h1": float(g[g.horizon == 1].dentro.mean()),
+                "picp_h6": float(g[g.horizon == 6].dentro.mean()),
+            }
+            cel = [f"{g[g.horizon == h].dentro.mean():.3f}" for h in range(1, 7)]
+            linhas_cal.append(
+                f"{ROTULO[m]} & " + " & ".join(cel)
+                + f" & {g.dentro.mean():.3f} & {g.largura.mean():.0f}"
+                + f" & {g['is'].mean():.0f} \\\\"
+            )
+        escreve_tabela("tab6_calibracao", f"""\\begin{{table}}[htbp]
+\\centering
+\\small
+\\setlength{{\\tabcolsep}}{{5pt}}
+\\caption{{Calibration of the 95\\% prediction intervals produced natively by SARIMA and
+Prophet, over the same {V["backtest"]["n_janelas"]} rolling origin windows. PICP is the
+empirical coverage, the fraction of observations falling inside the interval; the nominal
+target is 0.950.}}
+\\label{{tab:calibracao}}
+\\begin{{tabular}}{{lcccccccrr}}
+\\toprule
+& \\multicolumn{{6}}{{c}}{{PICP by horizon (months)}} & & & \\\\
+\\cmidrule(lr){{2-7}}
+Model & 1 & 2 & 3 & 4 & 5 & 6 & All & MPIW & IS \\\\
+\\midrule
+{chr(10).join(linhas_cal)}
+\\bottomrule
+\\end{{tabular}}
+
+\\vspace{{0.5em}}
+\\begin{{minipage}}{{\\textwidth}}
+\\footnotesize
+Both models undercover substantially: at a nominal 95\\%, SARIMA attains
+{V["calibracao"]["sarima"]["picp"]:.1%} and Prophet {V["calibracao"]["prophet"]["picp"]:.1%}.
+MPIW is the mean interval width in deaths per month. IS is the interval score of
+\\citet{{gneiting2007}}, which adds to the width a penalty proportional to the distance by
+which an observation falls outside the interval; lower is better, and it is the column that
+prevents a wide interval from being rewarded for covering by construction. The ordering by
+IS is the reverse of the ordering by point accuracy in
+Table~\\ref{{tab:desempenho}}: Prophet has the lowest sMAPE of all five models and the worse
+of the two intervals, because its bands are narrower
+({V["calibracao"]["prophet"]["mpiw"]:.0f} against {V["calibracao"]["sarima"]["mpiw"]:.0f}
+deaths) without being better placed. Prophet's coverage also degrades with the horizon,
+from {V["calibracao"]["prophet"]["picp_h1"]:.3f} at one month to
+{V["calibracao"]["prophet"]["picp_h6"]:.3f} at six, while SARIMA stays comparatively flat.
+The point forecasts underlying this table were verified to be the same ones reported in
+Table~\\ref{{tab:desempenho}}, so the calibration measured here describes those models and
+not merely models of the same name.
+\\end{{minipage}}
+\\end{{table}}""")
+
     (PAPER / "verified_numbers.json").write_text(
         json.dumps(V, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"  json    paper/verified_numbers.json ({len(json.dumps(V))} bytes)")

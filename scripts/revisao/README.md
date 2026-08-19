@@ -51,9 +51,24 @@ ambientes. Ver `docs/xgboost_reprodutibilidade.md`.
 Mede PICP (cobertura empírica), MPIW (largura média) e o interval score de
 Gneiting-Raftery, por horizonte, a 95% nominal, nas mesmas 103 janelas.
 
-**Ainda não reproduzido.** Os números que ele reporta (SARIMA 84,5% e Prophet 77,0% de
-cobertura contra 95% nominais) não passaram por verificação independente e não devem entrar
-no manuscrito antes disso.
+### Reproduzido
+
+Reimplementado de forma independente em `scripts/run_calibracao.py`, sem rodar o script
+dele, e com uma checagem que o original não faz: se a previsão pontual gerada junto com o
+intervalo é a mesma já guardada no benchmark.
+
+| | Ele reporta | Nossa reprodução |
+|---|---:|---:|
+| SARIMA PICP | 84,5% | 84,5% |
+| Prophet PICP | 77,0% | 77,2% |
+
+O SARIMA bate exato. A diferença do Prophet não é erro de ninguém: a banda dele vem de
+amostragem posterior não semeada e muda a cada execução. Com semente fixa passa a ser
+reprodutível. Ver o apêndice de `docs/xgboost_reprodutibilidade.md`.
+
+Conclusão: os dois subcobrem, o SARIMA por 10,5 pp e o Prophet por 17,8 pp. E o Prophet, que
+tem o melhor sMAPE dos cinco, tem o pior dos dois intervalos. Está no manuscrito, na subseção
+"The prediction intervals are not calibrated".
 
 ## Adaptações feitas ao versionar
 
