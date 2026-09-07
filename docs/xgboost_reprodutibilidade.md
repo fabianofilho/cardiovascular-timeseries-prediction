@@ -14,7 +14,12 @@ Mesmo código, mesma série, mesmas 103 janelas, mesma semente. Só o ambiente m
 | xgboost 3.1.0 | 6.832390 |
 | xgboost 3.2.0 | 6.832390 |
 | xgboost 3.3.0 | 6.984887 |
+| xgboost 3.4.1 (ambiente da Isa, Colab) | 6.803473 |
 | **valor guardado em `results/`** | **6.935000** |
+
+A 3.4.1 vem da rodada independente da Isabella Saade no Colab, com outra máquina e outro
+sistema operacional, e é o sétimo valor distinto. Ela reproduz exato o CatBoost, o
+`snaive`, o `snaive_drift` e o `naive`, o que isola o comportamento no XGBoost.
 
 Dentro de um mesmo ambiente o resultado é determinístico: três execuções seguidas dão
 spread `0.00e+00`. A variação é entre ambientes, não entre execuções.

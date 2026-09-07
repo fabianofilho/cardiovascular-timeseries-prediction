@@ -31,6 +31,8 @@ POR_VERSAO = {
     "3.1.0": 6.832390,
     "3.2.0": 6.832390,
     "3.3.0": 6.984887,
+    # Colab, rodada independente da Isabella Saade; outra maquina e outro SO.
+    "3.4.1": 6.803473,
 }
 GUARDADO_EM_RESULTS = 6.9350
 

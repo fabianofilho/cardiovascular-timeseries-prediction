@@ -325,7 +325,7 @@ interval. The same resampled windows were applied to every model in each replica
 which preserves pairing for the comparisons in Table~\\ref{{tab:pares}}. The interval
 describes the uncertainty of the metric, not of an individual forecast. Two of the five
 models do produce genuine forecast intervals; their calibration is reported separately in
-Table~\ref{{tab:calibracao}}.
+Table~\\ref{{tab:calibracao}}.
 \\end{{minipage}}
 \\end{{table}}
 """.replace("{,}", "{,}"))
@@ -485,14 +485,37 @@ criterion, only SARIMA meets both conditions.
         V["tabela5"][m] = {"sem": sem, "com": com, "ganho": sem - com,
                            "ic_low": lo, "ic_high": hi, "dm_sig": nsig,
                            "teto": float(sm_tt[m].mean()), "ganho_teto": com - float(sm_tt[m].mean())}
-        linhas.append(f"{ROTULO[m]} & {sem:.2f} & {com:.2f} & {sem - com:.3f} & "
+        linhas.append(f"{ROTULO[m]} & {sem:.2f} & {com:.2f} & {sgn(sem - com)} & "
                       f"{intervalo(lo, hi)} & {nsig} of {nh} & {sm_tt[m].mean():.2f} \\\\")
+
+    # Prophet. O manuscrito o excluia desta tabela alegando que nao aceita covariavel
+    # exogena; aceita, por add_regressor(). A rodada esta em scripts/revisao e sua
+    # analise em scripts/analisa_prophet_temp.py, que confere antes se a versao SEM
+    # temperatura reproduz a linha do Prophet na Tabela 1 (divergencia 0.0e+00).
+    pt_json = RES / "revisao" / "prophet_temp_vs_base.json"
+    if pt_json.exists():
+        pt = json.loads(pt_json.read_text(encoding="utf-8"))
+        d = pt["modelos"]["prophet_temp"]
+        teto_p = pt["modelos"]["prophet_temp_ceiling"]["smape"]
+        sem_p = pt["modelos"]["prophet_repro"]["smape"]
+        V["tabela5"]["prophet"] = {
+            "sem": sem_p, "com": d["smape"], "ganho": d["ganho_pp"],
+            "ic_low": d["ic_low"], "ic_high": d["ic_high"],
+            "dm_sig": d["dm_significativos"], "teto": teto_p,
+            "procedencia_max_div": pt["_meta"]["procedencia_max_div"],
+        }
+        linhas.insert(0, f"{ROTULO['prophet']} & {sem_p:.2f} & {d['smape']:.2f} & "
+                         f"{sgn(d['ganho_pp'])} & "
+                         f"{intervalo(d['ic_low'], d['ic_high'])} & "
+                         f"{d['dm_significativos']} of {nh} & {teto_p:.2f} \\\\")
     escreve_tabela("tab5_temperatura", f"""\\begin{{table}}[htbp]
 \\centering
 \\small
 \\setlength{{\\tabcolsep}}{{4pt}}
 \\caption{{Effect of monthly minimum temperature as an exogenous covariate, under the
-leakage-free climatology policy, and the labelled ceiling scenario.}}
+leakage-free climatology policy, and the labelled ceiling scenario. Prophet is
+included through its native \\texttt{{add\\_regressor}} interface; TimesFM, which has
+no such interface in this implementation, is not.}}
 \\label{{tab:temperatura}}
 \\begin{{tabular}}{{lrrrcrr}}
 \\toprule
@@ -814,7 +837,7 @@ Model & 1 & 2 & 3 & 4 & 5 & 6 & All & MPIW & IS \\\\
 \\begin{{minipage}}{{\\textwidth}}
 \\footnotesize
 Both models undercover substantially: at a nominal 95\\%, SARIMA attains
-{V["calibracao"]["sarima"]["picp"]:.1%} and Prophet {V["calibracao"]["prophet"]["picp"]:.1%}.
+{V["calibracao"]["sarima"]["picp"]*100:.1f}\\% and Prophet {V["calibracao"]["prophet"]["picp"]*100:.1f}\\%.
 MPIW is the mean interval width in deaths per month. IS is the interval score of
 \\citet{{gneiting2007}}, which adds to the width a penalty proportional to the distance by
 which an observation falls outside the interval; lower is better, and it is the column that

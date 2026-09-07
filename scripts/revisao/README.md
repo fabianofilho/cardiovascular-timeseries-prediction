@@ -12,6 +12,7 @@ depender disso. Os resultados correspondentes estão em `results/revisao/`.
 | `run_optuna.py` | O desempenho fraco dos boosters é falta de ajuste de hiperparâmetros? |
 | `run_intervals.py` | SARIMA e Prophet produzem intervalo de previsão; ele é calibrado? |
 | `variants.py`, `run_variants.py` | Engenharia de atributos resolve o que o tuning não resolveu? |
+| `run_prophet_exog.py` | O Prophet aceita covariável exógena, ao contrário do que o paper dizia? |
 
 ## `run_optuna.py`
 
@@ -102,6 +103,33 @@ O padrão do que ajuda vale mais que o total: estatística de janela **piora** o
 modelos, e o ganho vem da diferença sazonal. Ou seja, o que faltava aos boosters era
 representação do ciclo anual, não capacidade.
 
+## `run_prophet_exog.py`
+
+O manuscrito afirmava que só SARIMA, XGBoost e CatBoost aceitam covariável exógena, e por
+isso excluía o Prophet da Tabela 5. **A afirmação estava errada:** o Prophet tem
+`add_regressor()` nativo.
+
+### Reproduzido
+
+Rodado aqui, com a mesma política `climatology` sem vazamento. Análise em
+`scripts/analisa_prophet_temp.py`.
+
+| rodada | sMAPE | ganho | IC 95% | DM |
+|---|---:|---:|---|---:|
+| sem temperatura | 4,7010 | — | — | — |
+| com temperatura | 4,7356 | **-0,035** | [-0,081, +0,013] | 0/6 |
+| teto com vazamento | 4,6255 | +0,076 | [+0,011, +0,139] | 1/6 |
+
+A rodada sem temperatura reproduz a linha do Prophet na Tabela 1 com divergência
+**0,00e+00**, então o que a comparação mede é o efeito da covariável e não a diferença entre
+duas implementações.
+
+O Prophet é o único dos quatro em que a temperatura **piora** a previsão, embora sem
+significância. A leitura é que ele já ajusta sazonalidade anual explícita, então a
+temperatura entrega uma versão ruidosa de um sinal que ele já extraiu do próprio alvo.
+
+Já está no manuscrito, e a Tabela 5 agora tem a linha do Prophet.
+
 ## Adaptações feitas ao versionar
 
 Marcadas no código com `# ADAPTADO`:
@@ -117,5 +145,7 @@ Fora isso, o código é o dele, sem alteração.
 
 ## O que ainda falta trazer do Drive
 
-`run_covid.py`, `run_prophet_exog.py`, `run_temp_melhorado.py`, `check_dm_variance.py` e
-`build_revisao_assets.py`.
+`run_covid.py`, `run_temp_melhorado.py`, `check_dm_variance.py` e `build_revisao_assets.py`.
+
+E, da rodada do TabPFN da Isabella Saade, o CSV de previsões por janela, sem o qual a
+afirmação de que ele bate as referências ingênuas não pode ser testada. Ver `docs/tabpfn.md`.

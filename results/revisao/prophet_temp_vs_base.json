@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "B": 10000,
+    "seed": 20260817,
+    "n_janelas": 103,
+    "politica": "climatology (sem vazamento); ceiling = observed (vazamento)",
+    "procedencia_max_div": 0.0,
+    "criterio": "IC do bootstrap pareado exclui zero E DM p<0.05 em >=3 de 6"
+  },
+  "modelos": {
+    "prophet_repro": {
+      "smape": 4.700965467510203,
+      "mae": 355.1719105905664,
+      "ganho_pp": 0.0,
+      "ic_low": -0.0,
+      "ic_high": -0.0,
+      "dm_significativos": 0,
+      "de": 6
+    },
+    "prophet_temp": {
+      "smape": 4.73556998162036,
+      "mae": 357.65543475022326,
+      "ganho_pp": -0.03460451411015697,
+      "ic_low": -0.08081813755385821,
+      "ic_high": 0.012939438650918421,
+      "dm_significativos": 0,
+      "de": 6
+    },
+    "prophet_temp_ceiling": {
+      "smape": 4.625470162180927,
+      "mae": 347.81346841965427,
+      "ganho_pp": 0.07549530532927573,
+      "ic_low": 0.010625322069408123,
+      "ic_high": 0.13894132539550091,
+      "dm_significativos": 1,
+      "de": 6
+    }
+  }
+}

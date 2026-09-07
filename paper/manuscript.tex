@@ -207,9 +207,13 @@ that bounds what a perfect weather forecast could add. A third policy, using the
 value twelve months earlier, is available in the code but was not executed for this
 analysis and is not reported.
 
-Only models that natively accept exogenous regressors received the covariate (SARIMA,
-XGBoost, CatBoost). Prophet and TimesFM were excluded from that comparison rather than
-being given an input they would ignore.
+Models that accept exogenous regressors received the covariate: SARIMA, XGBoost and
+CatBoost through their regression interfaces, and Prophet through
+\texttt{add\_regressor}. TimesFM has no such interface in this implementation and was
+excluded rather than given an input it would ignore. For Prophet, the run without the
+covariate was checked against the forecasts reported in Table~\ref{tab:desempenho} before
+the comparison was made, and reproduces them exactly, so what the comparison measures is
+the effect of the covariate and not a difference between two implementations.
 
 \subsection{Reproducibility}
 
@@ -314,6 +318,36 @@ configuration of gradient boosting here that can be shown to beat repeating the 
 year, and every one of them remains more than a percentage point behind Prophet, SARIMA and
 TimesFM.
 
+\subsection{A tabular foundation model narrows the gap without closing it}
+
+The two boosting models are not the strongest tabular learners available, and a comparison
+that concludes against tabular methods while omitting the current state of the art would be
+incomplete. TabPFN, a transformer pre-trained on synthetic tabular tasks, was therefore run
+under the identical protocol: the same 103 windows, the same six-month horizon, the same
+twelve lags of the target as the only inputs.
+
+It reaches an sMAPE of 6.04\%, ahead of CatBoost by 0.55 percentage points and of XGBoost by
+0.90, making it the strongest tabular model tested here. It sits ahead of both naive
+references on the point estimate, at 6.18\% and 6.27\%, and behind the three leading models
+by more than 1.2 percentage points.
+
+That last comparison is the one that carries. The advantage over the naive references is
+0.14 percentage points, and this paper does not treat a point estimate as a result: the
+paired test that Table~\ref{tab:variantes} applies to every feature engineering variant
+could not be run here, because the per-forecast records for this run were not available. The
+caution is not procedural. The best boosting variant reached a \emph{larger} margin over the
+seasonal naive method, 0.18 percentage points, and still failed that test with an interval
+of $[-0.45, +0.10]$ and no significant Diebold-Mariano cell. The honest summary is that
+TabPFN is the best tabular model in this comparison and that whether it beats a rule
+requiring no model remains untested.
+
+The reviewer's request is nonetheless answered, and answered against the reviewer's
+expectation: including the strongest tabular learner does not change the conclusion. The
+distance from TabPFN to Prophet is 1.33 percentage points, wider than the entire spread
+among the three leading models. What the boosting results were showing was not the absence
+of a good tabular model but the nature of the task: 168 monthly observations dominated by a
+clean annual cycle do not reward this class of method.
+
 \subsection{The prediction intervals are not calibrated}
 
 \input{tables/tab6_calibracao}
@@ -408,6 +442,16 @@ Table~\ref{tab:pares}.}
 \subsection{Temperature helps, below the confirmation threshold}
 
 \input{tables/tab5_temperatura}
+
+Prophet is the one model for which the covariate makes the forecast worse, by 0.035
+percentage points, and that difference is not significant either: the paired interval is
+$[-0.081, +0.013]$ and no Diebold-Mariano cell reaches significance. Since Prophet already
+fits an explicit annual seasonality, minimum temperature supplies it with a noisier version
+of a signal it has already extracted from the target. The same reading applies in the other
+direction to the boosting models, whose gain from the covariate is the largest of the four:
+what temperature adds for them is the seasonality their twelve lags were failing to
+represent, which is the same conclusion reached in Table~\ref{tab:variantes} by a different
+route.
 
 \begin{figure}[htbp]
 \centering
