@@ -14,6 +14,8 @@ depender disso. Os resultados correspondentes estão em `results/revisao/`.
 | `variants.py`, `run_variants.py` | Engenharia de atributos resolve o que o tuning não resolveu? |
 | `run_prophet_exog.py` | O Prophet aceita covariável exógena, ao contrário do que o paper dizia? |
 | `run_covid.py` | A conclusão central depende do período pandêmico? |
+| `check_dm_variance.py` | O truncamento em h-1 subestima a variância do Diebold-Mariano? |
+| `run_temp_melhorado.py` | O ganho da temperatura nos boosters é só a sazonalidade que faltava? |
 
 ## `run_optuna.py`
 
@@ -165,6 +167,50 @@ passa a excluir zero. Mas o DM fica em 1/6 e 2/6, abaixo dos 3 exigidos. Se eu t
 só o intervalo, teria escrito que o XGBoost é significativamente pior, e o critério não
 sustenta. Há um teste travando exatamente essa distinção.
 
+## `check_dm_variance.py`
+
+Testa o estimador de variância do Diebold-Mariano, que é usado em todas as tabelas. A
+alegação: em h=1 o truncamento em h-1=0 defasagens usa só gamma0 e não absorve
+autocorrelação nenhuma. Mas janelas de origens vizinhas são sobrepostas, então o diferencial
+de perda deve ser serialmente correlacionado, e a variância estaria subestimada justamente no
+horizonte que mais pesa no critério de 3 em 6.
+
+### Reproduzido
+
+A autocorrelação existe: rho1 chega a **+0,164** no par prophet-catboost. Mas comparando o
+truncamento do paper contra Newey-West/Bartlett:
+
+**0 de 90 células mudam de veredito.** Nem uma em h=1, nem uma nos demais horizontes.
+
+Onde os p-valores se movem, movem na direção conservadora (prophet-catboost vai de 0,0007
+para 0,0060). Ou seja, a alegação tinha fundamento mas não tinha tamanho. As células "0 de 6"
+espalhadas pelo manuscrito são ausência de diferença, e não otimismo do estimador.
+
+Acrescentei gravação em JSON, porque resultado que só existe no terminal não dá para conferir
+depois nem travar em teste.
+
+## `run_temp_melhorado.py`
+
+Teste **falsificável** do mecanismo que o manuscrito atribui ao ganho da temperatura nos
+boosters. A predição: se o ganho é a sazonalidade que faltava às features, dar um termo de
+calendário de Fourier deve encolhê-lo. Se não encolher, a explicação está errada.
+
+### Reproduzido, e a predição passa
+
+| modelo | espec. | sem T | com T | ganho |
+|---|---|---:|---:|---:|
+| catboost | base | 6,589 | 6,331 | **+0,258** |
+| catboost | diffcal | 6,128 | 6,053 | **+0,076** |
+| xgboost | base | 6,832 | 6,505 | **+0,327** |
+| xgboost | diffcal | 6,350 | 6,385 | **-0,036** |
+
+O calendário explícito encolhe o ganho em 71% no CatBoost e **inverte o sinal** no XGBoost.
+
+E o -0,036 do XGBoost com calendário fica a um milésimo do -0,035 do Prophet, que ajusta
+sazonalidade anual por construção. Dois modelos que chegam à sazonalidade explícita por
+caminhos diferentes passam a ser prejudicados pela temperatura na mesma medida. É a predição
+que a explicação faz, e não uma que ela poderia fazer se estivesse errada.
+
 ## Adaptações feitas ao versionar
 
 Marcadas no código com `# ADAPTADO`:
@@ -180,7 +226,8 @@ Fora isso, o código é o dele, sem alteração.
 
 ## O que ainda falta trazer do Drive
 
-`run_temp_melhorado.py`, `check_dm_variance.py` e `build_revisao_assets.py`.
+`build_revisao_assets.py`, que é o gerador de assets dele e está superado pelo
+`scripts/build_paper_assets.py` deste repositório.
 
 E, da rodada do TabPFN da Isabella Saade, o CSV de previsões por janela, sem o qual a
 afirmação de que ele bate as referências ingênuas não pode ser testada. Ver `docs/tabpfn.md`.

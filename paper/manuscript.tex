@@ -485,6 +485,20 @@ what temperature adds for them is the seasonality their twelve lags were failing
 represent, which is the same conclusion reached in Table~\ref{tab:variantes} by a different
 route.
 
+That reading is a claim about mechanism, and it is falsifiable, so it was tested. If the
+covariate helps the boosting models because it supplies a seasonality their features lack,
+then giving them an explicit calendar term should absorb most of the gain; if the gain
+survives, the covariate is carrying weather information beyond climatology and the
+explanation is wrong. Repeating the comparison with Fourier calendar terms added to the
+feature set shrinks the CatBoost gain from 0.258 to 0.076 percentage points,
+and turns the XGBoost gain from +0.327 to -0.036, a change of sign. The latter figure is
+within a thousandth of a point of what Prophet, which fits an explicit annual seasonality of
+its own, records in Table~\ref{tab:temperatura}. Two models that arrive at explicit
+seasonality by different routes are hurt by the covariate by the same amount, which is the
+prediction the explanation makes and not one it could have made if it were wrong. Minimum
+temperature in this series is close to a deterministic function of the calendar month, and
+what it was adding to the boosting models was the calendar.
+
 \begin{figure}[htbp]
 \centering
 \input{figures/fig6_temperatura}

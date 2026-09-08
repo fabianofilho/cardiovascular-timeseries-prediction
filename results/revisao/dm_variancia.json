@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "pergunta": "o truncamento em h-1 subestima a variancia do DM?",
+    "n_janelas": 103,
+    "L_newey_west": 4,
+    "estimadores": [
+      "h-1 (paper)",
+      "Newey-West/Bartlett",
+      "NW com L=max(h-1, n^(1/3))"
+    ]
+  },
+  "acf_h1": {
+    "prophet-catboost": [
+      0.16388332692929786,
+      0.09741029053498429,
+      0.0807485148427205,
+      -0.00438960833553577,
+      -0.027233830333489757
+    ],
+    "prophet-sarima": [
+      -0.011801054569599729,
+      -0.03385146949173953,
+      -0.3177155499356237,
+      0.08851522816828626,
+      0.17949770863719075
+    ],
+    "snaive-catboost": [
+      0.02038073541491036,
+      -0.19820642665618474,
+      0.19198666041940377,
+      -0.048603441432513834,
+      -0.0897262262083181
+    ]
+  },
+  "celulas_que_mudam_h1": 0,
+  "celulas_h1": 15,
+  "celulas_que_mudam_total": 0,
+  "celulas_total": 90
+}
