@@ -13,6 +13,7 @@ depender disso. Os resultados correspondentes estão em `results/revisao/`.
 | `run_intervals.py` | SARIMA e Prophet produzem intervalo de previsão; ele é calibrado? |
 | `variants.py`, `run_variants.py` | Engenharia de atributos resolve o que o tuning não resolveu? |
 | `run_prophet_exog.py` | O Prophet aceita covariável exógena, ao contrário do que o paper dizia? |
+| `run_covid.py` | A conclusão central depende do período pandêmico? |
 
 ## `run_optuna.py`
 
@@ -130,6 +131,40 @@ temperatura entrega uma versão ruidosa de um sinal que ele já extraiu do próp
 
 Já está no manuscrito, e a Tabela 5 agora tem a linha do Prophet.
 
+## `run_covid.py`
+
+O manuscrito listava a pandemia como limitação sem rodar nenhuma sensibilidade. Este script
+roda, excluindo **janelas inteiras** cujo teste toca o período pandêmico, e não datas soltas,
+para preservar o retângulo janela por horizonte que o bootstrap pareado exige. Nenhum modelo
+é reajustado, então o único efeito medido é o da composição do período de teste.
+
+### Reproduzido, e completado
+
+O recorte `completo` é o controle e reproduz a Tabela 1 com divergência **0,00e+00**.
+
+O script original faz só o bootstrap. Acrescentei o Diebold-Mariano em
+`scripts/analisa_covid.py`, porque o critério do paper exige as duas metades, e aqui elas
+discordam.
+
+| recorte | janelas | Prophet | pares separados | pior DM |
+|---|---:|---:|---:|---:|
+| completo | 103 | 4,70 | 0 de 3 | 0/6 |
+| sem 2020-03 a 2021-12 | 76 | 3,60 | 0 de 3 | 0/6 |
+| sem 2020-01 a 2022-12 | 62 | 3,47 | 0 de 3 | 0/6 |
+
+**A conclusão central sobrevive.** Nenhum par entre os três líderes se separa em nenhum
+recorte, e nenhuma célula DM atinge significância. No corte amplo a ordem até se inverte,
+com o SARIMA passando o Prophet, que é a cara de uma diferença que não existe.
+
+Excluir a pandemia melhora todo mundo em cerca de 1,2 pp, o que indica período difícil para
+todos e não período que favorece um método.
+
+**Onde as duas metades discordam:** sem a pandemia, a desvantagem dos boosters contra o naive
+sazonal aumenta (CatBoost de 0,32 para 0,79 pp, XGBoost de 0,67 para 1,28) e o intervalo
+passa a excluir zero. Mas o DM fica em 1/6 e 2/6, abaixo dos 3 exigidos. Se eu tivesse olhado
+só o intervalo, teria escrito que o XGBoost é significativamente pior, e o critério não
+sustenta. Há um teste travando exatamente essa distinção.
+
 ## Adaptações feitas ao versionar
 
 Marcadas no código com `# ADAPTADO`:
@@ -145,7 +180,7 @@ Fora isso, o código é o dele, sem alteração.
 
 ## O que ainda falta trazer do Drive
 
-`run_covid.py`, `run_temp_melhorado.py`, `check_dm_variance.py` e `build_revisao_assets.py`.
+`run_temp_melhorado.py`, `check_dm_variance.py` e `build_revisao_assets.py`.
 
 E, da rodada do TabPFN da Isabella Saade, o CSV de previsões por janela, sem o qual a
 afirmação de que ele bate as referências ingênuas não pode ser testada. Ver `docs/tabpfn.md`.

@@ -918,6 +918,58 @@ Table~\\ref{{tab:desempenho}}.
 \\end{{minipage}}
 \\end{{table}}""")
 
+    # ---------- Tabela 8: sensibilidade ao periodo COVID -------------------------
+    cov_json = RES / "revisao" / "covid_sensibilidade.json"
+    if cov_json.exists():
+        cj = json.loads(cov_json.read_text(encoding="utf-8"))
+        V["covid"] = cj["recortes"]
+        ROT_COV = {"completo": "Full test period",
+                   "sem_covid_agudo": "Excluding 2020-03 to 2021-12",
+                   "sem_covid_amplo": "Excluding 2020-01 to 2022-12"}
+        linhas_cov = []
+        for rec in ("completo", "sem_covid_agudo", "sem_covid_amplo"):
+            r = cj["recortes"][rec]
+            cel = [str(r["n_janelas"])]
+            cel += [num(r["smape"][m], 2) for m in ("prophet", "sarima", "timesfm")]
+            pares = r["pares_top3"]
+            piores = max(p["dm_significativos"] for p in pares.values())
+            cel.append(f"{sum(1 for p in pares.values() if p['distinguiveis'])} of 3")
+            cel.append(f"{piores} of 6")
+            linhas_cov.append(f"{ROT_COV[rec]} & " + " & ".join(cel) + " \\\\")
+        escreve_tabela("tab8_covid", f"""\\begin{{table}}[htbp]
+\\centering
+\\small
+\\setlength{{\\tabcolsep}}{{5pt}}
+\\caption{{Sensitivity of the central finding to the COVID-19 period. Whole rolling origin
+windows whose test period overlaps the excluded range are dropped, rather than individual
+months, so that the paired structure the bootstrap requires is preserved. No model is
+refitted, so the only effect measured is that of the composition of the test period.}}
+\\label{{tab:covid}}
+\\begin{{tabular}}{{lrrrrcc}}
+\\toprule
+& & \\multicolumn{{3}}{{c}}{{sMAPE (\\%)}} & \\multicolumn{{2}}{{c}}{{Leading three}} \\\\
+\\cmidrule(lr){{3-5}} \\cmidrule(lr){{6-7}}
+Test period & Windows & Prophet & SARIMA & TimesFM & Pairs separated & Worst DM \\\\
+\\midrule
+{chr(10).join(linhas_cov)}
+\\bottomrule
+\\end{{tabular}}
+
+\\vspace{{0.5em}}
+\\begin{{minipage}}{{\\textwidth}}
+\\footnotesize
+The first row is the analysis reported throughout the paper and reproduces it exactly. The
+two exclusions remove 27 and 41 of the 103 windows. Accuracy improves markedly once the
+pandemic windows are dropped, by roughly 1.2 percentage points for every model, which
+confirms that the period inflates the error of all of them rather than of any one in
+particular. The finding of Table~\\ref{{tab:pares}} is unaffected: no pair among the leading
+three separates under the criterion of Section~\\ref{{sec:metodos}} in any of the three test
+periods, and no Diebold-Mariano cell reaches significance in any of them. The ordering among
+the three does change, with SARIMA ahead of Prophet in the widest exclusion, which is what
+an absence of real difference looks like rather than evidence against it.
+\\end{{minipage}}
+\\end{{table}}""")
+
     (PAPER / "verified_numbers.json").write_text(
         json.dumps(V, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"  json    paper/verified_numbers.json ({len(json.dumps(V))} bytes)")

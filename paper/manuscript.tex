@@ -258,7 +258,7 @@ support.}
 \label{fig:smape}
 \end{figure}
 
-\subsection{Two models fail to beat a naive benchmark}
+\subsection{Two models fail to beat a naive benchmark}\label{sec:naive}
 
 A forecast is informative only relative to a rule that requires no model, and the scaled
 error in Table~\ref{tab:desempenho} makes that comparison explicit. The seasonal naive
@@ -290,6 +290,38 @@ worse than its own untuned configuration. Repeating the CatBoost search over 60 
 the test windows deliberately exposed, an upper bound that no honest procedure can attain,
 yields 6.35\%. Even that leaked ceiling remains behind the seasonal naive method and some
 1.5 pp behind the three leading approaches. The limitation is not the size of the search.
+
+\subsection{The finding survives removing the pandemic}
+
+\input{tables/tab8_covid}
+
+The test period runs from January 2015 to December 2023 and therefore contains the pandemic,
+whose level shocks could plausibly drive the comparison between models. Table~\ref{tab:covid}
+removes it, in two ranges, because the choice of cut is arguable: an acute definition ending
+with mass vaccination, and a wider one that also absorbs Omicron and the late excess
+mortality. Whole windows are dropped rather than individual months, since the paired
+bootstrap needs every model evaluated on the same rectangle of windows and horizons, and no
+model is refitted, so the only thing that changes is which windows are scored.
+
+Removing the pandemic makes every model better by about the same amount. Prophet improves
+from 4.70\% to 3.60\% and 3.47\% under the two exclusions, and the other
+two follow within a tenth of a point. This is the expected signature of a period that is
+hard for everyone rather than of a period that favours one method.
+
+The central finding does not move. In all three test periods, every pairwise difference among
+Prophet, SARIMA and TimesFM contains zero and no Diebold-Mariano cell reaches significance,
+0 of 6 in every comparison. Under the widest exclusion the ordering itself changes, with
+SARIMA ahead of Prophet by 0.06 percentage points where it was behind by 0.10 in the full
+period. A ranking that reverses when 41 of 103 windows are removed is not a ranking, which is
+the same conclusion Table~\ref{tab:pares} reaches by a different route.
+
+One number does move, and in the direction that matters for the boosting models. Their
+disadvantage against the seasonal naive method widens once the pandemic is excluded, from
+0.32 to 0.79 percentage points for CatBoost and from 0.67 to 1.28 for XGBoost, and
+the paired intervals stop containing zero. The Diebold-Mariano requirement is still not met,
+at 1 and 2 cells of six, so the conclusion of Section~\ref{sec:naive} stands unchanged rather
+than strengthened: what the data support is the absence of evidence that boosting beats a
+rule requiring no model, and the pandemic was not what was hiding it.
 
 \subsection{Feature engineering does not rescue the boosting models}
 
