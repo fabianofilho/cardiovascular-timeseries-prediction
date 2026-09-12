@@ -1,0 +1,34 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.84\textwidth, height=4.0cm,
+  xlabel={sMAPE (\%)}, xmin=5.9, xmax=7.1,
+  xtick={6.0,6.2,6.4,6.6,6.8,7.0},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
+  ymin=0.4, ymax=5.1, ytick={4,3,2,1}, yticklabels={{CatBoost, lags only (base)},{CatBoost, + calendar \& seasonal diff},{XGBoost, lags only (base)},{XGBoost, + calendar \& seasonal diff}},
+  y tick label style={font=\scriptsize},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={The temperature gain shrinks once boosters get explicit seasonality},
+]
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.3312,4) (6.5893,4)};
+\addplot[only marks, mark=square*, mark size=2.2pt, draw=ccatboost, fill=white, line width=0.9pt] coordinates {(6.5893,4)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=ccatboost, fill=ccatboost] coordinates {(6.3312,4)};
+\node[anchor=west, font=\scriptsize, text=black] at (axis cs:6.6493,4) {+0.26 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.0527,3) (6.1283,3)};
+\addplot[only marks, mark=square*, mark size=2.2pt, draw=ccatboost, fill=white, line width=0.9pt] coordinates {(6.1283,3)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=ccatboost, fill=ccatboost] coordinates {(6.0527,3)};
+\node[anchor=west, font=\scriptsize, text=black] at (axis cs:6.1883,3) {+0.08 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.5887,2) (6.8272,2)};
+\addplot[only marks, mark=square*, mark size=2.2pt, draw=cxgboost, fill=white, line width=0.9pt] coordinates {(6.8272,2)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cxgboost, fill=cxgboost] coordinates {(6.5887,2)};
+\node[anchor=west, font=\scriptsize, text=black] at (axis cs:6.8872,2) {+0.24 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.4228,1) (6.3490,1)};
+\addplot[only marks, mark=square*, mark size=2.2pt, draw=cxgboost, fill=white, line width=0.9pt] coordinates {(6.3490,1)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cxgboost, fill=cxgboost] coordinates {(6.4228,1)};
+\node[anchor=west, font=\scriptsize, text=black] at (axis cs:6.4828,1) {-0.07 pp};
+\node[anchor=north west, font=\scriptsize, text=black]
+  at (axis cs:5.92,5.0)
+  {$\square$ without temp. \quad $\bullet$ with temp.};
+\end{axis}
+\end{tikzpicture}

@@ -1,0 +1,34 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=6.6cm,
+  xlabel={sMAPE (\%)}, xmin=4.0, xmax=11.8,
+  xtick={4,5,6,7,8,9,10,11},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=0},
+  ymin=0.4, ymax=8.6, ytick={8,7,6,5,4,3,2,1}, yticklabels={{Prophet},{SARIMA},{TimesFM},{CatBoost},{XGBoost},{Seasonal naive + drift},{Seasonal naive},{Naive}},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={Seasonal naive sits inside the boosting range},
+]
+\addplot[draw=none, fill=black, fill opacity=0.14, forget plot]
+  coordinates {(4.7010,0.4) (4.8325,0.4) (4.8325,8.6)
+                (4.7010,8.6)}
+  \closedcycle;
+\addplot[draw=cprophet, line width=2.0pt, mark=none] coordinates {(4.1709,8) (5.2675,8)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cprophet, fill=cprophet] coordinates {(4.7010,8)};
+\addplot[draw=csarima, line width=2.0pt, mark=none] coordinates {(4.2890,7) (5.3270,7)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=csarima, fill=csarima] coordinates {(4.7957,7)};
+\addplot[draw=ctimesfm, line width=2.0pt, mark=none] coordinates {(4.3245,6) (5.3851,6)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ctimesfm, fill=ctimesfm] coordinates {(4.8325,6)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(5.9248,5) (7.2734,5)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(6.5893,5)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(6.2614,4) (7.6465,4)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(6.9350,4)};
+\addplot[draw=black!55, line width=2.0pt, mark=none] coordinates {(5.5805,3) (6.8149,3)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=black!55, fill=black!55] coordinates {(6.1773,3)};
+\addplot[draw=black!55, line width=2.0pt, mark=none] coordinates {(5.6156,2) (6.9567,2)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=black!55, fill=black!55] coordinates {(6.2693,2)};
+\addplot[draw=black!55, line width=2.0pt, mark=none] coordinates {(9.8097,1) (11.6786,1)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=black!55, fill=black!55] coordinates {(10.7411,1)};
+\end{axis}
+\end{tikzpicture}

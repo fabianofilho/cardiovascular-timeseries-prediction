@@ -1,0 +1,20 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.80\textwidth, height=5.0cm,
+  xlabel={Forecast horizon (months)}, ylabel={Empirical coverage},
+  xmin=0.7, xmax=6.3, xtick={1,2,3,4,5,6},
+  ymin=0.70, ymax=1.00, ytick={0.70,0.75,0.80,0.85,0.90,0.95,1.00},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+  axis lines=left, tick align=outside, tick pos=left,
+  legend style={at={(0.02,0.06)}, anchor=south west, draw=none, fill=none,
+                 font=\small, text=black},
+]
+\draw[black!45, dashed, line width=0.9pt]
+  (axis cs:0.7,0.95) -- (axis cs:6.3,0.95)
+  node[midway, above, font=\scriptsize, text=black] {95\% nominal};
+\addplot[draw=csarima, mark=*, mark size=1.8pt, line width=1.1pt, mark options={draw=csarima, fill=csarima}] coordinates {(1,0.8544) (2,0.8544) (3,0.8447) (4,0.8544) (5,0.8252) (6,0.8350)};
+\addplot[draw=cprophet, mark=*, mark size=1.8pt, line width=1.1pt, mark options={draw=cprophet, fill=cprophet}] coordinates {(1,0.7961) (2,0.8058) (3,0.7670) (4,0.7573) (5,0.7476) (6,0.7476)};
+\legend{SARIMA,Prophet}
+\end{axis}
+\end{tikzpicture}

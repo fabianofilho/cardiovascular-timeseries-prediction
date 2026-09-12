@@ -1,0 +1,43 @@
+% gerado por scripts/revisao/build_revisao_tabs.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Hyperparameter search for the two gradient boosting models: the accuracy of the
+untuned configuration reported in Table~\ref{tab:desempenho}, of an honest search, and of
+a search allowed to see the test set. A positive gain means the search improved on the
+untuned model.}
+\label{tab:optuna}
+\begin{tabular}{lrrrrrrr}
+\toprule
+& \multicolumn{3}{c}{sMAPE (\%)} & \multicolumn{2}{c}{Gain (pp)} & & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-6}
+Model & Untuned & Honest & Leaked & Honest & Leaked & Trials & Hours \\
+\midrule
+CatBoost & 6.59 & 6.42 & 6.35 & $+0.17$ & $+0.24$ & 40 + 60 & 2.1 \\
+XGBoost & 6.85 & 7.06 & 6.22 & $-0.21$ & $+0.63$ & 40 + 60 & 1.1 \\
+\midrule
+Seasonal naive & \multicolumn{3}{c}{6.27} & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+The honest column tunes on a development split carved out of the training data of each
+origin, so no observation from the scored period is visible to the search; it is the column
+that describes what tuning is worth. The leaked column selects the configuration by its
+score on the test forecasts themselves. That is not a result, it is a bound: no search
+without a time machine can do better. Both models were given the same budget, reported in
+the last two columns as honest trials plus leaked trials and total wall clock. The honest
+search buys CatBoost less than two tenths of a percentage point and costs XGBoost two
+tenths, and neither tuned model reaches the seasonal naive method of 6.27\%.
+Even the leaked bound leaves both more than a percentage point behind the three leading
+models of Table~\ref{tab:desempenho}. Under-tuning is therefore not the explanation for
+the boosting results. The untuned column is the value this environment produces, which for
+XGBoost is 6.85\% rather than the
+6.83\% of the original run: XGBoost does not
+reproduce across library versions, a limitation already declared in the manuscript. All
+three columns of a row come from the same environment, so the gains are unaffected.
+\end{minipage}
+\end{table}
