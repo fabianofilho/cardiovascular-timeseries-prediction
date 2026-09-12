@@ -26,10 +26,11 @@ Under the climatology policy the future covariate is the month-of-year mean reco
 for each window from the exogenous series truncated at that window's training end, so no
 value from after the training end is visible. The ceiling column replaces it with the
 true observed future temperature, which leaks by construction and is reported only to
-bound what a perfect weather forecast could add. All three gains have intervals
-excluding zero, but none reaches the pre-declared threshold of DM significance in at
-least three horizons, so the effect is reported as suggestive and not established.
-Prophet and TimesFM do not accept exogenous regressors in this implementation and were
-excluded from this comparison rather than being given an input they would ignore.
+bound what a perfect weather forecast could add. Gain is positive when temperature helps.
+The three gains that exclude zero are SARIMA, CatBoost and XGBoost, but none reaches the
+pre-declared threshold of DM significance in at least three horizons, so the effect is
+reported as suggestive and not established. Prophet is included through add\_regressor(); its baseline run reproduces the forecasts of Table~\ref{tab:desempenho} exactly, so the two rows describe the same model with and without the covariate. It is the one model the covariate does not help: the gain is negative and its interval spans zero.
+TimesFM does not accept exogenous regressors in this implementation and was excluded from
+this comparison rather than being given an input it would ignore.
 \end{minipage}
 \end{table}
