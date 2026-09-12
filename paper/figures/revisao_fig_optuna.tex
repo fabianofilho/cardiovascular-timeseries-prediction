@@ -1,0 +1,32 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=4.6cm,
+  xlabel={sMAPE (\%)}, xmin=6.1, xmax=7.2,
+  xtick={6.2,6.4,6.6,6.8,7.0,7.2},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
+  ymin=0.4, ymax=6.6, ytick={6,5,4,3,2,1}, yticklabels={{CatBoost, base},{CatBoost, dev},{CatBoost, oracle},{XGBoost, base},{XGBoost, dev},{XGBoost, oracle}},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={Honest tuning does not close the gap; the leaked ceiling barely does},
+  legend style={at={(0.98,0.98)}, anchor=north east, draw=none, fill=none,
+                 font=\scriptsize, text=black, legend columns=1},
+]
+\draw[black!45, dashed, line width=0.7pt]
+  (axis cs:6.2693,0.4) -- (axis cs:6.2693,6.6)
+  node[midway, above, sloped, font=\scriptsize, text=black]
+  {seasonal naive, 6.27\%};
+\addplot[only marks, mark=square*, mark size=2.4pt, draw=ccatboost, fill=ccatboost] coordinates {(6.5893,6)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=ccatboost, fill=ccatboost] coordinates {(6.4163,5)};
+\addplot[only marks, mark=triangle*, mark size=2.4pt, draw=ccatboost, fill=ccatboost] coordinates {(6.3471,4)};
+\addplot[only marks, mark=square*, mark size=2.4pt, draw=cxgboost, fill=cxgboost] coordinates {(6.8324,3)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cxgboost, fill=cxgboost] coordinates {(7.0649,2)};
+\addplot[only marks, mark=triangle*, mark size=2.4pt, draw=cxgboost, fill=cxgboost] coordinates {(6.2244,1)};
+\addlegendimage{only marks, mark=square*, mark size=2.4pt, draw=black, fill=black}
+\addlegendentry{base (no tuning)}
+\addlegendimage{only marks, mark=*, mark size=2.4pt, draw=black, fill=black}
+\addlegendentry{honest tuning (dev)}
+\addlegendimage{only marks, mark=triangle*, mark size=2.8pt, draw=black, fill=black}
+\addlegendentry{leaked ceiling (oracle)}
+\end{axis}
+\end{tikzpicture}

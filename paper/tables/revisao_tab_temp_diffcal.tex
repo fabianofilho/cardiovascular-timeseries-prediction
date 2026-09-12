@@ -14,8 +14,8 @@ Model and feature set & Without temp. & With temp. & Gain (pp) \\
 CatBoost, lags only & 6.59 & 6.33 & $+0.258$ \\
 CatBoost, + calendar and seasonal difference & 6.13 & 6.05 & $+0.076$ \\
 \midrule
-XGBoost, lags only & 6.83 & 6.59 & $+0.238$ \\
-XGBoost, + calendar and seasonal difference & 6.35 & 6.42 & $-0.074$ \\
+XGBoost, lags only & 6.83 & 6.51 & $+0.327$ \\
+XGBoost, + calendar and seasonal difference & 6.35 & 6.39 & $-0.036$ \\
 \bottomrule
 \end{tabular}
 
@@ -25,7 +25,7 @@ XGBoost, + calendar and seasonal difference & 6.35 & 6.42 & $-0.074$ \\
 The first row of each block is the specification of Table~\ref{tab:temperatura}, lagged
 values only. The second adds Fourier calendar terms and takes the seasonal difference
 $y_t - y_{t-12}$ as the target, so the model no longer has to infer the annual cycle from
-the covariate. The gain shrinks in both models, CatBoost from $+0.258$ to $+0.076$ and XGBoost from $+0.238$ to $-0.074$ percentage
+the covariate. The gain shrinks in both models, CatBoost from $+0.258$ to $+0.076$ and XGBoost from $+0.327$ to $-0.036$ percentage
 points, and changes sign for XGBoost. The reading is that a large part of what minimum
 temperature contributed in Table~\ref{tab:temperatura} was the month of the year rather
 than the weather, and that the remaining contribution is too small to separate from noise.

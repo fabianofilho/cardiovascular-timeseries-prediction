@@ -809,22 +809,57 @@ contra a fonte e os valores batem. O problema era de garantia: um número digita
 como avisar quando os dados por baixo dele mudam.</p>"""
 
 
+def tabelas_orfas():
+    """Tabelas que o gerador produz e que o manuscrito nao inclui.
+
+    Conferido no arquivo, nao numa lista minha: a lista envelhece no dia em que
+    alguem acrescenta um \\input e ninguem se lembra de vir aqui apagar o item.
+    """
+    tex = (PAPER / "manuscript.tex").read_text(encoding="utf-8")
+    geradas = sorted(p.stem for p in (PAPER / "tables").glob("*.tex"))
+    return [n for n in geradas if f"tables/{n}" not in tex]
+
+
+def marcas_abertas():
+    """Trechos marcados com \\aberto no manuscrito, com o inicio da nota."""
+    tex = (PAPER / "manuscript.tex").read_text(encoding="utf-8")
+    return [re.sub(r"\s+", " ", m)[:160]
+            for m in re.findall(r"\\aberto\{(.+?)\}\s*\n", tex, re.S)]
+
+
 def bloco_pendencias():
-    itens = [
+    itens = []
+
+    for nota in marcas_abertas():
+        itens.append(("Marcado em aberto no próprio texto",
+                      f"Sai em vermelho no PDF compilado, para não passar despercebido "
+                      f"na submissão. A nota diz: {nota}"))
+
+    orfas = tabelas_orfas()
+    if orfas:
+        itens.append(
+            (f"{'Tabela gerada e não incluída' if len(orfas) == 1 else 'Tabelas geradas e não incluídas'}",
+             f"{', '.join(orfas)} {'sai' if len(orfas) == 1 else 'saem'} do gerador, mas o "
+             "manuscrito não faz \\input. O resultado chega ao leitor só em prosa. Ou entra "
+             "como tabela, ou sai do gerador."))
+
+    itens.append(
         ("Qual rodada de intervalo do Prophet vale",
          "A figura de calibração do manuscrito e a tabela regerada usam rodadas "
          "diferentes. Publicadas juntas, o documento se contradiz. A saída limpa é fixar "
          "a semente da amostragem do Prophet e rodar uma vez só, o que também resolve o "
-         "problema para sempre."),
-        ("O manuscrito ainda diz que nenhum ajuste foi feito",
-         "As Limitações do main_victor.tex afirmam que nenhuma busca de hiperparâmetros "
-         "foi executada. O Optuna rodou 100 trials por modelo. A afirmação precisa cair, "
-         "e o resultado da busca precisa entrar: ele reforça a conclusão do artigo em vez "
-         "de contrariá-la."),
-        ("A tabela de variantes não tem contraparte no texto",
-         "tab7_variantes sai do gerador, mas nenhuma versão do manuscrito a inclui; as "
-         "variantes só aparecem em prosa. Ou entra como tabela, ou sai do gerador."),
-    ]
+         "problema para sempre."))
+
+    victor = EXPERIMENTOS.parent / "00_manuscrito" / "main_victor.tex"
+    if victor.exists() and "hyperparameter search was" in victor.read_text(
+            encoding="utf-8", errors="ignore"):
+        itens.append(
+            ("O intermediário do Drive ainda diz que nenhum ajuste foi feito",
+             "As Limitações do main_victor.tex afirmam que nenhuma busca de "
+             "hiperparâmetros foi executada, enquanto o Optuna rodou. O manuscript.tex do "
+             "repositório já não diz isso, então a questão é se essa versão do Drive ainda "
+             "serve para alguma coisa ou se ficou para trás."))
+
     if tabpfn_rodou() is None:
         itens.append(
             ("TabPFN",
