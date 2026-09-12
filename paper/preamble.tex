@@ -18,6 +18,10 @@
 \usepackage{xcolor}
 \usepackage{caption}
 \usepackage{amsmath}
+% A legenda da fig4_janela usa \blacksquare, que vem daqui. Sem amssymb o
+% documento inteiro para de compilar, ainda que a figura isolada compile: o
+% preambulo que o gerador monta para compilar cada figura sozinha ja o carrega.
+\usepackage{amssymb}
 \usepackage[numbers,sort&compress]{natbib}
 
 \captionsetup{font=small,labelfont=bf}
@@ -34,6 +38,11 @@
 % Marcador de dado ainda indisponivel. Sai vermelho e em negrito de proposito:
 % e para ser impossivel submeter sem ver.
 \newcommand{\missing}[1]{\textcolor{red}{\textbf{[MISSING: #1]}}}
+
+% Marcador de decisao ainda nao tomada, ao lado do texto que ela afeta. Mesmo
+% vermelho do \missing e pelo mesmo motivo: o trecho entre colchetes nao pode
+% escapar para a submissao sem alguem ter olhado.
+\newcommand{\aberto}[1]{\textcolor{red}{\textbf{[OPEN: #1]}}}
 
 \setstretch{1.5}
 \linenumbers

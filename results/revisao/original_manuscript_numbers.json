@@ -1,0 +1,241 @@
+{
+  "_meta": {
+    "gerado_por": "scripts/revisao/extrai_original.py",
+    "fonte": "manuscript_comentado.pdf",
+    "paginas": 18,
+    "regra": "numeros lidos do PDF por token, nunca digitados"
+  },
+  "anotacoes": [
+    {
+      "pagina": 1,
+      "tipo": "FreeText",
+      "texto": "Dúvida: Entendo que não é indispensável e que o TimesFM já cobre um pouco disso, masss trazer o resultado do tabpfn não agregaria? Já que tem XGboost e catboost tbm. Afinal, o melhor do tabular precisa entrar pra ser justa a comparação."
+    },
+    {
+      "pagina": 1,
+      "tipo": "FreeText",
+      "texto": "Background para no estado da arte. Senti falta do objetivo no fim do background. Sei que o inicio da introdução diz isso, mas não sei se não vale garantir que o objetivo seja entendido como tal."
+    },
+    {
+      "pagina": 1,
+      "tipo": "Highlight",
+      "texto": "Achei essa frase incompleta. Solta. Mas pode ser falha de inglês meu."
+    },
+    {
+      "pagina": 4,
+      "tipo": "FreeText",
+      "texto": "E se a gente enriquecesse mais essa engenharia de features ao invés de só as lags de 1 a 12? Média móvel ou coisas assim?"
+    },
+    {
+      "pagina": 4,
+      "tipo": "FreeText",
+      "texto": "Como foi feito o ajuste de hiperparametros do xgboost e catboost? optuna?"
+    }
+  ],
+  "tabelas": {
+    "tabela1": {
+      "titulo": "Forecasting accuracy",
+      "colunas": [
+        "mae",
+        "rmse",
+        "smape",
+        "ic",
+        "largura"
+      ],
+      "linhas": {
+        "Prophet": {
+          "mae": "355.2",
+          "rmse": "515.8",
+          "smape": "4.70",
+          "ic": "[4.17, 5.27]",
+          "largura": "1.10"
+        },
+        "SARIMA": {
+          "mae": "363.3",
+          "rmse": "508.1",
+          "smape": "4.80",
+          "ic": "[4.29, 5.33]",
+          "largura": "1.04"
+        },
+        "TimesFM": {
+          "mae": "366.0",
+          "rmse": "513.4",
+          "smape": "4.83",
+          "ic": "[4.32, 5.39]",
+          "largura": "1.06"
+        },
+        "CatBoost": {
+          "mae": "500.9",
+          "rmse": "673.6",
+          "smape": "6.59",
+          "ic": "[5.92, 7.27]",
+          "largura": "1.35"
+        },
+        "XGBoost": {
+          "mae": "526.6",
+          "rmse": "704.5",
+          "smape": "6.94",
+          "ic": "[6.26, 7.65]",
+          "largura": "1.39"
+        }
+      }
+    },
+    "tabela2": {
+      "titulo": "Paired differences among the leading three",
+      "colunas": [
+        "dif",
+        "ic",
+        "p_boot",
+        "dm"
+      ],
+      "linhas": {
+        "Prophet -SARIMA": {
+          "dif": "-0.095",
+          "ic": "[-0.367, +0.157]",
+          "p_boot": "0.512",
+          "dm": "0 of 6"
+        },
+        "Prophet -TimesFM": {
+          "dif": "-0.132",
+          "ic": "[-0.319, +0.056]",
+          "p_boot": "0.171",
+          "dm": "0 of 6"
+        },
+        "SARIMA -TimesFM": {
+          "dif": "-0.037",
+          "ic": "[-0.303, +0.262]",
+          "p_boot": "0.768",
+          "dm": "0 of 6"
+        }
+      }
+    },
+    "tabela3": {
+      "titulo": "Effect of training history",
+      "colunas": [
+        "smape_curta",
+        "smape_longa",
+        "ganho"
+      ],
+      "linhas": {
+        "Prophet": {
+          "smape_curta": "7.68",
+          "smape_longa": "5.97",
+          "ganho": "1.71"
+        },
+        "SARIMA": {
+          "smape_curta": "7.45",
+          "smape_longa": "6.18",
+          "ganho": "1.27"
+        },
+        "TimesFM": {
+          "smape_curta": "7.30",
+          "smape_longa": "6.07",
+          "ganho": "1.23"
+        }
+      }
+    },
+    "tabela4": {
+      "titulo": "Expanding versus sliding 60-month window",
+      "colunas": [
+        "expanding",
+        "sliding60",
+        "dif",
+        "ic",
+        "p",
+        "dm"
+      ],
+      "linhas": {
+        "Prophet": {
+          "expanding": "4.70",
+          "sliding60": "5.39",
+          "dif": "-0.69",
+          "ic": "[-1.159, -0.219]",
+          "p": "0.005",
+          "dm": "0 of 6"
+        },
+        "SARIMA": {
+          "expanding": "4.80",
+          "sliding60": "5.46",
+          "dif": "-0.66",
+          "ic": "[-1.008, -0.346]",
+          "p": "0.000",
+          "dm": "3 of 6"
+        },
+        "TimesFM": {
+          "expanding": "4.83",
+          "sliding60": "4.74",
+          "dif": "+0.09",
+          "ic": "[-0.125, +0.307]",
+          "p": "0.424",
+          "dm": "0 of 6"
+        },
+        "CatBoost": {
+          "expanding": "6.59",
+          "sliding60": "6.64",
+          "dif": "-0.05",
+          "ic": "[-0.288, +0.176]",
+          "p": "0.661",
+          "dm": "0 of 6"
+        },
+        "XGBoost": {
+          "expanding": "6.94",
+          "sliding60": "6.87",
+          "dif": "+0.07",
+          "ic": "[-0.213, +0.354]",
+          "p": "0.635",
+          "dm": "0 of 6"
+        }
+      }
+    },
+    "tabela5": {
+      "titulo": "Effect of minimum temperature",
+      "colunas": [
+        "sem",
+        "com",
+        "ganho",
+        "ic",
+        "dm",
+        "teto"
+      ],
+      "linhas": {
+        "SARIMA": {
+          "sem": "4.80",
+          "com": "4.66",
+          "ganho": "0.136",
+          "ic": "[+0.034, +0.257]",
+          "dm": "1 of 6",
+          "teto": "4.63"
+        },
+        "CatBoost": {
+          "sem": "6.59",
+          "com": "6.33",
+          "ganho": "0.258",
+          "ic": "[+0.073, +0.452]",
+          "dm": "1 of 6",
+          "teto": "6.30"
+        },
+        "XGBoost": {
+          "sem": "6.94",
+          "com": "6.55",
+          "ganho": "0.382",
+          "ic": "[+0.222, +0.543]",
+          "dm": "2 of 6",
+          "teto": "6.55"
+        }
+      }
+    }
+  },
+  "figuras": {
+    "figura1": "sMAPE by model with 95% bootstrap intervals over rolling origin windows.",
+    "figura2": "Accuracy under an expanding training window and under a sliding 60-month window, on identical test origins.",
+    "figura3": "sMAPE by forecast horizon, n = 103 windows per cell.",
+    "figura4": "Reduction in sMAPE from adding monthly minimum temperature as an exogenous covariate under the leakage-free climatology policy, with 95% paired bootstrap intervals.",
+    "figura5": "Mean cardiovascular deaths by month of year (left axis) against mean monthly minimum temperature (right axis), 2010–2023.",
+    "figura6": "Monthly cardiovascular deaths in the state of São Paulo, January 2010 to December 2023 (168 months)."
+  },
+  "prosa": {
+    "sem_intervalos": "No prediction intervals, and therefore no forecast calibration. All five models here produce point forecasts, and all three metrics are point-forecast metrics. What we quantified is the uncertainty of the accuracy metric, not the uncertainty of an individual forecast. Empirical coverage against a nominal level was therefore never assessed. For a manager sizing capacity, the interval is the operative quantity, and its absence is the most consequential gap in this work. Enabling the intervals each model already supports natively and measuring coverage by horizon is the immediate next step.",
+    "prophet_sem_exogena": "Prophet and TimesFM do not accept exogenous regressors in this implementation and were excluded from this comparison rather than being given an input they would ignore.",
+    "periodo_pandemia": "Pandemic period. The series includes COVID-19, which introduced level shifts and possible cause-of-death misclassification."
+  }
+}

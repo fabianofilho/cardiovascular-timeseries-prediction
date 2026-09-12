@@ -1,0 +1,25 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.82\textwidth, height=3.6cm,
+  xlabel={sMAPE (\%)}, xmin=5.9, xmax=7.2,
+  xtick={6.0,6.2,6.4,6.6,6.8,7.0,7.2},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
+  ymin=0.4, ymax=2.6, ytick={2,1}, yticklabels={{CatBoost, enriched},{XGBoost, enriched}},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={The enriched variants also lose their edge under short history},
+]
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.0921,2) (6.5902,2)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=ccatboost, fill=ccatboost] coordinates {(6.0921,2)};
+\addplot[only marks, mark=square*, mark size=2.0pt, draw=black!55, fill=black!55] coordinates {(6.5902,2)};
+\node[anchor=west, font=\scriptsize, text=black] at (axis cs:6.6902,2) {+0.50 pp};
+\addplot[draw=black!28, line width=1.2pt, mark=none] coordinates {(6.3874,1) (6.7942,1)};
+\addplot[only marks, mark=*, mark size=2.4pt, draw=cxgboost, fill=cxgboost] coordinates {(6.3874,1)};
+\addplot[only marks, mark=square*, mark size=2.0pt, draw=black!55, fill=black!55] coordinates {(6.7942,1)};
+\node[anchor=west, font=\scriptsize, text=black] at (axis cs:6.8942,1) {+0.41 pp};
+\node[anchor=east, font=\scriptsize, text=black] at (axis cs:7.15,2.4)
+  {\textcolor{black!55}{$\bullet$} Expanding \quad
+    \textcolor{black!55}{$\blacksquare$} Sliding 60};
+\end{axis}
+\end{tikzpicture}

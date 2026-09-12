@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "gerado_por": "scripts/revisao/reconfere_local.py",
+    "executa": "celulas [3, 4, 6, 8] de tabpfn_benchmark.ipynb",
+    "protocolo": "103 janelas, horizonte 6, minimo de treino 60, expansiva",
+    "versoes": {
+      "python": "3.13.5",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "xgboost": "3.2.0",
+      "catboost": "1.2.10"
+    }
+  },
+  "resultados": [
+    {
+      "modelo": "naive",
+      "smape": 10.741133847097165,
+      "smape_artigo": 10.74113384710432,
+      "diferenca_pp": -7.155165349104209e-12,
+      "veredito": "bate"
+    },
+    {
+      "modelo": "snaive",
+      "smape": 6.269313196506414,
+      "smape_artigo": 6.269313196510599,
+      "diferenca_pp": -4.18509671362699e-12,
+      "veredito": "bate"
+    },
+    {
+      "modelo": "snaive_drift",
+      "smape": 6.177330014438569,
+      "smape_artigo": 6.177330014442687,
+      "diferenca_pp": -4.1175951537297806e-12,
+      "veredito": "bate"
+    },
+    {
+      "modelo": "xgboost",
+      "smape": 6.8342836161334946,
+      "smape_artigo": 6.935026892395093,
+      "diferenca_pp": -0.10074327626159807,
+      "veredito": "desvia"
+    },
+    {
+      "modelo": "catboost",
+      "smape": 6.589326365902394,
+      "smape_artigo": 6.589326365906759,
+      "diferenca_pp": -4.364508754406415e-12,
+      "veredito": "bate"
+    }
+  ]
+}

@@ -41,9 +41,11 @@ ROTULO = {
     "snaive_drift": "Seasonal naive + drift",
 }
 # HEX sem '#': entram em \definecolor{...}{HTML}{...} no preambulo
+# Paleta Okabe-Ito (Wong, 2011) -- distinguivel sob deuteranopia, protanopia e
+# tritanopia, e ainda legivel em impressao P&B. Substitui a "deep" do seaborn.
 COR = {
-    "prophet": "4C72B0", "sarima": "DD8452", "timesfm": "55A868",
-    "xgboost": "C44E52", "catboost": "8172B3",
+    "prophet": "0072B2", "sarima": "D55E00", "timesfm": "009E73",
+    "xgboost": "E69F00", "catboost": "CC79A7",
 }
 TOP3 = ["prophet", "sarima", "timesfm"]
 ORDEM = ["prophet", "sarima", "timesfm", "catboost", "xgboost"]
@@ -167,7 +169,8 @@ def rasteriza_figuras(dpi=300):
         return
 
     preambulo = ("\\documentclass[11pt,border=2pt]{standalone}\n"
-                 "\\usepackage[T1]{fontenc}\n\\usepackage{lmodern}\n"
+                 "\\usepackage[T1]{fontenc}\n\\usepackage{mathptmx}\n"
+                 "\\usepackage{amssymb}\n"
                  "\\usepackage{pgfplots}\n\\pgfplotsset{compat=1.18}\n"
                  "\\usepackage{xcolor}\n" + defs_cor() + "\n\\begin{document}\n")
     with tempfile.TemporaryDirectory() as td:
@@ -279,13 +282,21 @@ def main() -> int:
               for k in ("mae", "rmse", "smape", "mase")}
 
     def linha_tab1(m):
+        """Ordem das colunas igual a do manuscrito: MAE, RMSE, sMAPE, IC, largura, MASE.
+
+        A largura do IC entra como coluna propria porque e ela, e nao o ponto, que
+        sustenta o argumento de que os tres primeiros modelos nao se separam: a
+        diferenca entre eles e menor que a largura de qualquer um dos intervalos.
+        """
         d = V["tabela1"][m]
-        cel = []
-        for k, casas in (("mae", 1), ("rmse", 1), ("smape", 2), ("mase", 3)):
+
+        def forte(k, casas):
             s = num(d[k], casas)
-            cel.append(f"\\textbf{{{s}}}" if melhor[k] == m else s)
-        cel.append(f"$[{d['ic_low']:.2f}, {d['ic_high']:.2f}]$")
-        return f"{ROTULO[m]} & " + " & ".join(cel) + " \\\\"
+            return f"\\textbf{{{s}}}" if melhor[k] == m else s
+
+        return (f"{ROTULO[m]} & {forte('mae', 1)} & {forte('rmse', 1)} & "
+                f"{forte('smape', 2)} & $[{d['ic_low']:.2f}, {d['ic_high']:.2f}]$ & "
+                f"{num(d['ic_width'], 2)} & {forte('mase', 3)} \\\\")
 
     linhas = [linha_tab1(m) for m in ORDEM]
     linhas.append("\\midrule")
@@ -299,9 +310,9 @@ S\\~ao Paulo, Brazil, 2010--2023. All models were evaluated on the same
 {nw * nh} out-of-sample forecasts from {nw} rolling origin windows with a
 {nh}-month horizon.}}
 \\label{{tab:desempenho}}
-\\begin{{tabular}}{{lrrrrc}}
+\\begin{{tabular}}{{lrrrcrr}}
 \\toprule
-Model & MAE & RMSE & sMAPE (\\%) & MASE & 95\\% CI of sMAPE \\\\
+Model & MAE & RMSE & sMAPE (\\%) & 95\\% CI of sMAPE & Width & MASE \\\\
 \\midrule
 {chr(10).join(linhas)}
 \\bottomrule
@@ -317,7 +328,12 @@ forecasts scored here are one to six steps ahead and out of sample, unity is not
 relevant threshold: the out-of-sample seasonal naive method itself attains
 {V['tabela1']['snaive']['mase']:.3f}, and that row, not the value 1, is the benchmark the
 models have to beat. MAE and RMSE are in deaths per month;
-sMAPE is symmetric mean absolute percentage error. Intervals are percentile bootstrap
+sMAPE is symmetric mean absolute percentage error. Width is the span of the interval in
+percentage points, and it is the column that settles the ranking question: the whole
+spread of the three leading models,
+{max(V['tabela1'][m]['smape'] for m in TOP3) - min(V['tabela1'][m]['smape'] for m in TOP3):.2f}
+percentage points, is smaller than the width of any one of their intervals, so the order
+in which they appear is not an ordering the data supports. Intervals are percentile bootstrap
 with $B={B:,}$ replicates (seed {SEED}) resampling whole rolling origin windows rather
 than individual forecasts, because the six horizons within a window share a training
 origin and are not independent; resampling forecast by forecast would understate the
@@ -438,6 +454,36 @@ restriction to shared dates is the comparison that isolates training length.
                            "dm_sig": nsig, "veredito": conf}
         linhas.append(f"{ROTULO[m]} & {e:.2f} & {s:.2f} & {sgn(e - s, 2)} & "
                       f"{intervalo(lo, hi)} & {p:.3f} & {nsig} of {nh} \\\\")
+
+    # Variantes enriquecidas (direct): so ha as metricas agregadas das duas rodadas,
+    # nao as previsoes da rodada deslizante, entao nao da para reamostrar pareado.
+    # Entram sem IC, DM nem p, e a nota diz por que -- preencher essas celulas com
+    # numero de outra fonte seria pior que deixar a lacuna visivel.
+    rev_num = RES / "revisao" / "revisao_numbers.json"
+    n_enr = 0
+    if rev_num.exists():
+        t4e = json.loads(rev_num.read_text(encoding="utf-8")).get("tabela4_enriched", {})
+        if t4e:
+            V["tabela4_enriched"] = t4e
+            linhas.append("\\midrule")
+            for rot, d in t4e.items():
+                linhas.append(
+                    f"{rot} & {d['expanding']:.2f} & {d['sliding60']:.2f} & "
+                    f"{sgn(d['diff'], 2)} & --- & --- & --- \\\\")
+                n_enr += 1
+    if n_enr:
+        perdas = sorted(abs(d["diff"]) for d in V["tabela4_enriched"].values())
+        nota_enr = (
+            r" The two rows below the second rule are the best feature engineering "
+            r"variant of each boosting model (seasonal differencing, calendar terms, "
+            r"one model per horizon; Table~\ref{tab:variantes}), run under both window "
+            f"policies. They lose {perdas[0]:.2f} to {perdas[-1]:.2f} percentage points "
+            r"under the short window, so the advantage of feature engineering does not "
+            r"survive a short history either. Their interval, $p$ and DM cells are left "
+            r"blank because only the aggregate metrics of the sliding run were retained, "
+            r"not its individual forecasts, and the paired bootstrap needs the forecasts.")
+    else:
+        nota_enr = ""
     escreve_tabela("tab4_janela", f"""\\begin{{table}}[htbp]
 \\centering
 \\small
@@ -460,7 +506,7 @@ The only difference between the two runs is how much past each model may use: th
 expanding window trains from the start of the series to the origin (60 to 162 months),
 the sliding window on the most recent 60 months only. Test origins, horizons and
 evaluation are identical, so the bootstrap is paired by window. Under the pre-declared
-criterion, only SARIMA meets both conditions.
+criterion, only SARIMA meets both conditions.{nota_enr}
 \\end{{minipage}}
 \\end{{table}}
 """)
@@ -473,10 +519,42 @@ criterion, only SARIMA meets both conditions.
         ae_ex[m] = np.abs(yp - yt)
         yt2, yp2 = matriz(teto, f"{m}_temp")
         sm_tt[m] = smape_vec(yt2, yp2)
+
+    # Prophet aceita regressor exogeno por add_regressor(); a rodada esta em
+    # results/revisao/. O manuscrito o excluiu da Tabela 5 alegando que o modelo nao
+    # aceita exogenas, o que nao procede, entao a linha entra. Antes de usa-la o script
+    # confere que a rodada reproduz o Prophet oficial previsao a previsao: se nao
+    # reproduzir, a comparacao seria entre dois modelos diferentes e a linha cai fora.
+    modelos_t5 = ["sarima", "catboost", "xgboost"]
+    pn_csv = RES / "revisao" / "prophet_naive_predictions.csv"
+    if pn_csv.exists():
+        pn = pd.read_csv(pn_csv, parse_dates=["date"])
+        yt_r, yp_r = matriz(pn, "prophet_repro")
+        yt_o, yp_o = matriz(base, "prophet")
+        desvio = float(np.abs(yp_r - yp_o).max())
+        V["prophet_exog_reproducao"] = {"max_desvio_previsao": desvio}
+        if desvio < 1e-6:
+            yt_c, yp_c = matriz(pn, "prophet_temp")
+            sm_ex["prophet"] = smape_vec(yt_c, yp_c)
+            ae_ex["prophet"] = np.abs(yp_c - yt_c)
+            yt_p, yp_p = matriz(pn, "prophet_temp_ceiling")
+            sm_tt["prophet"] = smape_vec(yt_p, yp_p)
+            modelos_t5 = ["prophet"] + modelos_t5
+        else:
+            print(f"  [AVISO] prophet_repro diverge do oficial em {desvio:.3g}; "
+                  "linha do Prophet fora da Tabela 5")
+
+    nota_prophet = (
+        r" Prophet is included through add\_regressor(); its baseline run reproduces the "
+        r"forecasts of Table~\ref{tab:desempenho} exactly, so the two rows describe the "
+        r"same model with and without the covariate. It is the one model the covariate "
+        r"does not help: the gain is negative and its interval spans zero."
+    ) if "prophet" in modelos_t5 else ""
+
     boot_ex = bootstrap_janelas(sm_ex, nw)
     V["tabela5"] = {}
     linhas = []
-    for m in ["sarima", "catboost", "xgboost"]:
+    for m in modelos_t5:
         sem, com = float(sm[m].mean()), float(sm_ex[m].mean())
         bd = boot[m] - boot_ex[m]
         lo, hi = ic(bd)
@@ -532,11 +610,12 @@ Under the climatology policy the future covariate is the month-of-year mean reco
 for each window from the exogenous series truncated at that window's training end, so no
 value from after the training end is visible. The ceiling column replaces it with the
 true observed future temperature, which leaks by construction and is reported only to
-bound what a perfect weather forecast could add. All three gains have intervals
-excluding zero, but none reaches the pre-declared threshold of DM significance in at
-least three horizons, so the effect is reported as suggestive and not established.
-Prophet and TimesFM do not accept exogenous regressors in this implementation and were
-excluded from this comparison rather than being given an input they would ignore.
+bound what a perfect weather forecast could add. Gain is positive when temperature helps.
+The three gains that exclude zero are SARIMA, CatBoost and XGBoost, but none reaches the
+pre-declared threshold of DM significance in at least three horizons, so the effect is
+reported as suggestive and not established.{nota_prophet}
+TimesFM does not accept exogenous regressors in this implementation and was excluded from
+this comparison rather than being given an input it would ignore.
 \\end{{minipage}}
 \\end{{table}}
 """)
@@ -618,7 +697,7 @@ excluded from this comparison rather than being given an input they would ignore
   coordinates {{(2021.0,5400) (2024.0,5400) (2024.0,11100) (2021.0,11100)}} \closedcycle;
 % ancorado a direita e dentro do limite do eixo: centralizado em 2022.5 o rotulo
 % estourava a borda e saia cortado
-\node[anchor=east, font=\scriptsize, text=cprophet!80!black]
+\node[anchor=east, font=\scriptsize, text=black]
   at (axis cs:2023.9,10500) {{test window shared with the earlier round}};
 \end{{axis}}
 \end{{tikzpicture}}""")
@@ -687,16 +766,14 @@ excluded from this comparison rather than being given an input they would ignore
         y = len(ORDEM) - i
         e, s = V["tabela4"][m]["expanding"], V["tabela4"][m]["deslizante"]
         dif = s - e
-        cor = "C44E52" if dif > 0 else "55A868"
         linhas.append(
             f"\\addplot[draw=black!28, line width=1.2pt, mark=none] "
             f"coordinates {{({e:.4f},{y}) ({s:.4f},{y})}};\n"
             f"\\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] "
             f"coordinates {{({e:.4f},{y})}};\n"
-            f"\\addplot[only marks, mark=*, mark size=2.4pt, draw=csarima, fill=csarima] "
+            f"\\addplot[only marks, mark=square*, mark size=2.0pt, draw=csarima, fill=csarima] "
             f"coordinates {{({s:.4f},{y})}};\n"
-            f"\\definecolor{{d{i}}}{{HTML}}{{{cor}}}\n"
-            f"\\node[anchor=west, font=\\scriptsize, text=d{i}] "
+            f"\\node[anchor=west, font=\\scriptsize, text=black] "
             f"at (axis cs:{max(e, s) + 0.10:.4f},{y}) {{{dif:+.2f} pp}};")
     ticks = ",".join(str(len(ORDEM) - i) for i in range(len(ORDEM)))
     labs = ",".join(ROTULO[m] for m in ORDEM)
@@ -713,9 +790,9 @@ excluded from this comparison rather than being given an input they would ignore
   title={{Cost of discarding history beyond five years}},
 ]
 {chr(10).join(linhas)}
-\node[anchor=east, font=\scriptsize] at (axis cs:7.65,5.35)
+\node[anchor=east, font=\scriptsize, text=black] at (axis cs:7.65,5.35)
   {{\textcolor{{cprophet}}{{$\bullet$}} Expanding \quad
-    \textcolor{{csarima}}{{$\bullet$}} Sliding 60}};
+    \textcolor{{csarima}}{{$\blacksquare$}} Sliding 60}};
 \end{{axis}}
 \end{{tikzpicture}}""")
 
@@ -730,25 +807,31 @@ excluded from this comparison rather than being given an input they would ignore
   width=0.80\textwidth, height=4.8cm,
   axis y line*=left, axis x line*=bottom,
   xmin=0.5, xmax=12.5, xtick={{1,...,12}}, xticklabels={{{meses}}},
-  ylabel={{Mean deaths per month}}, ylabel style={{text=cxgboost}},
+  ylabel={{Mean deaths per month}}, ylabel style={{text=black}},
   scaled y ticks=false, ytick={{6500,7000,7500,8000}},
-  yticklabel style={{text=cxgboost, /pgf/number format/fixed,
+  yticklabel style={{text=black, /pgf/number format/fixed,
                      /pgf/number format/1000 sep={{,}}}},
   tick align=outside,
+  legend style={{at={{(0,1.03)}}, anchor=south west, draw=none, fill=none,
+                 font=\scriptsize, text=black}},
 ]
 \addplot[draw=cxgboost, mark=*, mark size=2.0pt, line width=1.1pt]
   coordinates {{{cm}}};
+\addlegendentry{{Deaths per month}}
 \end{{axis}}
 \begin{{axis}}[
   width=0.80\textwidth, height=4.8cm,
   axis y line*=right, axis x line=none,
   xmin=0.5, xmax=12.5,
-  ylabel={{Mean minimum temperature (C)}}, ylabel style={{text=cprophet}},
-  yticklabel style={{text=cprophet}},
+  ylabel={{Mean minimum temperature (C)}}, ylabel style={{text=black}},
+  yticklabel style={{text=black}},
   tick align=outside,
+  legend style={{at={{(1,1.03)}}, anchor=south east, draw=none, fill=none,
+                 font=\scriptsize, text=black}},
 ]
 \addplot[draw=cprophet, mark=square*, mark size=1.7pt, line width=0.9pt, dashed]
   coordinates {{{ct}}};
+\addlegendentry{{Minimum temperature}}
 \end{{axis}}
 \end{{tikzpicture}}""")
 
@@ -797,7 +880,11 @@ excluded from this comparison rather than being given an input they would ignore
                      + (2.0 / alpha) * np.clip(cal.lo - cal.y_true, 0, None)
                      + (2.0 / alpha) * np.clip(cal.y_true - cal.hi, 0, None))
         V["calibracao"] = {"nominal": 1 - alpha}
-        linhas_cal = []
+        # Layout por bloco de metrica, nao por modelo: cobertura e interval score
+        # respondem a perguntas diferentes e a ordem dos dois modelos se inverte de um
+        # bloco para o outro, que e justamente o achado. Empilhar as duas metricas na
+        # mesma linha esconderia essa inversao.
+        linhas_cov, linhas_is = [], []
         for m in ("sarima", "prophet"):
             g = cal[cal.model == m]
             if g.empty:
@@ -807,13 +894,18 @@ excluded from this comparison rather than being given an input they would ignore
                 "is": float(g["is"].mean()), "n": int(len(g)),
                 "picp_h1": float(g[g.horizon == 1].dentro.mean()),
                 "picp_h6": float(g[g.horizon == 6].dentro.mean()),
+                "picp_por_horizonte": [float(g[g.horizon == h].dentro.mean())
+                                       for h in range(1, 7)],
+                "is_por_horizonte": [float(g[g.horizon == h]["is"].mean())
+                                     for h in range(1, 7)],
             }
-            cel = [f"{g[g.horizon == h].dentro.mean():.3f}" for h in range(1, 7)]
-            linhas_cal.append(
-                f"{ROTULO[m]} & " + " & ".join(cel)
-                + f" & {g.dentro.mean():.3f} & {g.largura.mean():.0f}"
-                + f" & {g['is'].mean():.0f} \\\\"
-            )
+            cov = [f"{v:.3f}" for v in V["calibracao"][m]["picp_por_horizonte"]]
+            isc = [f"{v:.0f}" for v in V["calibracao"][m]["is_por_horizonte"]]
+            linhas_cov.append(f"{ROTULO[m]}, coverage & " + " & ".join(cov)
+                              + f" & {g.dentro.mean():.3f} & {g.largura.mean():.0f} \\\\")
+            linhas_is.append(f"{ROTULO[m]}, interval score & " + " & ".join(isc)
+                             + f" & {g['is'].mean():.0f} & --- \\\\")
+        linhas_cal = linhas_cov + ["\\midrule"] + linhas_is
         escreve_tabela("tab6_calibracao", f"""\\begin{{table}}[htbp]
 \\centering
 \\small
@@ -823,11 +915,11 @@ Prophet, over the same {V["backtest"]["n_janelas"]} rolling origin windows. PICP
 empirical coverage, the fraction of observations falling inside the interval; the nominal
 target is 0.950.}}
 \\label{{tab:calibracao}}
-\\begin{{tabular}}{{lcccccccrr}}
+\\begin{{tabular}}{{lcccccccr}}
 \\toprule
-& \\multicolumn{{6}}{{c}}{{PICP by horizon (months)}} & & & \\\\
+& \\multicolumn{{6}}{{c}}{{Forecast horizon (months)}} & & \\\\
 \\cmidrule(lr){{2-7}}
-Model & 1 & 2 & 3 & 4 & 5 & 6 & All & MPIW & IS \\\\
+Model and metric & $h=1$ & $h=2$ & $h=3$ & $h=4$ & $h=5$ & $h=6$ & All & MPIW \\\\
 \\midrule
 {chr(10).join(linhas_cal)}
 \\bottomrule
@@ -851,7 +943,14 @@ from {V["calibracao"]["prophet"]["picp_h1"]:.3f} at one month to
 {V["calibracao"]["prophet"]["picp_h6"]:.3f} at six, while SARIMA stays comparatively flat.
 The point forecasts underlying this table were verified to be the same ones reported in
 Table~\\ref{{tab:desempenho}}, so the calibration measured here describes those models and
-not merely models of the same name.
+not merely models of the same name. One caveat applies to the Prophet row and not to
+SARIMA. Prophet derives its bands from a finite sample of posterior draws, and that sample
+is not seeded in this pipeline: rerunning the backtest leaves every point forecast
+identical to the last decimal while moving the bounds by up to a hundred deaths, which
+shifts the coverage figures above by roughly two tenths of a percentage point and the
+interval score by about half a percent. The digits reported here are therefore reproducible
+only up to that sampling noise, which is far smaller than the gap to the nominal 0.950 and
+does not touch the conclusion.
 \\end{{minipage}}
 \\end{{table}}""")
 

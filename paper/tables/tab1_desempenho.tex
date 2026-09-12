@@ -8,19 +8,19 @@ S\~ao Paulo, Brazil, 2010--2023. All models were evaluated on the same
 618 out-of-sample forecasts from 103 rolling origin windows with a
 6-month horizon.}
 \label{tab:desempenho}
-\begin{tabular}{lrrrrc}
+\begin{tabular}{lrrrcrr}
 \toprule
-Model & MAE & RMSE & sMAPE (\%) & MASE & 95\% CI of sMAPE \\
+Model & MAE & RMSE & sMAPE (\%) & 95\% CI of sMAPE & Width & MASE \\
 \midrule
-Prophet & \textbf{355.2} & 515.8 & \textbf{4.70} & \textbf{0.860} & $[4.17, 5.27]$ \\
-SARIMA & 363.3 & \textbf{508.1} & 4.80 & 0.880 & $[4.29, 5.33]$ \\
-TimesFM & 366.0 & 513.4 & 4.83 & 0.887 & $[4.32, 5.39]$ \\
-CatBoost & 500.9 & 673.6 & 6.59 & 1.213 & $[5.92, 7.27]$ \\
-XGBoost & 526.6 & 704.5 & 6.94 & 1.275 & $[6.26, 7.65]$ \\
+Prophet & \textbf{355.2} & 515.8 & \textbf{4.70} & $[4.17, 5.27]$ & 1.10 & \textbf{0.860} \\
+SARIMA & 363.3 & \textbf{508.1} & 4.80 & $[4.29, 5.33]$ & 1.04 & 0.880 \\
+TimesFM & 366.0 & 513.4 & 4.83 & $[4.32, 5.39]$ & 1.06 & 0.887 \\
+CatBoost & 500.9 & 673.6 & 6.59 & $[5.92, 7.27]$ & 1.35 & 1.213 \\
+XGBoost & 526.6 & 704.5 & 6.94 & $[6.26, 7.65]$ & 1.39 & 1.275 \\
 \midrule
-Seasonal naive + drift & 468.1 & 637.9 & 6.18 & 1.134 & $[5.58, 6.81]$ \\
-Seasonal naive & 474.0 & 654.4 & 6.27 & 1.148 & $[5.62, 6.96]$ \\
-Naive & 810.7 & 1003.0 & 10.74 & 1.964 & $[9.81, 11.68]$ \\
+Seasonal naive + drift & 468.1 & 637.9 & 6.18 & $[5.58, 6.81]$ & 1.23 & 1.134 \\
+Seasonal naive & 474.0 & 654.4 & 6.27 & $[5.62, 6.96]$ & 1.34 & 1.148 \\
+Naive & 810.7 & 1003.0 & 10.74 & $[9.81, 11.68]$ & 1.87 & 1.964 \\
 \bottomrule
 \end{tabular}
 
@@ -34,7 +34,12 @@ forecasts scored here are one to six steps ahead and out of sample, unity is not
 relevant threshold: the out-of-sample seasonal naive method itself attains
 1.148, and that row, not the value 1, is the benchmark the
 models have to beat. MAE and RMSE are in deaths per month;
-sMAPE is symmetric mean absolute percentage error. Intervals are percentile bootstrap
+sMAPE is symmetric mean absolute percentage error. Width is the span of the interval in
+percentage points, and it is the column that settles the ranking question: the whole
+spread of the three leading models,
+0.13
+percentage points, is smaller than the width of any one of their intervals, so the order
+in which they appear is not an ordering the data supports. Intervals are percentile bootstrap
 with $B=10,000$ replicates (seed 20260817) resampling whole rolling origin windows rather
 than individual forecasts, because the six horizons within a window share a training
 origin and are not independent; resampling forecast by forecast would understate the

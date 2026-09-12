@@ -1,0 +1,43 @@
+% gerado por scripts/build_paper_assets.py -- nao editar a mao
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\textwidth, height=7.2cm,
+  xlabel={sMAPE difference from seasonal naive (pp)},
+  xmin=-0.55, xmax=1.20,
+  xtick={-0.5,-0.25,0,0.25,0.5,0.75,1.0},
+  xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+  ymin=0.4, ymax=12.6, ytick={12,11,10,9,8,7,6,5,4,3,2,1}, yticklabels={{CatBoost, direct strategy},{CatBoost, + seasonal difference},{CatBoost, full (cal+diff12+direct)},{CatBoost, + calendar Fourier},{CatBoost, lags only (base)},{CatBoost, + rolling stats},{XGBoost, direct strategy},{XGBoost, + seasonal difference},{XGBoost, full (cal+diff12+direct)},{XGBoost, + calendar Fourier},{XGBoost, lags only (base)},{XGBoost, + rolling stats}},
+  y tick label style={font=\scriptsize},
+  axis lines=left, tick align=outside, tick pos=left,
+  title style={align=left, font=\small},
+  title={None of the twelve feature variants beats seasonal naive at the
+    pre-declared threshold},
+]
+\draw[black!45, dashed, line width=0.7pt]
+  (axis cs:0,0.4) -- (axis cs:0,12.6);
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(-0.4544,12) (0.0977,12)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(-0.1772,12)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(-0.3722,11) (0.2285,11)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(-0.0662,11)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(-0.4269,10) (0.1448,10)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(-0.1342,10)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(-0.3709,9) (0.3873,9)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(0.0016,9)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(-0.0561,8) (0.7159,8)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(0.3200,8)};
+\addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(0.1579,7) (0.8994,7)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=ccatboost, fill=ccatboost] coordinates {(0.5162,7)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(-0.1784,6) (0.4205,6)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.1181,6)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(-0.3073,5) (0.3169,5)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.0130,5)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(-0.1785,4) (0.5045,4)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.1592,4)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(-0.0461,3) (0.8569,3)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.3899,3)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(0.1441,2) (1.0114,2)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.5631,2)};
+\addplot[draw=cxgboost, line width=2.0pt, mark=none] coordinates {(0.2907,1) (1.1416,1)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cxgboost, fill=cxgboost] coordinates {(0.7068,1)};
+\end{axis}
+\end{tikzpicture}

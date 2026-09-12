@@ -1,0 +1,37 @@
+% gerado por scripts/revisao/build_revisao_tabs.py -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Whether the temperature gain of Table~\ref{tab:temperatura} survives once the
+boosting models are given the annual cycle explicitly. Gain is positive when the covariate
+helps.}
+\label{tab:tempdiffcal}
+\begin{tabular}{lrrr}
+\toprule
+Model and feature set & Without temp. & With temp. & Gain (pp) \\
+\midrule
+CatBoost, lags only & 6.59 & 6.33 & $+0.258$ \\
+CatBoost, + calendar and seasonal difference & 6.13 & 6.05 & $+0.076$ \\
+\midrule
+XGBoost, lags only & 6.83 & 6.51 & $+0.327$ \\
+XGBoost, + calendar and seasonal difference & 6.35 & 6.39 & $-0.036$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+The first row of each block is the specification of Table~\ref{tab:temperatura}, lagged
+values only. The second adds Fourier calendar terms and takes the seasonal difference
+$y_t - y_{t-12}$ as the target, so the model no longer has to infer the annual cycle from
+the covariate. The gain shrinks in both models, CatBoost from $+0.258$ to $+0.076$ and XGBoost from $+0.327$ to $-0.036$ percentage
+points, and changes sign for XGBoost. The reading is that a large part of what minimum
+temperature contributed in Table~\ref{tab:temperatura} was the month of the year rather
+than the weather, and that the remaining contribution is too small to separate from noise.
+The comparison that carries this conclusion is within a row, the same run with and without
+the covariate; the without-temperature column of the XGBoost blocks is not identical to
+Table~\ref{tab:temperatura} because XGBoost does not reproduce across library versions,
+a limitation already declared in the manuscript.
+\end{minipage}
+\end{table}
