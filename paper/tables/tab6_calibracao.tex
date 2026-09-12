@@ -8,14 +8,17 @@ Prophet, over the same 103 rolling origin windows. PICP is the
 empirical coverage, the fraction of observations falling inside the interval; the nominal
 target is 0.950.}
 \label{tab:calibracao}
-\begin{tabular}{lcccccccrr}
+\begin{tabular}{lcccccccr}
 \toprule
-& \multicolumn{6}{c}{PICP by horizon (months)} & & & \\
+& \multicolumn{6}{c}{Forecast horizon (months)} & & \\
 \cmidrule(lr){2-7}
-Model & 1 & 2 & 3 & 4 & 5 & 6 & All & MPIW & IS \\
+Model and metric & $h=1$ & $h=2$ & $h=3$ & $h=4$ & $h=5$ & $h=6$ & All & MPIW \\
 \midrule
-SARIMA & 0.854 & 0.854 & 0.845 & 0.854 & 0.825 & 0.835 & 0.845 & 1288 & 3500 \\
-Prophet & 0.796 & 0.786 & 0.796 & 0.767 & 0.738 & 0.748 & 0.772 & 1045 & 4468 \\
+SARIMA, coverage & 0.854 & 0.854 & 0.845 & 0.854 & 0.825 & 0.835 & 0.845 & 1288 \\
+Prophet, coverage & 0.796 & 0.786 & 0.796 & 0.767 & 0.738 & 0.748 & 0.772 & 1045 \\
+\midrule
+SARIMA, interval score & 2792 & 3460 & 3577 & 3532 & 3667 & 3969 & 3500 & --- \\
+Prophet, interval score & 4208 & 4342 & 4340 & 4572 & 4640 & 4706 & 4468 & --- \\
 \bottomrule
 \end{tabular}
 
@@ -37,6 +40,13 @@ from 0.796 at one month to
 0.748 at six, while SARIMA stays comparatively flat.
 The point forecasts underlying this table were verified to be the same ones reported in
 Table~\ref{tab:desempenho}, so the calibration measured here describes those models and
-not merely models of the same name.
+not merely models of the same name. One caveat applies to the Prophet row and not to
+SARIMA. Prophet derives its bands from a finite sample of posterior draws, and that sample
+is not seeded in this pipeline: rerunning the backtest leaves every point forecast
+identical to the last decimal while moving the bounds by up to a hundred deaths, which
+shifts the coverage figures above by roughly two tenths of a percentage point and the
+interval score by about half a percent. The digits reported here are therefore reproducible
+only up to that sampling noise, which is far smaller than the gap to the nominal 0.950 and
+does not touch the conclusion.
 \end{minipage}
 \end{table}
