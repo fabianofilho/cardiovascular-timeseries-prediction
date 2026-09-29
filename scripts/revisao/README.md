@@ -204,7 +204,7 @@ calendário de Fourier deve encolhê-lo. Se não encolher, a explicação está 
 | xgboost | base | 6,880 | 6,512 | **+0,368** |
 | xgboost | diffcal | 6,368 | 6,379 | **-0,010** |
 
-O calendário explícito encolhe o ganho em 71% no CatBoost e **inverte o sinal** no XGBoost.
+O calendário explícito encolhe o ganho em 71% no CatBoost e **zera o ganho** no XGBoost (-0,010, indistinguível de zero).
 
 A linha base de cada modelo reproduz a tabela de temperatura do manuscrito, o que
 `check_controle_calendario.py` confere antes de gerar tabela e figura (`make
