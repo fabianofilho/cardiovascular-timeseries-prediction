@@ -19,6 +19,8 @@ o dado, nao a arquitetura.** As prioridades refletem isso.
 - [ ] Submeter; revisores sugeridos em `paper/suggested_reviewers.md` (checar coautoria de
       Bastos e Queiroz com o Alexandre no Lattes)
 - [ ] TabPFN: so entra com o CSV de previsoes por janela da Isa; ate la o texto declara o teste pendente
+- Conformal fica para a resposta aos revisores (decisao de 29/09, LAB-126): pronto em
+  `results/revisao/conformal_sensibilidade.json`, PICP 0,914 no SARIMA e no Prophet, fora do manuscrito
 
 Regra que ficou: numeros do XGBoost so reproduzem na maquina Windows (`n_jobs=1` nao basta
 entre CPUs). Qualquer regeneracao que envolva XGBoost roda la, com controle contra a Tabela 1.
