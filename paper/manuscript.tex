@@ -518,9 +518,7 @@ then giving them an explicit calendar term should absorb most of the gain; if th
 survives, the covariate is carrying weather information beyond climatology and the
 explanation is wrong. Table~\ref{tab:tempdiffcal} repeats the comparison with Fourier calendar terms
 added to the feature set. It shrinks the CatBoost gain from 0.258 to 0.076 percentage points,
-and turns the XGBoost gain from +0.327 to -0.036, a change of sign. The XGBoost rows of this
-table were computed before the environment was pinned, which is why their baseline differs
-from Table~\ref{tab:temperatura}. On the second machine the same test takes the XGBoost gain
+and turns the XGBoost gain from +0.368 to -0.010, a change of sign. On the second machine the same test takes the XGBoost gain
 from +0.423 to -0.169. The magnitudes move with the environment; the change of sign, which is
 what the explanation predicts, holds in both. Minimum
 temperature in this series is close to a deterministic function of the calendar month, and

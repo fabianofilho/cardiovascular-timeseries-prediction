@@ -86,30 +86,19 @@ def test_no_xgboost_o_ganho_chega_a_inverter_de_sinal():
     assert g[("xgboost", "diffcal")] < 0
 
 
-@sem_temp
-def test_com_calendario_o_xgboost_se_comporta_como_o_prophet():
-    """Convergencia entre dois caminhos diferentes para a mesma sazonalidade explicita.
-
-    E o que faz a explicacao ser mecanismo e nao coincidencia: o Prophet ajusta
-    sazonalidade anual por construcao, o XGBoost so passa a ter uma quando recebe o termo
-    de Fourier, e os dois passam a ser prejudicados pela temperatura na mesma medida.
-    """
-    g = _ganhos()
-    pt = RAIZ / "results" / "revisao" / "prophet_temp_vs_base.json"
-    if not pt.exists():
-        pytest.skip("rodada do Prophet com temperatura ausente")
-    prophet = json.loads(pt.read_text(encoding="utf-8"))["modelos"]["prophet_temp"]["ganho_pp"]
-    assert abs(g[("xgboost", "diffcal")] - prophet) < 0.01, (
-        f"XGBoost com calendario: {g[('xgboost', 'diffcal')]:.3f}, "
-        f"Prophet: {prophet:.3f}. Deixaram de convergir; o texto cita essa coincidencia.")
+# A convergencia com o Prophet (XGBoost com calendario a 0,01 do -0,035 do Prophet) deixou
+# de ser testada: o texto largou esse argumento em 28/09 porque ele nao se repete entre
+# maquinas. O que o texto afirma agora, a troca de sinal, esta no teste acima.
 
 
 @sem_temp
 def test_a_bancada_reproduz_o_benchmark():
-    """Controle: as colunas sem temperatura tem que bater com a Tabela 1."""
+    """Controle: as colunas sem temperatura tem que bater com a Tabela 1.
+
+    Vale so no ambiente dos numeros publicados; ver docs/xgboost_reprodutibilidade.md.
+    """
     d = pd.read_csv(TEMP)
     v = json.loads((RAIZ / "paper" / "verified_numbers.json").read_text(encoding="utf-8"))
     base = {r.modelo: r.sem_T for r in d.itertuples() if r.espec == "base"}
-    assert base["catboost"] == pytest.approx(v["tabela1"]["catboost"]["smape"], abs=1e-3)
-    # O XGBoost depende da versao da biblioteca; ver docs/xgboost_reprodutibilidade.md.
-    assert base["xgboost"] == pytest.approx(6.8324, abs=2e-3)
+    for kind in ("catboost", "xgboost"):
+        assert base[kind] == pytest.approx(v["tabela1"][kind]["smape"], abs=1e-3)
