@@ -200,7 +200,7 @@ covariate was checked against the forecasts reported in Table~\ref{tab:desempenh
 the comparison was made, and reproduces them exactly, so what the comparison measures is
 the effect of the covariate and not a difference between two implementations.
 
-\subsection{Reproducibility}
+\subsection{Reproducibility}\label{sec:repro}
 
 All tables and figures in this manuscript are generated programmatically from the forecast
 files by a single script, and every numerical value cited in the text is emitted by the
@@ -215,10 +215,16 @@ thread counts, holding the code, the data and the seed constant, its sMAPE range
 6.80\% to 6.98\%. CatBoost was stable to the tenth of a basis point under the same
 variation, which locates the behaviour in one library rather than in the protocol. Both
 sources were therefore removed: the environment pins the library version, and the model is
-fitted on a single thread, which is the only setting that does not depend on how many cores
-the machine has. The figure reported in Table~\ref{tab:desempenho} comes from that
-environment, and the exact versions are recorded with the code. Fitting on one thread costs
-computation and buys a number that another machine can obtain.
+fitted on a single thread, which removes the dependence on how many cores the machine has.
+The figure reported in Table~\ref{tab:desempenho} comes from that environment, and the
+exact versions are recorded with the code. A single thread does not remove every source,
+however. Rerun on a second machine with a different processor architecture, the same
+library versions and one thread, XGBoost reached 6.83\% rather than 6.88\%, and its
+temperature-augmented variant 6.41\% rather than 6.51\%. The reported figures are therefore
+exact for the recorded environment and reproducible elsewhere to within about a tenth of a
+percentage point, which is small against every between-model comparison in this paper but
+not against the one verdict that sits on the decision threshold, discussed with
+Table~\ref{tab:temperatura}.
 
 The earlier figure, obtained before either source was controlled, was 6.94\%. Regenerating
 it under the pinned environment moved every quantity that depends on it, and the direction
@@ -494,6 +500,16 @@ zero, and 3 of the six Diebold-Mariano cells reach significance. This is the one
 this paper where the covariate can be said to help rather than to appear to help, and it helps
 the model that needed it most while leaving it still the weakest of the five.
 
+That verdict rests exactly on the threshold, and it is sensitive to the computing
+environment in a way no other verdict here is. Before the environment was pinned, the same
+comparison reached significance in 2 of the six cells and did not meet the criterion. On the
+second machine described in Section~\ref{sec:repro}, the gain is 0.423 percentage points
+with an interval of $[+0.268, +0.574]$ and 4 of six cells, which meets it. The direction and
+the interval excluding zero hold in every environment measured; whether the horizon-level
+condition is satisfied does not. We therefore read this row as a consistent but marginal
+gain, established under the pinned environment and not robustly established across
+environments.
+
 \input{tables/revisao_tab_temp_diffcal}
 
 That reading is a claim about mechanism, and it is falsifiable, so it was tested. If the
@@ -502,11 +518,11 @@ then giving them an explicit calendar term should absorb most of the gain; if th
 survives, the covariate is carrying weather information beyond climatology and the
 explanation is wrong. Table~\ref{tab:tempdiffcal} repeats the comparison with Fourier calendar terms
 added to the feature set. It shrinks the CatBoost gain from 0.258 to 0.076 percentage points,
-and turns the XGBoost gain from +0.327 to -0.036, a change of sign. The latter figure is
-within a thousandth of a point of what Prophet, which fits an explicit annual seasonality of
-its own, records in Table~\ref{tab:temperatura}. Two models that arrive at explicit
-seasonality by different routes are hurt by the covariate by the same amount, which is the
-prediction the explanation makes and not one it could have made if it were wrong. Minimum
+and turns the XGBoost gain from +0.327 to -0.036, a change of sign. The XGBoost rows of this
+table were computed before the environment was pinned, which is why their baseline differs
+from Table~\ref{tab:temperatura}. On the second machine the same test takes the XGBoost gain
+from +0.423 to -0.169. The magnitudes move with the environment; the change of sign, which is
+what the explanation predicts, holds in both. Minimum
 temperature in this series is close to a deterministic function of the calendar month, and
 what it was adding to the boosting models was the calendar.
 
