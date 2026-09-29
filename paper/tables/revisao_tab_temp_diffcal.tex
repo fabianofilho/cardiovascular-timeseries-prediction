@@ -14,8 +14,8 @@ Model and feature set & Without temp. & With temp. & Gain (pp) \\
 CatBoost, lags only & 6.59 & 6.33 & $+0.258$ \\
 CatBoost, + calendar and seasonal difference & 6.13 & 6.05 & $+0.076$ \\
 \midrule
-XGBoost, lags only & 6.83 & 6.51 & $+0.327$ \\
-XGBoost, + calendar and seasonal difference & 6.35 & 6.39 & $-0.036$ \\
+XGBoost, lags only & 6.88 & 6.51 & $+0.368$ \\
+XGBoost, + calendar and seasonal difference & 6.37 & 6.38 & $-0.010$ \\
 \bottomrule
 \end{tabular}
 
@@ -25,13 +25,12 @@ XGBoost, + calendar and seasonal difference & 6.35 & 6.39 & $-0.036$ \\
 The first row of each block is the specification of Table~\ref{tab:temperatura}, lagged
 values only. The second adds Fourier calendar terms and takes the seasonal difference
 $y_t - y_{t-12}$ as the target, so the model no longer has to infer the annual cycle from
-the covariate. The gain shrinks in both models, CatBoost from $+0.258$ to $+0.076$ and XGBoost from $+0.327$ to $-0.036$ percentage
+the covariate. The gain shrinks in both models, CatBoost from $+0.258$ to $+0.076$ and XGBoost from $+0.368$ to $-0.010$ percentage
 points, and changes sign for XGBoost. The reading is that a large part of what minimum
 temperature contributed in Table~\ref{tab:temperatura} was the month of the year rather
 than the weather, and that the remaining contribution is too small to separate from noise.
 The comparison that carries this conclusion is within a row, the same run with and without
-the covariate; the without-temperature column of the XGBoost blocks is not identical to
-Table~\ref{tab:temperatura} because XGBoost does not reproduce across library versions,
-a limitation already declared in the manuscript.
+the covariate; the lags-only row of each block reproduces Table~\ref{tab:temperatura},
+with and without temperature.
 \end{minipage}
 \end{table}

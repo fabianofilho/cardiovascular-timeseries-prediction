@@ -139,10 +139,9 @@ def tab_temp_diffcal():
     encolher ao dar aos boosters um termo de calendario e a diferenca sazonal
     explicitos. Encolhe.
 
-    Nota: a linha 'lags only' do CatBoost bate com a Tabela 5 do artigo; a do XGBoost
-    nao (6.83 aqui, 6.94 la), pela nao-reprodutibilidade do XGBoost por falta de pin de
-    versao ja registrada no manuscrito. A comparacao que sustenta a conclusao e sem T
-    contra com T DENTRO da mesma linha, no mesmo ambiente, e essa nao e afetada.
+    Nota: a linha 'lags only' dos dois modelos reproduz a Tabela 5 do artigo, o que
+    scripts/revisao/check_controle_calendario.py confere antes de a tabela ser gerada.
+    A comparacao que sustenta a conclusao e sem T contra com T DENTRO da mesma linha.
     """
     df = pd.read_csv(REV / "temp_melhorado.csv")
     rot = {"base": "lags only", "diffcal": "+ calendar and seasonal difference"}
@@ -188,9 +187,8 @@ points, and changes sign for XGBoost. The reading is that a large part of what m
 temperature contributed in Table~\ref{{tab:temperatura}} was the month of the year rather
 than the weather, and that the remaining contribution is too small to separate from noise.
 The comparison that carries this conclusion is within a row, the same run with and without
-the covariate; the without-temperature column of the XGBoost blocks is not identical to
-Table~\ref{{tab:temperatura}} because XGBoost does not reproduce across library versions,
-a limitation already declared in the manuscript.
+the covariate; the lags-only row of each block reproduces Table~\ref{{tab:temperatura}},
+with and without temperature.
 \end{{minipage}}
 \end{{table}}""")
 

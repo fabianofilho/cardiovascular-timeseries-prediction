@@ -283,6 +283,25 @@ versionado. O mecanismo se mantém nos dois ambientes medidos: com o termo de ca
 ganho da temperatura no XGBoost desaparece ou inverte de sinal (-0,036 antes, -0,169 aqui).
 Para corrigir a tabela, rodar o script na máquina que gerou os números de 23/09.
 
+**Regenerada no Windows, 2026-09-29.** Rodada na máquina dos números de 23/09 (Windows 11,
+Intel64 Family 6 Model 165, Python 3.12.10, `.venv` idêntico ao `requirements-lock.txt`,
+xgboost 3.2.0 com `n_jobs=1`). O controle passou nos quatro valores com tolerância 1e-6,
+e a tabela e a figura foram regeneradas. `temp_melhorado.csv` ficou:
+
+| modelo | espec. | sem T | com T | ganho |
+|---|---|---:|---:|---:|
+| catboost | base | 6,589326 | 6,331192 | +0,258 |
+| catboost | diffcal | 6,128316 | 6,052699 | +0,076 |
+| xgboost | base | 6,880428 | 6,512106 | +0,368 |
+| xgboost | diffcal | 6,368225 | 6,378559 | -0,010 |
+
+O CatBoost não mudou. No XGBoost, a base agora reproduz a Tabela 5, e o ganho com o termo
+de calendário passou de -0,036 para -0,010: continua negativo, então a troca de sinal se
+mantém nos três ambientes medidos (-0,036 antes de 23/09, -0,010 no publicado, -0,169 no
+Mac). O manuscrito passou a citar +0,368 → -0,010 e perdeu a frase que explicava a base
+divergente. O PNG da figura foi rasterizado com o `pymupdf` do Python do sistema, porque
+ele não está no lock; o `.venv` não foi alterado.
+
 ## Prophet: semente resolve a banda, mas o ponto varia entre máquinas
 
 `scripts/revisao/check_prophet_semente.py`, resultado em `results/revisao/prophet_semente.json`:
