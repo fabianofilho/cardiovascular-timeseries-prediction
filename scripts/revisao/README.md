@@ -201,15 +201,20 @@ calendário de Fourier deve encolhê-lo. Se não encolher, a explicação está 
 |---|---|---:|---:|---:|
 | catboost | base | 6,589 | 6,331 | **+0,258** |
 | catboost | diffcal | 6,128 | 6,053 | **+0,076** |
-| xgboost | base | 6,832 | 6,505 | **+0,327** |
-| xgboost | diffcal | 6,350 | 6,385 | **-0,036** |
+| xgboost | base | 6,880 | 6,512 | **+0,368** |
+| xgboost | diffcal | 6,368 | 6,379 | **-0,010** |
 
 O calendário explícito encolhe o ganho em 71% no CatBoost e **inverte o sinal** no XGBoost.
 
-E o -0,036 do XGBoost com calendário fica a um milésimo do -0,035 do Prophet, que ajusta
-sazonalidade anual por construção. Dois modelos que chegam à sazonalidade explícita por
-caminhos diferentes passam a ser prejudicados pela temperatura na mesma medida. É a predição
-que a explicação faz, e não uma que ela poderia fazer se estivesse errada.
+A linha base de cada modelo reproduz a tabela de temperatura do manuscrito, o que
+`check_controle_calendario.py` confere antes de gerar tabela e figura (`make
+regen-calendario`). Números da máquina de 23/09, regenerados em 29/09.
+
+A troca de sinal é o que se repete entre ambientes: -0,036 com o XGBoost de antes de 23/09,
+-0,010 no ambiente publicado e -0,169 na segunda máquina. A magnitude não se repete. Antes
+havia aqui um segundo argumento, o de o XGBoost com calendário ficar a um milésimo do
+-0,035 do Prophet. Ele valia só com os números antigos e saiu do texto em 28/09. Ver
+`docs/xgboost_reprodutibilidade.md`.
 
 ## Adaptações feitas ao versionar
 
