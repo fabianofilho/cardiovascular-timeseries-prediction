@@ -183,7 +183,7 @@ The first row of each block is the specification of Table~\ref{{tab:temperatura}
 values only. The second adds Fourier calendar terms and takes the seasonal difference
 $y_t - y_{{t-12}}$ as the target, so the model no longer has to infer the annual cycle from
 the covariate. The gain shrinks in both models, {encolhe[0]} and {encolhe[1]} percentage
-points, and changes sign for XGBoost. The reading is that a large part of what minimum
+points, and vanishes for XGBoost. The reading is that a large part of what minimum
 temperature contributed in Table~\ref{{tab:temperatura}} was the month of the year rather
 than the weather, and that the remaining contribution is too small to separate from noise.
 The comparison that carries this conclusion is within a row, the same run with and without
