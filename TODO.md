@@ -7,6 +7,24 @@ o dado, nao a arquitetura.** As prioridades refletem isso.
 
 ---
 
+## Submissao ao IJF (estado em 29/09/2026)
+
+- [x] Dados do autor completos: CRediT, CAPES Finance Code 001, dispensa etica (CNS 510/2016),
+      agradecimentos, email e ORCID na cover letter (LAB-125, fechada)
+- [x] Resumo com 150 palavras (limite do IJF: 100-150); o longo esta em `paper/abstract_estendido.tex`
+- [x] Revisao da Isa aplicada (PRs #10 a #16); tabela de calendario regenerada no Windows (LAB-177)
+- [x] Pacote `manuscrito_ijf_2026-09-29.zip` (commit 9aa720a) enviado a Victor e Isa em 29/09
+- [ ] Aguardar aprovacao de Victor e Isa; decidir quando incluir o Alexandre
+- [ ] Conferir pelo CAFe se o IJF entra no acordo CAPES-Elsevier antes de marcar acesso aberto
+- [ ] Submeter; revisores sugeridos em `paper/suggested_reviewers.md` (checar coautoria de
+      Bastos e Queiroz com o Alexandre no Lattes)
+- [ ] TabPFN: so entra com o CSV de previsoes por janela da Isa; ate la o texto declara o teste pendente
+
+Regra que ficou: numeros do XGBoost so reproduzem na maquina Windows (`n_jobs=1` nao basta
+entre CPUs). Qualquer regeneracao que envolva XGBoost roda la, com controle contra a Tabela 1.
+
+---
+
 ## Concluido
 
 ### ~~Prioridade 1: ampliar a serie temporal~~ (feito no PR #2, 17/08/2026)
