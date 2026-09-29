@@ -1,0 +1,50 @@
+% Resumo estruturado longo (Background/Methods/Results/Conclusions), com os trechos da
+% revisao da Isa. NAO entra no manuscrito do IJF, que exige 100-150 palavras sem notacao.
+% Guardado para revista que aceite resumo estruturado.
+
+\section*{Abstract}
+
+\noindent\textbf{Background.} Cardiovascular diseases are the leading cause of death in
+Brazil. Foundation models pre-trained on large time series corpora are increasingly
+reported as outperforming classical alternatives in health forecasting. Such rankings are
+usually reported as point estimates, without any measure of how much of the observed gap
+is sampling noise. We asked whether such a ranking survives a measure of its own
+uncertainty, and where forecasting accuracy on this series actually comes from.
+
+\noindent\textbf{Methods.} We benchmarked five forecasting approaches, SARIMA, Prophet,
+TimesFM, XGBoost and CatBoost, on monthly cardiovascular mortality in the state of
+S\~ao Paulo, using 168 months of records from the Brazilian Mortality Information System
+(SIM/DataSUS, January 2010 to December 2023; 1{,}217{,}427 cardiovascular deaths).
+Rolling origin cross-validation with a 6-month horizon and a 60-month minimum training
+window produced 103 windows and 618 out-of-sample forecasts per model. Every comparison
+carries uncertainty, from a block bootstrap resampling entire windows ($B=10{,}000$) and
+from the Diebold-Mariano test with the Harvey correction at each horizon. Before running
+the analysis we fixed the criterion for calling a difference established: the paired
+interval must exclude zero and the Diebold-Mariano test must reach $p<0.05$ in at least
+three of the six horizons. Three naive references were included as the benchmark any model
+must clear. We further varied training history while holding test dates fixed, enriched
+the feature set of the boosting models, added a tabular foundation model to the
+comparison, and evaluated monthly minimum temperature as an exogenous covariate under a
+leakage-free design.
+
+\noindent\textbf{Results.} Prophet (sMAPE 4.70\%, 95\% CI 4.17 to 5.27), SARIMA (4.80\%,
+4.29 to 5.33) and TimesFM (4.83\%, 4.32 to 5.39) were statistically indistinguishable:
+the spread among them (0.13 percentage points, pp) was an order of magnitude smaller than
+the mean interval width (1.07 pp), all three paired differences contained zero
+($p=0.17$ to $0.77$), and none of the 18 Diebold-Mariano cells reached significance.
+Boosting models were detectably worse, with all 36 comparisons against a leading model at
+$p<0.05$, and neither cleared the seasonal naive benchmark (MASE 1.213 and 1.263 against
+1.148); enriching their features and adding a tabular foundation model narrowed the gap
+without closing it. Holding test dates fixed, nine additional years of training reduced sMAPE by
+1.23 to 1.71 pp, roughly ten times any between-model difference. Truncating training
+history to 60 months cost SARIMA 0.66 pp and Prophet 0.69 pp while leaving TimesFM
+unaffected ($p=0.42$), and TimesFM then led. Minimum temperature improved three of the
+four models that accept covariates, but only XGBoost met the pre-declared criterion (gain
+0.368 pp, 95\% CI $+0.190$ to $+0.548$, 3 of 6 horizons), and a calendar term absorbed the
+gain, indicating that what the covariate supplied was seasonality rather than weather.
+
+\noindent\textbf{Conclusions.} Model selection among these three families is an
+operational rather than a statistical decision. Extending the data delivered far more
+than substituting the model. The defensible advantage of a zero-shot foundation model
+here is robustness to short history, not superior accuracy.
+

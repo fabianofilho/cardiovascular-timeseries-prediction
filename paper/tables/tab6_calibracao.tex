@@ -40,13 +40,14 @@ from 0.796 at one month to
 0.748 at six, while SARIMA stays comparatively flat.
 The point forecasts underlying this table were verified to be the same ones reported in
 Table~\ref{tab:desempenho}, so the calibration measured here describes those models and
-not merely models of the same name. One caveat applies to the Prophet row and not to
-SARIMA. Prophet derives its bands from a finite sample of posterior draws, and that sample
-is not seeded in this pipeline: rerunning the backtest leaves every point forecast
-identical to the last decimal while moving the bounds by up to a hundred deaths, which
-shifts the coverage figures above by roughly two tenths of a percentage point and the
-interval score by about half a percent. The digits reported here are therefore reproducible
-only up to that sampling noise, which is far smaller than the gap to the nominal 0.950 and
-does not touch the conclusion.
+not merely models of the same name. Prophet derives its bands from a finite sample of posterior draws. That sample is seeded
+at every window: two fits of the same window with the seed give bounds identical to the
+last decimal, while without it the bounds move by
+34 to 53 deaths. Across
+machines the Prophet point forecast itself is not bit-identical: rerun on a second machine
+with the same package versions, 63 of the 103 windows
+differed by up to 49 deaths, which left the coverage unchanged at
+0.772 and moved the sMAPE from 4.701 to
+4.700.
 \end{minipage}
 \end{table}

@@ -222,3 +222,67 @@ guardado, e sem efeito sobre a calibração, porque 101 das 103 janelas são as 
 
 Só o XGBoost tem divergência estrutural. Os outros dois são casos localizados, e o do
 Prophet já está fechado.
+
+---
+
+# Rodada de 2026-09-28: o que muda de máquina para máquina
+
+Medido num Mac (arm64, Python 3.12) com as versões exatas do lock para os pacotes
+envolvidos: xgboost 3.2.0, catboost 1.2.10, prophet 1.4.0, numpy 2.5.3, pandas 2.3.3,
+scikit-learn 1.9.1, skforecast 0.25.0. A máquina que produziu os números publicados em
+23/09 não é esta.
+
+## XGBoost: `n_jobs=1` não basta entre plataformas
+
+A decisão de 23/09 dizia que `n_jobs=1` é a única escolha que não depende da máquina. Não
+se sustenta entre plataformas:
+
+| rodada | publicado (23/09) | este Mac, `n_jobs=1` |
+|---|---:|---:|
+| xgboost, sem temperatura | 6,880428 | 6,833274 |
+| xgboost_temp, climatologia | 6,512106 | 6,410349 |
+| ganho da temperatura | 0,368 | 0,423 |
+
+`n_jobs=1` torna o resultado estável **dentro** de uma plataforma. Entre plataformas, a
+aritmética de ponto flutuante do histograma ainda difere. O número publicado continua
+sendo de um ambiente específico, agora identificado por versão e thread, mas não por CPU.
+
+## O veredito da temperatura no XGBoost está no limiar
+
+O critério pede intervalo pareado excluindo zero e Diebold-Mariano com p<0,05 em ao menos 3
+de 6 horizontes. Nos três ambientes medidos:
+
+| ambiente | ganho | IC 95% | DM p<0,05 | atende |
+|---|---:|---|---:|---|
+| anterior a 23/09 | 0,327 | exclui zero | 2 de 6 | não |
+| publicado (23/09) | 0,368 | [0,190, 0,548] | 3 de 6 | sim |
+| este Mac | 0,423 | [0,268, 0,574] | 4 de 6 | sim |
+
+A única linha da Tabela 5 que atende o critério atende em dois de três ambientes. O
+manuscrito afirma que atende, e isso é verdade no ambiente publicado, mas a conclusão
+depende da máquina. Decisão pendente do autor: manter como está, ou declarar essa
+sensibilidade no texto.
+
+## A tabela do termo de calendário ficou para trás na regeneração
+
+`results/revisao/temp_melhorado.csv` e `paper/tables/revisao_tab_temp_diffcal.tex` ainda
+trazem o XGBoost de antes de 23/09 (6,832 → 6,505, ganho 0,327), enquanto a Tabela 5 e o
+resumo usam 6,880 → 6,512, ganho 0,368. A regeneração de 23/09 não incluiu
+`scripts/revisao/run_temp_melhorado.py`.
+
+Rodado neste Mac, o script dá XGBoost base 6,833 → 6,410 (+0,423) e diffcal 6,285 → 6,454
+(-0,169). O controle falha (a base deveria dar 6,8804), então esse resultado **não** foi
+versionado. O mecanismo se mantém nos dois ambientes medidos: com o termo de calendário, o
+ganho da temperatura no XGBoost desaparece ou inverte de sinal (-0,036 antes, -0,169 aqui).
+Para corrigir a tabela, rodar o script na máquina que gerou os números de 23/09.
+
+## Prophet: semente resolve a banda, mas o ponto varia entre máquinas
+
+`scripts/revisao/check_prophet_semente.py`, resultado em `results/revisao/prophet_semente.json`:
+
+- Com a semente do `run_calibracao.py`, dois ajustes da mesma janela dão ponto e banda
+  idênticos (diferença 0,00). Sem semente, a banda move 34 a 53 óbitos. A nota da Tabela 6,
+  que dizia o contrário, foi corrigida e agora cita esses números a partir do JSON.
+- Entre máquinas, a previsão **pontual** muda em 63 das 103 janelas, até 49 óbitos. O PICP
+  fica idêntico (0,772) e o sMAPE vai de 4,701 para 4,700. A afirmação do apêndice acima,
+  "ponto determinístico, divergência 9,09e-13", vale dentro da máquina original.

@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "gerado_por": "scripts/revisao/check_prophet_semente.py",
+    "semente": 20260817,
+    "tolerancia_obitos": 0.01,
+    "ambiente": {
+      "plataforma": "macOS-27.0-arm64-arm-64bit",
+      "python": "3.12.13",
+      "prophet": "1.4.0",
+      "numpy": "2.5.3",
+      "pandas": "2.3.3"
+    }
+  },
+  "semente": [
+    {
+      "janela": 1,
+      "semeado_ponto": 0.0,
+      "semeado_banda": 0.0,
+      "sem_semente_ponto": 0.0,
+      "sem_semente_banda": 43.75067719178969
+    },
+    {
+      "janela": 52,
+      "semeado_ponto": 0.0,
+      "semeado_banda": 0.0,
+      "sem_semente_ponto": 0.0,
+      "sem_semente_banda": 33.90518276446801
+    },
+    {
+      "janela": 103,
+      "semeado_ponto": 0.0,
+      "semeado_banda": 0.0,
+      "sem_semente_ponto": 0.0,
+      "sem_semente_banda": 53.15561937786242
+    }
+  ],
+  "semente_resumo": {
+    "semeado_dif_max": 0.0,
+    "sem_semente_banda_min": 33.90518276446801,
+    "sem_semente_banda_max": 53.15561937786242
+  },
+  "entre_maquinas": {
+    "previsoes": 618,
+    "janelas": 103,
+    "janelas_divergentes": 63,
+    "dif_max_ponto": 49.341084126295755,
+    "dif_max_banda": 53.35744229524789,
+    "picp_aqui": 0.7718446601941747,
+    "picp_guardado": 0.7718446601941747,
+    "smape_aqui": 4.70005911103915,
+    "smape_guardado": 4.700965467510203
+  }
+}

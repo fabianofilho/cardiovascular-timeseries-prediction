@@ -891,6 +891,22 @@ this comparison rather than being given an input it would ignore.
             linhas_is.append(f"{ROTULO[m]}, interval score & " + " & ".join(isc)
                              + f" & {g['is'].mean():.0f} & --- \\\\")
         linhas_cal = linhas_cov + ["\\midrule"] + linhas_is
+
+        # A nota antiga dizia que a banda do Prophet nao e semeada. E o contrario:
+        # run_calibracao.py semeia a cada janela. Os numeros da nota saem da checagem
+        # scripts/revisao/check_prophet_semente.py, nao de texto fixo.
+        ps = json.loads((RES / "revisao" / "prophet_semente.json").read_text(encoding="utf-8"))
+        em = ps["entre_maquinas"]
+        V["calibracao"]["prophet_semente"] = {
+            "sem_semente_banda_min": ps["semente_resumo"]["sem_semente_banda_min"],
+            "sem_semente_banda_max": ps["semente_resumo"]["sem_semente_banda_max"],
+            "semeado_dif_max": ps["semente_resumo"]["semeado_dif_max"],
+            "janelas_divergentes": em["janelas_divergentes"], "janelas": em["janelas"],
+            "dif_max_ponto": em["dif_max_ponto"],
+            "picp_outra_maquina": em["picp_aqui"], "smape_outra_maquina": em["smape_aqui"],
+            "smape_guardado": em["smape_guardado"],
+        }
+        PS = V["calibracao"]["prophet_semente"]
         escreve_tabela("tab6_calibracao", f"""\\begin{{table}}[htbp]
 \\centering
 \\small
@@ -928,14 +944,15 @@ from {V["calibracao"]["prophet"]["picp_h1"]:.3f} at one month to
 {V["calibracao"]["prophet"]["picp_h6"]:.3f} at six, while SARIMA stays comparatively flat.
 The point forecasts underlying this table were verified to be the same ones reported in
 Table~\\ref{{tab:desempenho}}, so the calibration measured here describes those models and
-not merely models of the same name. One caveat applies to the Prophet row and not to
-SARIMA. Prophet derives its bands from a finite sample of posterior draws, and that sample
-is not seeded in this pipeline: rerunning the backtest leaves every point forecast
-identical to the last decimal while moving the bounds by up to a hundred deaths, which
-shifts the coverage figures above by roughly two tenths of a percentage point and the
-interval score by about half a percent. The digits reported here are therefore reproducible
-only up to that sampling noise, which is far smaller than the gap to the nominal 0.950 and
-does not touch the conclusion.
+not merely models of the same name. Prophet derives its bands from a finite sample of posterior draws. That sample is seeded
+at every window: two fits of the same window with the seed give bounds identical to the
+last decimal, while without it the bounds move by
+{PS["sem_semente_banda_min"]:.0f} to {PS["sem_semente_banda_max"]:.0f} deaths. Across
+machines the Prophet point forecast itself is not bit-identical: rerun on a second machine
+with the same package versions, {PS["janelas_divergentes"]} of the {PS["janelas"]} windows
+differed by up to {PS["dif_max_ponto"]:.0f} deaths, which left the coverage unchanged at
+{PS["picp_outra_maquina"]:.3f} and moved the sMAPE from {PS["smape_guardado"]:.3f} to
+{PS["smape_outra_maquina"]:.3f}.
 \\end{{minipage}}
 \\end{{table}}""")
 
