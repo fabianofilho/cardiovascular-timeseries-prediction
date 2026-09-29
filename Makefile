@@ -18,7 +18,7 @@ PIP = $(VENV_PY) -m pip
 RUN = PYTHONPATH=src $(VENV_PY)
 
 .PHONY: venv setup-base setup-full lock check-venv sample-pysus smoke-baseline \
-        benchmark-all assets test
+        benchmark-all assets test regen-calendario
 
 # Falha cedo e com instrucao, em vez de cair num "No such file" do make.
 check-venv:
@@ -79,3 +79,12 @@ assets: check-venv
 
 test: check-venv
 	$(RUN) -m pytest
+
+# Regenera a tabela e a figura do termo de calendario (revisao_*_temp_diffcal). Rodar SO na
+# maquina que gerou os numeros publicados: o controle confere que a linha "base" reproduz a
+# Tabela 5 e para tudo se nao reproduzir. Ver docs/xgboost_reprodutibilidade.md.
+regen-calendario: check-venv
+	$(RUN) scripts/revisao/run_temp_melhorado.py
+	$(RUN) scripts/revisao/check_controle_calendario.py
+	$(RUN) scripts/revisao/build_revisao_tabs.py
+	$(RUN) scripts/revisao/build_revisao_figs2.py
