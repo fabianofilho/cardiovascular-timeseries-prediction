@@ -7,7 +7,9 @@
 #     .venv/bin/python     -m pip install -r requirements-lock.txt   (Linux, macOS)
 #
 # Conferido neste ambiente, contra results/benchmark_sim_real_sp_2010_2023_metrics.csv:
-#   prophet, sarima e catboost reproduzem com divergencia 0.0000
+#   prophet, sarima e catboost reproduzem com divergencia 0.0000 NESTA maquina. Em outra
+#   plataforma com as mesmas versoes o ponto do prophet muda ate 49 obitos em 63 de 103
+#   janelas (docs/xgboost_reprodutibilidade.md, rodada de 2026-09-28)
 #   xgboost da 6.832390 contra os 6.935027 guardados, que e a pendencia conhecida
 #   (docs/xgboost_reprodutibilidade.md); nenhuma versao testada reproduz esse valor.
 #

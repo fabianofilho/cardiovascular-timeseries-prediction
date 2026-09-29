@@ -24,39 +24,19 @@ forecast uncertainty; Diebold-Mariano test; epidemiological surveillance; Brazil
 
 \section*{Abstract}
 
-\noindent\textbf{Background.} Cardiovascular diseases are the leading cause of death in
-Brazil. Foundation models pre-trained on large time series corpora are increasingly
-reported as outperforming classical alternatives in health forecasting. Such rankings are
-usually reported as point estimates, without any measure of how much of the observed gap
-is sampling noise.
-
-\noindent\textbf{Methods.} We benchmarked five forecasting approaches, SARIMA, Prophet,
-TimesFM, XGBoost and CatBoost, on monthly cardiovascular mortality in the state of
-S\~ao Paulo, using 168 months of records from the Brazilian Mortality Information System
-(SIM/DataSUS, January 2010 to December 2023; 1{,}217{,}427 cardiovascular deaths).
-Rolling origin cross-validation with a 6-month horizon and a 60-month minimum training
-window produced 103 windows and 618 out-of-sample forecasts per model. Every comparison
-carries uncertainty, from a block bootstrap resampling entire windows ($B=10{,}000$) and
-from the Diebold-Mariano test with the Harvey correction at each horizon. A decision
-criterion was fixed before the analysis. We further varied training history while holding
-test dates fixed, and evaluated monthly minimum temperature as an exogenous covariate
-under a leakage-free design.
-
-\noindent\textbf{Results.} Prophet (sMAPE 4.70\%, 95\% CI 4.17 to 5.27), SARIMA (4.80\%,
-4.29 to 5.33) and TimesFM (4.83\%, 4.32 to 5.39) were statistically indistinguishable:
-the spread among them (0.13 percentage points, pp) was an order of magnitude smaller than
-the mean interval width (1.07 pp), all three paired differences contained zero
-($p=0.17$ to $0.77$), and none of the 18 Diebold-Mariano cells reached significance.
-Boosting models were detectably worse, with all 36 comparisons against a leading model at
-$p<0.05$. Holding test dates fixed, nine additional years of training reduced sMAPE by
-1.23 to 1.71 pp, roughly ten times any between-model difference. Truncating training
-history to 60 months cost SARIMA 0.66 pp and Prophet 0.69 pp while leaving TimesFM
-unaffected ($p=0.42$), and TimesFM then led.
-
-\noindent\textbf{Conclusions.} Model selection among these three families is an
-operational rather than a statistical decision. Extending the data delivered far more
-than substituting the model. The defensible advantage of a zero-shot foundation model
-here is robustness to short history, not superior accuracy.
+Foundation models are increasingly reported to outperform classical methods in health
+forecasting, usually on point estimates alone. We benchmarked SARIMA, Prophet, TimesFM,
+XGBoost and CatBoost on 168 months of cardiovascular mortality in S\~ao Paulo, Brazil,
+over 103 rolling origin windows, with a window-level block bootstrap, Diebold-Mariano
+tests and a decision criterion fixed in advance. Prophet, SARIMA and TimesFM were
+statistically indistinguishable: their spread in percentage error was about eight times
+smaller than their interval width. Boosting was detectably worse and did not beat a
+seasonal naive benchmark. Holding test dates fixed, nine additional years of training
+reduced error about ten times more than any change of model. With only five years of
+history SARIMA and Prophet degraded while TimesFM did not. Monthly
+temperature helped mainly by supplying seasonality. For a long single series, model choice
+is an operational decision; the case for a foundation model is robustness to short
+history.
 
 \vspace{1em}
 \hrule
@@ -169,6 +149,12 @@ rather than a comparison of overlapping marginal intervals.
 \textbf{Diebold-Mariano test.} Equality of predictive accuracy was tested at each horizon
 using the Diebold-Mariano statistic \citep{diebold1995} with the small-sample correction of
 Harvey, Leybourne and Newbold \citep{harvey1997}, with absolute error as the loss function.
+The long-run variance of the loss differential uses the standard truncation at $h-1$ lags
+for $h$-step-ahead forecasts, which absorbs no serial correlation at $h=1$. Recomputing the 90
+cells that compare the five models and the seasonal naive method pairwise with a Bartlett
+kernel and a Newey-West bandwidth, which also absorbs dependence between overlapping
+windows, leaves all 90 on the same side of the 5\% threshold, so
+this approximation does not drive any conclusion reported here.
 
 \textbf{Pre-declared criterion.} To avoid selecting a favourable statistic after the fact,
 we declared before the analysis that an improvement counts as established only if the 95\%
@@ -671,6 +657,19 @@ drivers that the aggregate obscures.
 \textbf{Zero-shot only.} TimesFM was not fine-tuned. The extended series now satisfies the
 data prerequisite for fine-tuning, which remains pending on hardware.
 
+\textbf{Dependence between windows.} The block bootstrap resamples whole rolling origin
+windows, which respects the dependence among the six horizons inside a window. Consecutive
+windows nonetheless share five of their six test dates and almost all of their training
+data, so treating windows as exchangeable is still an approximation, and the intervals
+reported here are, if anything, narrower than they should be. A moving block bootstrap
+over adjacent windows would be the stricter alternative.
+
+\textbf{Multiple comparisons.} The paper reports well over one hundred hypothesis tests
+with no correction for multiplicity. The pre-declared criterion, which requires agreement
+between an interval and at least three of six horizon-level tests, was adopted in place of
+a formal adjustment; it is a stricter bar than any single test, but it is not an
+error-rate control.
+
 \textbf{Pandemic period.} The series includes COVID-19, which introduced level shifts and
 possible cause-of-death misclassification.
 
@@ -697,8 +696,8 @@ Software, Formal analysis, Writing -- original draft. Isabela Venancio da Silva:
 Writing -- review \& editing. Alexandre Chiavegatto Filho: Supervision, Writing -- review \&
 editing.
 
-\textbf{Funding.} This research received no specific grant from any funding agency in the
-public, commercial or not-for-profit sectors.
+\textbf{Funding.} This study was financed in part by the Coordena\c{c}\~ao de
+Aperfei\c{c}oamento de Pessoal de N\'ivel Superior, Brazil (CAPES), Finance Code 001.
 
 \textbf{Ethics.} This study used publicly available, de-identified secondary mortality
 records distributed by the Brazilian Ministry of Health, with no individual identification
