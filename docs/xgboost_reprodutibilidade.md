@@ -260,8 +260,15 @@ de 6 horizontes. Nos três ambientes medidos:
 
 A única linha da Tabela 5 que atende o critério atende em dois de três ambientes. O
 manuscrito afirma que atende, e isso é verdade no ambiente publicado, mas a conclusão
-depende da máquina. Decisão pendente do autor: manter como está, ou declarar essa
-sensibilidade no texto.
+depende da máquina.
+
+**Decisão do Fabiano, 2026-09-28: declarar no texto.** A seção de Reprodutibilidade deixou
+de dizer que um thread "compra um número que outra máquina consegue obter". A discussão da
+Tabela 5 passou a chamar a linha de "ganho consistente mas marginal, estabelecido no
+ambiente fixado e não de forma robusta entre ambientes". O parágrafo do termo de calendário
+perdeu o argumento de coincidência com o Prophet ("dentro de um milésimo"), que não se
+repete na segunda máquina (-0,169 contra -0,035), e ficou com o que se repete: a troca de
+sinal. Números em `results/revisao/xgboost_outra_maquina.json`.
 
 ## A tabela do termo de calendário ficou para trás na regeneração
 

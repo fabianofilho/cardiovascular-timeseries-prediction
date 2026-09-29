@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "o_que": "XGBoost com e sem temperatura (climatologia) numa segunda maquina, mesmas versoes do lock, n_jobs=1",
+    "como": "scripts/run_benchmark.py --models xgboost [--exog-csv ... --exog-policy climatology], depois scripts/run_uncertainty.py --seed 20260817; tabela de calendario por scripts/revisao/run_temp_melhorado.py",
+    "ambiente": {
+      "plataforma": "macOS-27.0-arm64-arm-64bit",
+      "python": "3.12.13",
+      "xgboost": "3.2.0",
+      "numpy": "2.5.3"
+    },
+    "data": "2026-09-28"
+  },
+  "outra_maquina": {
+    "smape_sem_temp": 6.833273840116232,
+    "smape_com_temp": 6.41034875667223,
+    "ganho": 0.422925083444281,
+    "ic": [
+      0.2677934597113813,
+      0.573741018166489
+    ],
+    "dm_p_por_h": [
+      0.0134136042567067,
+      0.0215396679634913,
+      0.1000186122922077,
+      0.0611951920066475,
+      0.0012337988064758,
+      0.0010156474777682
+    ],
+    "dm_celulas_p05": 4,
+    "calendario": {
+      "sem_T": 6.284817685711627,
+      "com_T": 6.453961388596087,
+      "ganho": -0.16914370288446
+    },
+    "base_tabela_calendario": {
+      "sem_T": 6.833273840116232,
+      "com_T": 6.41034875667223
+    }
+  },
+  "publicado": {
+    "dm_p_por_h": [
+      0.0422358642090299,
+      0.0880030963757765,
+      0.0410491132945869,
+      0.2946565858202123,
+      0.0172354171624276,
+      0.1710513699481155
+    ],
+    "dm_celulas_p05": 3
+  },
+  "anterior_a_regeneracao": {
+    "dm_celulas_p05": 2,
+    "fonte": "commit e829dc2, mensagem e docs/xgboost_reprodutibilidade.md"
+  }
+}
