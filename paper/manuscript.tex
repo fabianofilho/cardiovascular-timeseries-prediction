@@ -4,10 +4,17 @@
 accuracy of cardiovascular mortality in S\~ao Paulo, Brazil: a benchmark of foundation,
 classical and boosting models with measured uncertainty}
 
-\author{Fabiano B. N. Filho\thanks{Faculdade de Sa\'ude P\'ublica, Universidade de
+% Revisao duplo-cega do IJF: compilar manuscript_blind.tex, que define \BLIND e tira
+% autores, financiamento, CRediT, agradecimentos e o endereco do repositorio. Esses dados
+% vao em title_page.tex, que o IJF mantem separado dos revisores.
+\ifdefined\BLIND
+\author{}
+\else
+\author{Fabiano Novaes Barcellos Filho\thanks{Faculdade de Sa\'ude P\'ublica, Universidade de
 S\~ao Paulo, S\~ao Paulo, Brazil. Corresponding author.} \and
 Isabela Venancio da Silva\footnotemark[1] \and
 Alexandre Chiavegatto Filho\footnotemark[1]}
+\fi
 
 \date{}
 
@@ -706,13 +713,15 @@ measuring the uncertainty rather than reporting the ranking.
 
 \section*{Declarations}
 
-\textbf{Author contributions (CRediT).} Fabiano B. N. Filho: Conceptualization, Methodology,
-Software, Formal analysis, Writing -- original draft. Isabela Venancio da Silva: Validation,
-Writing -- review \& editing. Alexandre Chiavegatto Filho: Supervision, Writing -- review \&
-editing.
+\ifdefined\BLIND\else
+\textbf{Author contributions (CRediT).} Fabiano Novaes Barcellos Filho: Conceptualization,
+Methodology, Software, Formal analysis, Writing -- original draft. Isabela Venancio da
+Silva: Validation, Writing -- review \& editing. Alexandre Chiavegatto Filho: Supervision,
+Writing -- review \& editing.
 
 \textbf{Funding.} This study was financed in part by the Coordena\c{c}\~ao de
 Aperfei\c{c}oamento de Pessoal de N\'ivel Superior, Brazil (CAPES), Finance Code 001.
+\fi
 
 \textbf{Ethics.} This study used publicly available, de-identified secondary mortality
 records distributed by the Brazilian Ministry of Health, with no individual identification
@@ -724,8 +733,9 @@ the research ethics committee system, and ethical approval was therefore not req
 \textbf{Competing interests.} The authors declare no competing interests.
 
 \textbf{Data availability.} The aggregated monthly series, the temperature series, all
-forecast files and all uncertainty outputs are available in the study repository at
-\url{https://github.com/fabianofilho/cardiovascular-timeseries-prediction}. Individual death
+forecast files and all uncertainty outputs are available in the study repository
+\ifdefined\BLIND(address withheld for double-blind review)\else at
+\url{https://github.com/fabianofilho/cardiovascular-timeseries-prediction}\fi. Individual death
 records are not redistributed; the extraction script reproduces them from the public DataSUS
 source.
 
@@ -738,7 +748,9 @@ this manuscript, is available in the same repository.
 drafting. The tool is not an author. The authors reviewed and verified all analyses, figures
 and numerical values reported here, and take full responsibility for the content.
 
+\ifdefined\BLIND\else
 \textbf{Acknowledgements.} No dedicated computational resources were used.
+\fi
 
 \bibliographystyle{unsrtnat}
 \bibliography{refs/references}
