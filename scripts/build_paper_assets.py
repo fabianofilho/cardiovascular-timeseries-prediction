@@ -46,6 +46,12 @@ ROTULO = {
 COR = {
     "prophet": "0072B2", "sarima": "D55E00", "timesfm": "009E73",
     "xgboost": "E69F00", "catboost": "CC79A7",
+    # Papel, nao modelo. Tres figuras usavam a cor de um modelo para colorir algo que
+    # nao e modelo -- a banda de destaque da serie, as duas janelas de treino, a curva
+    # de temperatura -- e o leitor que aprende "azul = Prophet" na Figura 2 reencontra
+    # o mesmo azul na Figura 4 querendo dizer "janela expansiva". Sky blue da mesma
+    # paleta Okabe-Ito, reservada para a covariavel.
+    "temp": "56B4E9",
 }
 TOP3 = ["prophet", "sarima", "timesfm"]
 ORDEM = ["prophet", "sarima", "timesfm", "catboost", "xgboost"]
@@ -493,7 +499,7 @@ test origins. A negative difference means the expanding window is more accurate.
 \\label{{tab:janela}}
 \\begin{{tabular}}{{lrrrcrc}}
 \\toprule
-Model & Expanding & Sliding 60 & Diff. (pp) & 95\\% CI & $p$ & DM cells $p<0.05$ \\\\
+Model & Expanding & Sliding 60 & Expanding $-$ Sliding (pp) & 95\\% CI & $p$ & DM cells $p<0.05$ \\\\
 \\midrule
 {chr(10).join(linhas)}
 \\bottomrule
@@ -678,7 +684,7 @@ this comparison rather than being given an input it would ignore.
   every axis plot/.append style={{line width=0.5pt}},
 ]
 \addplot[draw=black!80, mark=none] coordinates {{{pts}}};
-\addplot[draw=none, fill=cprophet, fill opacity=0.10, forget plot]
+\addplot[draw=none, fill=black, fill opacity=0.07, forget plot]
   coordinates {{(2021.0,5400) (2024.0,5400) (2024.0,11100) (2021.0,11100)}} \closedcycle;
 % ancorado a direita e dentro do limite do eixo: centralizado em 2022.5 o rotulo
 % estourava a borda e saia cortado
@@ -738,7 +744,10 @@ this comparison rather than being given an input it would ignore.
   axis lines=left, tick align=outside, tick pos=left,
   legend style={{at={{(0.02,0.98)}}, anchor=north west, draw=none, fill=none,
                  font=\scriptsize, legend columns=3, column sep=4pt}},
-  ymax=8.6,
+  ymin=4, ymax=8.6, ytick={{4,5,6,7,8}},
+  % Sem o ymin e o ytick explicitos, a escolha automatica punha a marca mais baixa em
+  % 5 e os tres modelos lideres ficavam abaixo dela, sem nenhuma referencia de leitura,
+  % com o ponto do SARIMA em h=1 encostado no eixo.
 ]
 {chr(10).join(series_h)}
 \legend{{{','.join(leg)}}}
@@ -754,9 +763,9 @@ this comparison rather than being given an input it would ignore.
         linhas.append(
             f"\\addplot[draw=black!28, line width=1.2pt, mark=none] "
             f"coordinates {{({e:.4f},{y}) ({s:.4f},{y})}};\n"
-            f"\\addplot[only marks, mark=*, mark size=2.4pt, draw=cprophet, fill=cprophet] "
+            f"\\addplot[only marks, mark=*, mark size=2.4pt, draw=black!80, fill=black!80] "
             f"coordinates {{({e:.4f},{y})}};\n"
-            f"\\addplot[only marks, mark=square*, mark size=2.0pt, draw=csarima, fill=csarima] "
+            f"\\addplot[only marks, mark=square*, mark size=2.0pt, draw=black!45, fill=black!45] "
             f"coordinates {{({s:.4f},{y})}};\n"
             f"\\node[anchor=west, font=\\scriptsize, text=black] "
             f"at (axis cs:{max(e, s) + 0.10:.4f},{y}) {{{dif:+.2f} pp}};")
@@ -776,8 +785,8 @@ this comparison rather than being given an input it would ignore.
 ]
 {chr(10).join(linhas)}
 \node[anchor=east, font=\scriptsize, text=black] at (axis cs:7.65,5.35)
-  {{\textcolor{{cprophet}}{{$\bullet$}} Expanding \quad
-    \textcolor{{csarima}}{{$\blacksquare$}} Sliding 60}};
+  {{\textcolor{{black!80}}{{$\bullet$}} Expanding \quad
+    \textcolor{{black!45}}{{$\blacksquare$}} Sliding 60}};
 \end{{axis}}
 \end{{tikzpicture}}""")
 
@@ -800,7 +809,7 @@ this comparison rather than being given an input it would ignore.
   legend style={{at={{(0,1.03)}}, anchor=south west, draw=none, fill=none,
                  font=\scriptsize, text=black}},
 ]
-\addplot[draw=cxgboost, mark=*, mark size=2.0pt, line width=1.1pt]
+\addplot[draw=black!80, mark=*, mark size=2.0pt, line width=1.1pt]
   coordinates {{{cm}}};
 \addlegendentry{{Deaths per month}}
 \end{{axis}}
@@ -808,20 +817,28 @@ this comparison rather than being given an input it would ignore.
   width=0.80\textwidth, height=4.8cm,
   axis y line*=right, axis x line=none,
   xmin=0.5, xmax=12.5,
-  ylabel={{Mean minimum temperature (C)}}, ylabel style={{text=black}},
+  ylabel={{Mean minimum temperature ($^\circ$C)}}, ylabel style={{text=black}},
   yticklabel style={{text=black}},
   tick align=outside,
   legend style={{at={{(1,1.03)}}, anchor=south east, draw=none, fill=none,
                  font=\scriptsize, text=black}},
 ]
-\addplot[draw=cprophet, mark=square*, mark size=1.7pt, line width=0.9pt, dashed]
+\addplot[draw=ctemp, mark=square*, mark size=1.7pt, line width=0.9pt, dashed,
+         mark options={{draw=ctemp, fill=ctemp, solid}}]
   coordinates {{{ct}}};
 \addlegendentry{{Minimum temperature}}
 \end{{axis}}
 \end{{tikzpicture}}""")
 
     # ---------- fig6: efeito da temperatura ----------
-    mods = ["sarima", "catboost", "xgboost"]
+    # O Prophet entra. Ele ficava de fora desta lista desde quando estava fora da
+    # comparacao inteira, por um motivo que a revisao mostrou nao proceder. A Tabela 5
+    # foi corrigida e passou a ter as quatro linhas; a figura nao, e ficou mostrando so
+    # os tres ganhos positivos. Como o Prophet e o unico modelo que a covariavel piora,
+    # e como e nele que o argumento do mecanismo se apoia -- o ganho e inverso a
+    # sazonalidade que o modelo ja tem --, omiti-lo fazia a figura contar o oposto da
+    # tabela ao lado.
+    mods = ["prophet", "sarima", "catboost", "xgboost"]
     linhas = []
     for i, m in enumerate(mods):
         y = len(mods) - i
@@ -835,19 +852,19 @@ this comparison rather than being given an input it would ignore.
     labs = ",".join(ROTULO[m] for m in mods)
     escreve_figura("fig6_temperatura", rf"""\begin{{tikzpicture}}
 \begin{{axis}}[
-  width=0.78\textwidth, height=3.8cm,
+  width=0.78\textwidth, height=4.6cm,
   xlabel={{Reduction in sMAPE from the temperature covariate (pp)}},
-  xmin=-0.06, xmax=0.62,
+  xmin=-0.12, xmax=0.62,
   % com valores pequenos o pgfplots gera tick automatico em notacao cientifica
   % (-5 \cdot 10^{-2}) e os rotulos colidem. Tick e formato explicitos.
-  xtick={{0,0.1,0.2,0.3,0.4,0.5,0.6}},
+  xtick={{-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6}},
   scaled x ticks=false,
   xticklabel style={{/pgf/number format/fixed, /pgf/number format/precision=1}},
-  ymin=0.4, ymax=3.6, ytick={{{ticks}}}, yticklabels={{{labs}}},
+  ymin=0.4, ymax=4.6, ytick={{{ticks}}}, yticklabels={{{labs}}},
   axis lines=left, tick align=outside, tick pos=left,
 ]
 \draw[black!45, dashed, line width=0.6pt]
-  (axis cs:0,0.4) -- (axis cs:0,3.6);
+  (axis cs:0,0.4) -- (axis cs:0,4.6);
 {chr(10).join(linhas)}
 \end{{axis}}
 \end{{tikzpicture}}""")

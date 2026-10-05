@@ -32,6 +32,16 @@ from build_paper_assets import (  # noqa: E402
 REV = RES / "revisao"
 NUMBERS = json.loads((REV / "revisao_numbers.json").read_text(encoding="utf-8"))
 
+# A Tabela 1 tem uma fonte canonica, paper/verified_numbers.json, e o revisao_numbers.json
+# guarda uma segunda copia dela em "tabela1_estendida". As duas concordavam nos oito
+# modelos ate a regeneracao do XGBoost, que atualizou a canonica e deixou a copia parada
+# em 12/09: a figura das referencias ingenuas continuou desenhando 6,9350 enquanto a
+# Tabela 1 ja dizia 6,8804. Os sete outros modelos coincidiam, que e o que fez isso passar
+# despercebido. Aqui a figura le a canonica; o revisao_numbers.json segue servindo ao que
+# so existe nele.
+VERIFICADOS = json.loads(
+    (RES.parent / "paper" / "verified_numbers.json").read_text(encoding="utf-8"))
+
 ROTULO_EXT = dict(ROTULO)  # copia; nao poluir o dict importado
 
 
@@ -41,7 +51,7 @@ def fig_naive_estendida():
     boosting, o achado central de R1."""
     ordem = ["prophet", "sarima", "timesfm", "catboost", "xgboost",
              "snaive_drift", "snaive", "naive"]
-    t1 = NUMBERS["tabela1_estendida"]
+    t1 = VERIFICADOS["tabela1"]
     n = len(ordem)
     linhas = []
     for i, m in enumerate(ordem):

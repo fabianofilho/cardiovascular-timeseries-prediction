@@ -30,3 +30,6 @@ data/processed/*
 # figuras de paper/ ficam versionadas porque sao a entrada dele.
 build/
 paper/manuscript.pdf
+
+# trabalho local arquivado, nao versionado
+_old/

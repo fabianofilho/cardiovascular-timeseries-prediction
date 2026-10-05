@@ -21,7 +21,10 @@ import pytest
 
 RAIZ = Path(__file__).resolve().parents[1]
 PT = RAIZ / "results" / "revisao" / "prophet_temp_vs_base.json"
-TAB = RAIZ / "results" / "revisao" / "tabpfn_resultados_v4.json"
+# A rodada de 23/09 nas 103 janelas. A v4 continua no repositorio como historico, e
+# apontar para ela aqui era o que deixava estes testes verdes sobre dado velho.
+TAB = RAIZ / "results" / "revisao" / "tabpfn_resultados_v5_2026-09-23.json"
+PRED_TAB = RAIZ / "results" / "revisao" / "tabpfn_predictions.csv"
 VER = RAIZ / "paper" / "verified_numbers.json"
 
 sem_pt = pytest.mark.skipif(not PT.exists(), reason="rodada do Prophet com temperatura ausente")
@@ -113,34 +116,52 @@ def test_o_tabpfn_continua_atras_dos_tres_lideres():
 
 
 @sem_tab
-def test_a_vitoria_sobre_o_naive_nao_pode_ser_afirmada_sem_o_teste_pareado():
-    """O ponto do teste, e a razao de ele existir.
+def test_a_vitoria_sobre_o_naive_foi_medida_e_nao_atende_o_criterio():
+    """O inverso do teste que estava aqui, pela mesma razao que ele existia.
 
-    A margem do TabPFN sobre o naive sazonal com drift e MENOR que a do catboost_direct,
-    que reprovou no criterio pre-declarado. Enquanto nao houver previsoes por janela, a
-    afirmacao de vitoria nao tem suporte, e este teste guarda a comparacao que mostra isso.
+    Enquanto nao havia previsao por janela, o teste guardava a comparacao que mostrava
+    que a afirmacao de vitoria nao tinha suporte. A medicao foi feita, e o resultado nao
+    e o previsto: o intervalo pareado EXCLUI zero, o que nenhuma variante de boosting
+    conseguiu, e mesmo assim o criterio nao e atendido, porque o Diebold-Mariano fica em
+    1 de 6. Agora o teste cobra o resultado medido, e reprova se alguem escrever vitoria.
     """
-    r = _tabpfn()
-    margem_tabpfn = r["snaive_drift"]["smape_obtido"] - r["tabpfn"]["smape_obtido"]
-
     vj = RAIZ / "results" / "revisao" / "variants_vs_snaive.json"
     if not vj.exists():
         pytest.skip("variantes ainda nao rodadas")
-    d = json.loads(vj.read_text(encoding="utf-8"))["modelos"]["catboost_direct"]
-    margem_reprovada = -d["delta_smape_vs_snaive"]
+    d = json.loads(vj.read_text(encoding="utf-8"))["modelos"]
+    assert "tabpfn" in d, (
+        "o TabPFN sumiu do variants_vs_snaive.json. O criterio pre-declarado so pode ser "
+        "avaliado com a previsao janela a janela; sem ela a afirmacao volta a nao ter "
+        "suporte.")
+    tab = d["tabpfn"]
 
-    assert margem_tabpfn < margem_reprovada, (
-        f"a margem do TabPFN ({margem_tabpfn:.3f} pp) passou a ser maior que a do "
-        f"catboost_direct ({margem_reprovada:.3f} pp), que reprovou no criterio. "
-        "Se isso mudou, rode o teste pareado antes de afirmar vitoria."
-    )
-    assert d["melhor_que_snaive"] is False
+    assert tab["ic_high"] < 0, (
+        f"o intervalo pareado contra o naive sazonal deixou de excluir zero: "
+        f"[{tab['ic_low']:.3f}, {tab['ic_high']:.3f}]. O texto afirma que exclui.")
+    assert tab["dm_significativos"] < 3, (
+        f"o Diebold-Mariano passou a {tab['dm_significativos']}/6 e o criterio agora e "
+        "atendido. Isso muda a conclusao do manuscrito: reescreva a subsecao do modelo "
+        "tabular antes de deixar o teste verde.")
+    assert tab["melhor_que_snaive"] is False
 
 
 @sem_tab
-def test_o_pendente_esta_documentado():
+def test_a_previsao_por_janela_existe_e_esta_completa():
+    """Sem as 103x6 linhas o criterio nao e calculavel, e foi assim por tres semanas."""
+    if not PRED_TAB.exists():
+        pytest.skip("CSV por janela ausente")
+    linhas = PRED_TAB.read_text(encoding="utf-8").strip().split("\n")
+    assert len(linhas) - 1 == 103 * 6, (
+        f"{len(linhas) - 1} previsoes, esperado {103 * 6}. O teste pareado sobre um "
+        "conjunto incompleto nao e comparavel com o dos outros modelos.")
+
+
+@sem_tab
+def test_o_resultado_esta_documentado():
     doc = RAIZ / "docs" / "tabpfn.md"
     assert doc.exists(), "docs/tabpfn.md sumiu"
     texto = doc.read_text(encoding="utf-8")
-    for trecho in ("previsões por janela", "critério pré-declarado", "Isabella Saade"):
-        assert trecho in texto
+    for trecho in ("critério pré-declarado", "não atende", "tabpfn_client"):
+        assert trecho in texto, (
+            f"{trecho!r} saiu de docs/tabpfn.md. O veredito medido e a ressalva sobre a "
+            "versao do cliente sao o que impede alguem de reportar o numero sozinho.")

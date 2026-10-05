@@ -501,6 +501,17 @@
       "de": 6,
       "melhor_que_snaive": false
     },
+    "tabpfn": {
+      "smape": 5.845879971048635,
+      "mae": 444.39616517495955,
+      "mase": 1.0764040333404812,
+      "delta_smape_vs_snaive": -0.42343322546196394,
+      "ic_low": -0.6984062803621554,
+      "ic_high": -0.12764853536344709,
+      "dm_significativos": 1,
+      "de": 6,
+      "melhor_que_snaive": false
+    },
     "snaive": {
       "smape": 6.269313196510599,
       "mae": 473.95631067961165,

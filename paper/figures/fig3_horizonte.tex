@@ -7,7 +7,10 @@
   axis lines=left, tick align=outside, tick pos=left,
   legend style={at={(0.02,0.98)}, anchor=north west, draw=none, fill=none,
                  font=\scriptsize, legend columns=3, column sep=4pt},
-  ymax=8.6,
+  ymin=4, ymax=8.6, ytick={4,5,6,7,8},
+  % Sem o ymin e o ytick explicitos, a escolha automatica punha a marca mais baixa em
+  % 5 e os tres modelos lideres ficavam abaixo dela, sem nenhuma referencia de leitura,
+  % com o ponto do SARIMA em h=1 encostado no eixo.
 ]
 \addplot[draw=cprophet, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=cprophet, fill=cprophet}] coordinates {(1,4.3538) (2,4.4520) (3,4.6456) (4,4.8209) (5,4.9294) (6,5.0041)};
 \addplot[draw=csarima, mark=*, mark size=1.6pt, line width=0.9pt, mark options={draw=csarima, fill=csarima}] coordinates {(1,4.1625) (2,4.6971) (3,4.7652) (4,4.8096) (5,5.1129) (6,5.2266)};

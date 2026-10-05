@@ -24,6 +24,13 @@ RES = ROOT / "results"
 VAR = RES / "revisao" / "variants_predictions.csv"
 BASE = RES / "benchmark_baselines_2010_2023_predictions.csv"
 BENCH = RES / "benchmark_sim_real_sp_2010_2023_predictions.csv"
+# Previsoes que chegam de fora do pipeline local, uma linha por janela e horizonte, no
+# mesmo formato dos demais. Hoje e so o TabPFN, que roda por API e nao aqui. Entra como
+# arquivo opcional para que a ausencia dele nao quebre a rodada de quem nao o tem, e
+# para que a presenca dele nao mude nada dos outros modelos: mesmas janelas, mesma
+# semente, mesmo bootstrap.
+EXTRA = sorted((RES / "revisao").glob("*_predictions_externas.csv")) + [
+    RES / "revisao" / "tabpfn_predictions.csv"]
 
 B = 10_000
 SEED = 20260817
@@ -71,8 +78,18 @@ def main() -> int:
         str(RES / "series" / "serie_eventos_sp_sim_real_2010_2023.csv"), "date", "value", "MS")
     den = mase_denominador(serie, m=12)
 
-    todos = pd.concat([var, base, bench], ignore_index=True)
-    nomes = sorted(var.model.unique()) + [REF, "snaive_drift", "naive"]
+    quadros = [var, base, bench]
+    externos = []
+    for p in EXTRA:
+        if not p.exists():
+            continue
+        d = pd.read_csv(p)
+        quadros.append(d)
+        externos += sorted(d.model.unique())
+        print(f"  {p.name}: {len(d)} linhas, modelos {sorted(d.model.unique())}")
+
+    todos = pd.concat(quadros, ignore_index=True)
+    nomes = sorted(var.model.unique()) + externos + [REF, "snaive_drift", "naive"]
 
     ae, sm = {}, {}
     for m in nomes:
@@ -123,12 +140,40 @@ def main() -> int:
     print("  Logo o ponto de comparacao NAO e 1: e este valor. O denominador do MASE e o")
     print("  erro EM AMOSTRA de um passo, e as previsoes aqui sao de um a seis passos fora.")
 
+    # A mesma conta contra o naive sazonal COM DRIFT, que e a referencia ingenua mais
+    # forte da serie. O criterio do paper compara com o naive sazonal simples, e e esse
+    # que manda; esta segunda tabela existe porque o texto tambem afirma coisas sobre a
+    # referencia com drift, e afirmacao sem arquivo de origem e o que este projeto passa
+    # o tempo consertando.
+    REF2 = "snaive_drift"
+    ref2_sm = sm[REF2]
+    contra_drift = {}
+    for m in nomes:
+        dif = sm[m][idx].mean(axis=(1, 2)) - ref2_sm[idx].mean(axis=(1, 2))
+        lo, hi = np.percentile(dif, [2.5, 97.5])
+        sig = 0
+        ps = []
+        for h in range(HORIZONTES):
+            _, p = dm_test(ae[m][:, h] - ae[REF2][:, h], h + 1)
+            ps.append(None if p != p else float(p))
+            if p == p and p < 0.05:
+                sig += 1
+        contra_drift[m] = {
+            "delta_smape": float(sm[m].mean() - ref2_sm.mean()),
+            "ic_low": float(lo), "ic_high": float(hi),
+            "dm_significativos": sig, "de": HORIZONTES,
+            "dm_p_por_horizonte": ps,
+            "melhor_que_snaive_drift": bool(hi < 0 and sig >= 3),
+        }
+
     saida = RES / "revisao" / "variants_vs_snaive.json"
     saida.write_text(json.dumps({
         "_meta": {"B": B, "seed": SEED, "referencia": REF,
+                  "referencia_secundaria": REF2,
                   "mase_denominador": float(den), "n_janelas": int(nw),
                   "criterio": "IC do bootstrap pareado exclui zero E DM p<0.05 em >=3 de 6"},
         "modelos": linhas,
+        "modelos_vs_snaive_drift": contra_drift,
     }, indent=2) + "\n", encoding="utf-8")
     print(f"\n  results/revisao/{saida.name}")
     return 0
