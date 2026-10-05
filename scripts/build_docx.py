@@ -106,6 +106,30 @@ ACENTOS = {
 }
 
 
+SIMBOLOS = {
+    r"\Delta": "Δ", r"\delta": "δ", r"\alpha": "α", r"\beta": "β", r"\gamma": "γ",
+    r"\sigma": "σ", r"\mu": "μ", r"\times": "×", r"\pm": "±", r"\leq": "≤",
+    r"\geq": "≥", r"\approx": "≈", r"\ldots": "…", r"\cdot": "·",
+}
+
+
+def resolve_condicionais(tex: str) -> str:
+    """Fica com a versao IDENTIFICADA de um manuscrito que tambem gera a versao cega.
+
+    O manuscript.tex tem blocos \\ifdefined\\BLIND ... \\else ... \\fi desde 04/10, para
+    a revisao duplo-cega do IJF. O .docx e para os coautores, entao vale o ramo \\else.
+    Sem isto o parser descartava o CRediT e os agradecimentos (o bloco comeca com
+    barra invertida) e escrevia os dois ramos da disponibilidade de dados.
+    """
+    padrao = re.compile(r"\\ifdefined\\BLIND(.*?)(?:\\else(.*?))?\\fi(?![a-zA-Z])", re.S)
+    return padrao.sub(lambda m: m.group(2) or "", tex)
+
+
+def tira_comentarios(tex: str) -> str:
+    """Remove comentario LaTeX (% ate o fim da linha), preservando o \\% escapado."""
+    return "\n".join(re.sub(r"(?<!\\)%.*", "", linha) for linha in tex.split("\n"))
+
+
 def limpa_inline(s: str, cites: dict, refs: dict) -> list[tuple[str, dict]]:
     """Converte um trecho de LaTeX em runs (texto, formato).
 
@@ -139,6 +163,10 @@ def limpa_inline(s: str, cites: dict, refs: dict) -> list[tuple[str, dict]]:
             x = x.replace(a, b)
         x = x.replace("{,}", ",").replace("--", "-")
         x = re.sub(r"\$([^$]*)\$", r"\1", x)
+        # Simbolo antes da remocao generica de comandos: sem isto "$\Delta$ is the
+        # difference" saia como " is the difference", e a frase ficava sem sujeito.
+        for a, b in SIMBOLOS.items():
+            x = re.sub(re.escape(a) + r"(?![a-zA-Z])", b, x)
         for a, b in ((r"\%", "%"), (r"\&", "&"), (r"\_", "_"), (r"\$", "$"),
                      (r"\#", "#"), ("~", " ")):
             x = x.replace(a, b)
@@ -312,6 +340,21 @@ def indexa(tex: str) -> tuple[dict, dict, list[str]]:
         lab = re.search(r"\\label\{(tab:[\w]+)\}", arq)
         if lab:
             refs[lab.group(1)] = str(n_tab)
+    # Secoes numeradas como no PDF (\section e \subsection sem estrela). Sem isto
+    # todo "Section~\ref{sec:...}" virava "Section ?" no Word.
+    sec = sub = 0
+    atual = ""
+    for m in re.finditer(r"\\(sub)?section(\*?)\{|\\label\{(sec:[\w]+)\}", tex):
+        if m.group(3):
+            if atual:
+                refs[m.group(3)] = atual
+        elif not m.group(2):
+            if m.group(1):
+                sub += 1
+                atual = f"{sec}.{sub}"
+            else:
+                sec, sub = sec + 1, 0
+                atual = str(sec)
     ordem = sorted(cites, key=cites.get)
     return cites, refs, ordem
 
@@ -419,10 +462,12 @@ def main() -> int:
     BUILD.mkdir(parents=True, exist_ok=True)
     v = json.loads((PAPER / "verified_numbers.json").read_text(encoding="utf-8"))
     tex = (PAPER / "manuscript.tex").read_text(encoding="utf-8")
+    tex = resolve_condicionais(tira_comentarios(tex))
     cites, refs, ordem = indexa(tex)
 
     doc = setup_document()
     n_fig = n_tab = n_ausente = 0
+    n_sec = n_sub = 0
 
     # ---- carimbo de proveniencia ----
     p = doc.add_paragraph()
@@ -464,7 +509,7 @@ def main() -> int:
         escreve_runs(pa, limpa_inline(aut, cites, refs))
     pf = doc.add_paragraph()
     pf.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    rf = pf.add_run("Faculdade de Saude Publica, Universidade de Sao Paulo, Sao Paulo, Brazil")
+    rf = pf.add_run("Faculdade de Saúde Pública, Universidade de São Paulo, São Paulo, Brazil")
     rf.font.size = Pt(10)
     rf.italic = True
 
@@ -478,9 +523,16 @@ def main() -> int:
         if not b:
             continue
 
-        m = re.match(r"\\(sub)?section\*?\{(.*?)\}", b, re.S)
+        m = re.match(r"\\(sub)?section(\*?)\{(.*?)\}", b, re.S)
         if m:
-            txt = " ".join(x[0] for x in limpa_inline(m.group(2), cites, refs))
+            txt = " ".join(x[0] for x in limpa_inline(m.group(3), cites, refs))
+            if not m.group(2):
+                if m.group(1):
+                    n_sub += 1
+                    txt = f"{n_sec}.{n_sub} {txt}"
+                else:
+                    n_sec, n_sub = n_sec + 1, 0
+                    txt = f"{n_sec} {txt}"
             ph = doc.add_paragraph()
             rh = ph.add_run(txt)
             rh.bold = True
