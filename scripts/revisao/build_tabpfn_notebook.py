@@ -30,13 +30,16 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from build_paper_assets import PAPER  # noqa: E402
+from nbtools import caderno, code, md, valida  # noqa: E402
 
 EXPERIMENTOS = Path(
     r"G:\.shortcut-targets-by-id\1zRZlDXqjBRVUlO0Zys2L0W69eJvgMI58\Labs"
     r"\Cardiovascular Time Series\IJF_Series_Temporais_CV\02_experimentos"
 )
 SERIE_PY = EXPERIMENTOS / "kaggle" / "series_data.py"
-SAIDA = EXPERIMENTOS / "tabpfn_benchmark.ipynb"
+# Notebook fica em 02_experimentos/notebooks/, junto com os outros, e nao solto na
+# raiz da pasta de experimentos.
+SAIDA = EXPERIMENTOS / "notebooks" / "tabpfn_benchmark.ipynb"
 
 # rotulos de exibicao, na ordem em que a tabela final deve sair
 ORDEM_SAIDA = ["naive", "snaive", "snaive_drift", "xgboost", "catboost",
@@ -63,26 +66,6 @@ def carrega_referencia() -> dict:
 
 # --------------------------------------------------------------------- celulas
 
-def fonte(txt: str) -> list[str]:
-    """Quebra em linhas MANTENDO o \\n de cada uma.
-
-    O nbformat manda que source seja o texto ja quebrado, e o Jupyter remonta com
-    ''.join(source), sem separador. Se as linhas vierem sem o \\n final, a celula
-    inteira colapsa numa linha so e o notebook nao roda. Foi exatamente esse o defeito
-    da primeira versao deste gerador.
-    """
-    return txt.strip("\n").splitlines(keepends=True)
-
-
-def md(txt):
-    return {"cell_type": "markdown", "metadata": {}, "source": fonte(txt)}
-
-
-def code(txt):
-    return {"cell_type": "code", "execution_count": None, "metadata": {},
-            "outputs": [], "source": fonte(txt)}
-
-
 CEL_INSTALA = '''
 # Instalacao. Leva alguns minutos. Se o Colab pedir para reiniciar o ambiente, reinicie
 # e comece de novo desta celula -- nao pule para as seguintes sem reiniciar.
@@ -108,27 +91,40 @@ warnings.filterwarnings("ignore")
 # le a variavel de ambiente TABPFN_TOKEN, entao um alimenta o outro aqui.
 # tabpfn_client.fit() levanta erro sem token e nunca abre prompt sozinho, entao o token
 # tem de estar definido antes de qualquer chamada.
-NOMES_SEGREDO = ["PRIOR_LABS_TOKEN", "TABPFN_TOKEN"]
+# Variantes numeradas entram na busca porque a cota e DIARIA e por conta: quando ela
+# esgota no meio de uma rodada, a saida e uma chave de outra conta, e o segredo novo
+# acaba nomeado PRIOR_LABS_TOKEN2, 3, e assim por diante. Sem isto o notebook lia o
+# primeiro nome, achava a chave velha e batia na mesma cota esgotada -- parecendo que
+# a conta nova nao adiantou. A ordem e decrescente: a mais recente primeiro.
+NOMES_SEGREDO = [f"PRIOR_LABS_TOKEN{n}" for n in ("5", "4", "3", "2", "")]
+NOMES_SEGREDO += ["TABPFN_TOKEN"]
 
-TOKEN, origem = os.environ.get("TABPFN_TOKEN"), "variavel de ambiente"
+# Os Secrets vem ANTES da variavel de ambiente, e nao depois. Na ordem inversa, uma
+# execucao anterior desta celula deixava a chave velha em os.environ e reexecutar
+# continuava pegando ela, mesmo com o segredo ja trocado -- o que faz uma conta nova
+# parecer que nao adiantou.
+TOKEN, origem = None, None
+try:
+    from google.colab import userdata
+    for _nome in NOMES_SEGREDO:
+        try:
+            TOKEN = userdata.get(_nome)
+        except Exception:
+            TOKEN = None
+        if TOKEN:
+            origem = f"Secrets do Colab ({_nome})"
+            break
+except ImportError:
+    pass
 if not TOKEN:
-    try:
-        from google.colab import userdata
-        for _nome in NOMES_SEGREDO:
-            try:
-                TOKEN = userdata.get(_nome)
-            except Exception:
-                TOKEN = None
-            if TOKEN:
-                origem = f"Secrets do Colab ({_nome})"
-                break
-    except ImportError:
-        pass
+    TOKEN, origem = os.environ.get("TABPFN_TOKEN"), "variavel de ambiente"
 if not TOKEN:
     TOKEN = getpass("Token da PriorLabs (platform.priorlabs.ai/account/api-keys): ")
     origem = "digitado agora"
 os.environ["TABPFN_TOKEN"] = TOKEN.strip()
-print(f"token definido, {len(os.environ['TABPFN_TOKEN'])} caracteres, de {origem}")
+# Os ultimos caracteres, para conferir de olho QUAL chave esta em uso sem expo-la.
+print(f"token de {origem}, {len(os.environ['TABPFN_TOKEN'])} caracteres, "
+      f"terminando em ...{os.environ['TABPFN_TOKEN'][-6:]}")
 '''
 
 CEL_PROTOCOLO = '''
@@ -256,7 +252,8 @@ print("xgboost", xgboost.__version__, "| catboost", catboost.__version__)
 
 RESULTADOS["xgboost"] = avalia(preditor_recursivo(lambda: XGBRegressor(
     n_estimators=300, max_depth=4, learning_rate=0.05,
-    subsample=0.9, colsample_bytree=0.9, random_state=42, n_jobs=1   # ADAPTADO: igual a src/cv_timeseries/models.py,
+    # ADAPTADO: n_jobs=1, igual a src/cv_timeseries/models.py
+    subsample=0.9, colsample_bytree=0.9, random_state=42, n_jobs=1,
 ), nome="xgboost"), "xgboost")
 
 RESULTADOS["catboost"] = avalia(preditor_recursivo(lambda: CatBoostRegressor(
@@ -337,7 +334,32 @@ THINKING = False #@param {type:"boolean"}
 # THINKING melhora ate 15%, mas o limite cai para 10 fits/min e 30/h: mais de tres horas
 # e meia para as 103 janelas. So ligue sabendo disso.
 
+# O checkpoint no disco da sessao do Colab morre com a sessao, e uma rodada completa
+# custa mais de uma hora de API. Se o Drive estiver montado ele fica la, e uma queda de
+# sessao deixa de custar a rodada inteira. Foi assim que o CSV da rodada anterior se
+# perdeu, e com ele a unica medicao por janela que existia do TabPFN. Por isso o Drive
+# e montado aqui, em vez de recomendado num comentario que ninguem le antes de gastar
+# a hora.
 CHECKPOINT = "tabpfn_previsoes.csv"
+if MODO != "nao rodar" and not os.path.isdir("/content/drive/MyDrive"):
+    # force_remount resolve o "mount failed" mais comum, que e uma montagem anterior
+    # meio morta na mesma sessao. Duas tentativas, e segue sem Drive se nao der: sem
+    # Drive a rodada ainda e retomavel dentro da sessao, porque o checkpoint fica no
+    # disco dela. O que se perde e a sobrevivencia a uma queda de sessao.
+    for forcar in (False, True):
+        try:
+            from google.colab import drive
+            drive.mount("/content/drive", force_remount=forcar)
+            break
+        except Exception as e:
+            print(f"Drive nao montou (force_remount={forcar}): {type(e).__name__}: {e}")
+if os.path.isdir("/content/drive/MyDrive"):
+    os.makedirs("/content/drive/MyDrive/tabpfn_cv", exist_ok=True)
+    CHECKPOINT = "/content/drive/MyDrive/tabpfn_cv/tabpfn_previsoes.csv"
+    print(f"checkpoint no Drive: {CHECKPOINT}")
+else:
+    print("AVISO: checkpoint no disco da sessao. Uma queda custa a rodada inteira.")
+
 CONFIRMO_RODAR = MODO != "nao rodar"
 LIMITE_JANELAS = 5 if MODO.startswith("teste") else None
 
@@ -361,7 +383,15 @@ class LimitadorDeTaxa:
             time.sleep(atraso)
         self.ultima = time.time()
 
-def com_retentativa(fn, limitador, tentativas=5):
+# Escada de espera para o 429, em segundos. Nao e exponencial curta de proposito: a
+# rodada que estourou estava a 26 chamadas por minuto, abaixo do teto de 60/min, e
+# ainda assim levou 429 depois de cinco esperas de um minuto. Isso e cota de janela
+# longa, horaria ou diaria, e contra ela cinco minutos nao servem. Somadas, estas
+# esperas dao pouco mais de uma hora, que e o tempo de uma janela horaria reabrir.
+# Esperar nao custa API, e o checkpoint garante que o que ja rodou nao se repete.
+ESCADA = (60, 120, 300, 600, 900, 900, 900)
+
+def com_retentativa(fn, limitador, tentativas=len(ESCADA)):
     """Repete em HTTP 429 respeitando o Retry-After em vez de tentar as cegas."""
     for k in range(tentativas):
         limitador.espera()
@@ -371,11 +401,28 @@ def com_retentativa(fn, limitador, tentativas=5):
             msg = str(e)
             if "429" not in msg and "Too Many Requests" not in msg.lower():
                 raise
-            espera = 60.0
+            # Cota diaria nao e rajada: esperar a escada inteira nao a reabre, so
+            # queima uma hora para falhar igual. O servidor informa a hora do reset,
+            # entao a saida certa e parar na hora e repetir o que ele disse.
+            if "daily" in msg.lower() or "resets at" in msg.lower():
+                quando = re.search(r"[Rr]esets at ([0-9: -]+UTC)", msg)
+                print("\\n" + "=" * 68)
+                print("  COTA DIARIA ESGOTADA. Nao adianta esperar aqui.")
+                if quando:
+                    print(f"  Reabre em {quando.group(1)}.")
+                print("  O checkpoint esta salvo: rode esta celula de novo depois do")
+                print("  reset e ela retoma de onde parou, sem repetir nenhuma janela.")
+                print("=" * 68)
+                raise
+            if k == tentativas - 1:
+                raise
+            espera = float(ESCADA[min(k, len(ESCADA) - 1)])
             m = re.search(r"[Rr]etry-?[Aa]fter[^0-9]*(\\d+)", msg)
             if m:
-                espera = float(m.group(1))
-            print(f"    429; esperando {espera:.0f}s (tentativa {k + 1}/{tentativas})")
+                espera = max(espera, float(m.group(1)))
+            print(f"    429; esperando {espera / 60:.0f} min "
+                  f"(tentativa {k + 1}/{tentativas}); o checkpoint esta salvo",
+                  flush=True)
             time.sleep(espera + 1)
     raise RuntimeError("limite de taxa persistente apos varias tentativas")
 
@@ -464,6 +511,31 @@ if CONFIRMO_RODAR:
         RESULTADOS["tabpfn"] = s
         print(f"\\n  tabpfn         sMAPE {s:.6f}"
               f"   ({n_janelas} janelas, {time.time() - t0:.0f}s)")
+
+        # O checkpoint guarda so `fim,h,y_pred`, que basta para retomar a rodada e nao
+        # basta para o teste pareado: analisa_variantes.py precisa de `y_true` e do
+        # indice de janela para montar a matriz 103x6. As duas colunas que faltam sao
+        # deterministicas a partir de SERIE e de rolling_origin_splits, entao isto e
+        # derivacao do que ja foi medido, nao medicao nova.
+        # Sem este arquivo a afirmacao sobre o TabPFN nao passa pelo criterio
+        # pre-declarado, e foi exatamente esse o item que ficou em aberto da vez passada.
+        linhas_pred = []
+        for w, (treino, teste, fim) in enumerate(rolling_origin_splits(SERIE), 1):
+            for h in range(1, HORIZONTE + 1):
+                linhas_pred.append({
+                    "model": "tabpfn", "window": w, "horizon": h,
+                    "date": f"{DATAS[fim + h - 1]:%Y-%m-%d}",
+                    "y_true": float(teste[h - 1]),
+                    "y_pred": float(yp_all[w - 1][h - 1]),
+                })
+        pred = pd.DataFrame(linhas_pred)
+        if len(pred) != n_janelas * HORIZONTE:
+            raise ValueError(
+                f"{len(pred)} linhas, esperado {n_janelas * HORIZONTE}")
+        pred.to_csv("tabpfn_predictions.csv", index=False)
+        print(f"  tabpfn_predictions.csv  {len(pred)} linhas "
+              f"({n_janelas} janelas x {HORIZONTE} horizontes)")
+        print("  Este arquivo vai para results/revisao/ no repositorio.")
 else:
     print("")
     print("=" * 68)
@@ -580,7 +652,8 @@ if RODAR_OPTUNA:
                 min_child_weight=trial.suggest_int("min_child_weight", 1, 10),
                 reg_lambda=trial.suggest_float("reg_lambda", 1e-2, 50.0, log=True),
                 reg_alpha=trial.suggest_float("reg_alpha", 1e-3, 5.0, log=True),
-                random_state=42, n_jobs=1   # ADAPTADO: igual a src/cv_timeseries/models.py)
+                # ADAPTADO: n_jobs=1, igual a src/cv_timeseries/models.py
+                random_state=42, n_jobs=1)
         return dict(
             iterations=trial.suggest_int("iterations", 100, 1500, step=50),
             depth=trial.suggest_int("depth", 2, 8),
@@ -755,40 +828,23 @@ saida = {
 }
 with open("tabpfn_resultados.json", "w", encoding="utf-8") as f:
     json.dump(saida, f, indent=2, ensure_ascii=False)
-print("\\nEscrito tabpfn_resultados.json -- baixe e me devolva este arquivo.")
+print("\\nEscrito tabpfn_resultados.json.")
+# O JSON traz o agregado; o CSV traz a medicao por janela, que e do que o criterio
+# pre-declarado precisa. Os dois descem juntos, porque foi a falta do segundo que
+# deixou o item em aberto da ultima vez.
+para_baixar = ["tabpfn_resultados.json"]
+if os.path.exists("tabpfn_predictions.csv"):
+    para_baixar.append("tabpfn_predictions.csv")
+else:
+    print("AVISO: tabpfn_predictions.csv nao existe. Sem ele o teste pareado nao roda.")
+print("Baixe: " + ", ".join(para_baixar))
 try:
     from google.colab import files
-    files.download("tabpfn_resultados.json")
+    for _f in para_baixar:
+        files.download(_f)
 except Exception:
     pass
 '''
-
-
-def valida(nb) -> None:
-    """Remonta cada celula COMO O JUPYTER remonta e compila o Python resultante.
-
-    A checagem tem de partir de ''.join(source), nao de '\\n'.join(source): foi por
-    testar a segunda forma que a primeira versao deste gerador passou num notebook em
-    que toda celula colapsava numa linha unica no Colab.
-    """
-    for i, c in enumerate(nb["cells"]):
-        texto = "".join(c["source"])
-        if c["cell_type"] != "code":
-            continue
-        if len(c["source"]) > 1 and "\n" not in texto:
-            raise ValueError(f"celula {i}: linhas sem quebra, colapsaria no Jupyter")
-        # Linhas de shell (!pip) nao sao Python; viram no-op so para o compile. A
-        # indentacao tem de ser preservada, senao um "!pip" dentro de um if vira erro
-        # de bloco -- no IPython ele funciona, virando get_ipython().system(...).
-        limpo = "\n".join(
-            (l[:len(l) - len(l.lstrip())] + "pass") if l.lstrip().startswith("!") else l
-            for l in texto.split("\n"))
-        try:
-            compile(limpo, f"<celula {i}>", "exec")
-        except SyntaxError as e:
-            raise ValueError(f"celula {i}: {e}") from e
-    print(f"  validadas {sum(1 for c in nb['cells'] if c['cell_type'] == 'code')} "
-          "celulas de codigo")
 
 
 def main() -> int:
@@ -863,17 +919,9 @@ reproduzido aqui de proposito -- ele e um limite superior, nao um resultado.
         code(CEL_FINAL),
     ]
 
-    nb = {
-        "cells": celulas,
-        "metadata": {
-            "colab": {"provenance": [], "toc_visible": True},
-            "kernelspec": {"display_name": "Python 3", "name": "python3"},
-            "language_info": {"name": "python"},
-        },
-        "nbformat": 4,
-        "nbformat_minor": 0,
-    }
+    nb = caderno(celulas)
     valida(nb)
+    SAIDA.parent.mkdir(parents=True, exist_ok=True)
     SAIDA.write_text(json.dumps(nb, indent=1, ensure_ascii=False), encoding="utf-8")
     print(f"  notebook  {SAIDA.name}  ({len(celulas)} celulas, "
           f"{SAIDA.stat().st_size // 1024} KB)")

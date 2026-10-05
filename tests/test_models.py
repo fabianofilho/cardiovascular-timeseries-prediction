@@ -25,20 +25,21 @@ from cv_timeseries.models import (
     Forecaster,
     ProphetForecaster,
     SarimaForecaster,
+    TabPFNForecaster,
     TimesFMForecaster,
     XGBoostForecaster,
     _SkforecastRecursiveForecaster,
 )
 
 TODOS = [SarimaForecaster, ProphetForecaster, TimesFMForecaster,
-         XGBoostForecaster, CatBoostForecaster]
+         XGBoostForecaster, CatBoostForecaster, TabPFNForecaster]
 
 # Quem aceita exogena de verdade. Prophet e TimesFM ignoram a exogena nesta
 # implementacao, entao TEM que estar False: e o que faz o run_benchmark exclui-los da
 # comparacao com temperatura em vez de dar a eles um input que nao usam.
 EXOG_ESPERADO = {
     "sarima": True, "xgboost": True, "catboost": True,
-    "prophet": False, "timesfm": False,
+    "prophet": False, "timesfm": False, "tabpfn": False,
 }
 
 
@@ -111,8 +112,22 @@ def test_nomes_sao_unicos():
 
 
 def test_nomes_batem_com_os_aceitos_pelo_cli():
-    """A lista `valid` do run_benchmark tem que casar com os nomes reais das classes."""
-    assert {c.name for c in TODOS} == {"sarima", "prophet", "timesfm", "xgboost", "catboost"}
+    """A lista `valid` do run_benchmark tem que casar com os nomes reais das classes.
+
+    Antes o conjunto esperado era digitado aqui, e por isso o teste continuava verde
+    quando um modelo novo entrava no CLI e nao na lista: ele comparava a lista consigo
+    mesma. Agora le a lista real do script, que e o que o nome do teste promete.
+    """
+    import re
+    from pathlib import Path
+
+    fonte = (Path(__file__).resolve().parents[1] / "scripts" / "run_benchmark.py"
+             ).read_text(encoding="utf-8")
+    m = re.search(r"valid = \{(.*?)\}", fonte, re.S)
+    assert m, "lista `valid` nao encontrada em run_benchmark.py"
+    do_cli = set(re.findall(r'"([a-z_]+)"', m.group(1)))
+    ingenuos = {"naive", "snaive", "snaive_drift"}
+    assert {c.name for c in TODOS} == do_cli - ingenuos
 
 
 # --------------------------------------------------------------------------- #
@@ -129,7 +144,7 @@ def test_o_modulo_importa_sem_nenhuma_dependencia_pesada():
     import importlib
     mod = importlib.import_module("cv_timeseries.models")
     for nome in ("SarimaForecaster", "ProphetForecaster", "TimesFMForecaster",
-                 "XGBoostForecaster", "CatBoostForecaster"):
+                 "XGBoostForecaster", "CatBoostForecaster", "TabPFNForecaster"):
         assert hasattr(mod, nome)
 
 
@@ -152,7 +167,7 @@ def test_dependencia_ausente_falha_ao_instanciar_e_nao_ao_importar(cls):
 # familia de boosting
 # --------------------------------------------------------------------------- #
 def test_boosting_herda_da_base_recursiva():
-    for cls in (XGBoostForecaster, CatBoostForecaster):
+    for cls in (XGBoostForecaster, CatBoostForecaster, TabPFNForecaster):
         assert issubclass(cls, _SkforecastRecursiveForecaster)
         assert issubclass(cls, Forecaster)
 

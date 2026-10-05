@@ -41,16 +41,23 @@ def fig_optuna():
     """Ajuste honesto (dev) nao supera o modelo base; o teto com vazamento (oracle)
     e o melhor caso possivel para uma busca, e mesmo assim nao bate o naive sazonal
     para o CatBoost."""
-    ceil_cb = carrega("ceiling_catboost.json")["catboost"]
-    ceil_xg = carrega("ceiling_xgboost.json")["xgboost"]
-    dev_cb = carrega("optuna_catboost_dev_base.json")
-    dev_xg = carrega("optuna_xgboost_dev_base.json")
-
+    # MESMA fonte da Tabela do Optuna: os tres valores reavaliados no ambiente fixado.
+    #
+    # Antes esta figura lia os JSONs da busca original -- ceiling_*.json e
+    # optuna_*_dev_base.json -- e a tabela lia optuna_ambiente_fixado.json. Duas fontes
+    # para o mesmo numero, e a regeneracao do XGBoost atualizou so uma: a tabela passou a
+    # dizer 6,88 / 7,02 / 6,25 e a figura continuou desenhando 6,83 / 7,06 / 6,22. A
+    # linha do CatBoost coincidia por acidente, porque o CatBoost reproduz entre
+    # ambientes e o XGBoost nao, que e justamente a limitacao que a nota da tabela
+    # declara. Pior: o codigo usava campos diferentes por modelo, baseline_reproduzida
+    # para um e baseline_esperada para o outro.
+    #
+    # A nota da tabela afirma que as tres colunas sao medidas no ambiente fixado "so the
+    # gains compare like with like". A figura agora cumpre a mesma afirmacao.
+    fixado = carrega("optuna_ambiente_fixado.json")["modelos"]
     linhas_modelo = [
-        ("catboost", ceil_cb["baseline_reproduzida"], dev_cb["smape_benchmark"],
-         ceil_cb["ceiling_smape"]),
-        ("xgboost", ceil_xg["baseline_esperada"], dev_xg["smape_benchmark"],
-         ceil_xg["ceiling_smape"]),
+        (m, fixado[m]["base"], fixado[m]["dev"], fixado[m]["oracle"])
+        for m in ("catboost", "xgboost")
     ]
     etapas = [("base", "square*", "sem ajuste"),
               ("dev", "*", "ajuste honesto (dev)"),

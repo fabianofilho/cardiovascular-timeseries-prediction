@@ -139,8 +139,11 @@ Models were evaluated by rolling origin cross-validation with an expanding windo
 windows and 618 out-of-sample forecasts per model. The 60-month minimum provides at least
 four effective seasonal cycles after the double differencing implied by the SARIMA
 specification. Every model saw identical windows and identical test dates, which is what
-makes the paired analysis below valid. Accuracy was summarised by mean absolute error
-(MAE), root mean squared error (RMSE) and symmetric mean absolute percentage error (sMAPE).
+makes the paired analysis below valid. The rolling origin design follows
+\citet{tashman2000}. Accuracy was summarised by mean absolute error (MAE), root mean
+squared error (RMSE) and symmetric mean absolute percentage error (sMAPE), and by the mean
+absolute scaled error (MASE), which states directly whether a model earns its complexity
+against a benchmark that requires no estimation \citep{hyndman2006}.
 
 \subsection{Uncertainty quantification}
 
@@ -331,7 +334,7 @@ the same conclusion Table~\ref{tab:pares} reaches by a different route.
 
 One number does move, and in the direction that matters for the boosting models. Their
 disadvantage against the seasonal naive method widens once the pandemic is excluded, from
-0.32 to 0.79 percentage points for CatBoost and from 0.67 to 1.28 for XGBoost, and
+0.32 to 0.79 percentage points for CatBoost and from 0.61 to 1.12 for XGBoost, and
 the paired intervals stop containing zero. The Diebold-Mariano requirement is still not met,
 at 1 and 2 cells of six, so the conclusion of Section~\ref{sec:naive} stands unchanged rather
 than strengthened: what the data support is the absence of evidence that boosting beats a
@@ -374,25 +377,45 @@ incomplete. TabPFN, a transformer pre-trained on synthetic tabular tasks, was th
 under the identical protocol: the same 103 windows, the same six-month horizon, the same
 twelve lags of the target as the only inputs.
 
-It reaches an sMAPE of 6.04\%, ahead of CatBoost by 0.55 percentage points and of XGBoost by
-0.90, making it the strongest tabular model tested here. It sits ahead of both naive
+It reaches an sMAPE of 5.85\%, ahead of CatBoost by 0.74 percentage points and of XGBoost by
+1.03, making it the strongest tabular model tested here. It sits ahead of both naive
 references on the point estimate, at 6.18\% and 6.27\%, and behind the three leading models
-by more than 1.2 percentage points.
+by more than 1.0 percentage point.
 
-That last comparison is the one that carries. The advantage over the naive references is
-0.14 percentage points, and this paper does not treat a point estimate as a result: the
-paired test that Table~\ref{tab:variantes} applies to every feature engineering variant
-could not be run here, because the per-forecast records for this run were not available. The
-caution is not procedural. The best boosting variant reached a \emph{larger} margin over the
-seasonal naive method, 0.18 percentage points, and still failed that test with an interval
-of $[-0.45, +0.10]$ and no significant Diebold-Mariano cell. The honest summary is that
-TabPFN is the best tabular model in this comparison and that whether it beats a rule
-requiring no model remains untested.
+It is the comparison against the naive references that decides what this row means, and
+here the paired test was run rather than deferred. Against the seasonal naive method the
+advantage is 0.42 percentage points, and the paired interval of the difference in sMAPE
+(TabPFN minus the reference) is $[-0.698, -0.128]$, which excludes zero; against the
+seasonal naive with annual drift it is 0.33 points with $[-0.622, -0.031]$, also excluding
+zero. This is a
+stronger result than any boosting variant obtained: the best of them, at a margin of 0.18
+points over the same benchmark, produced an interval of $[-0.45, +0.10]$ that contains zero.
+The criterion declared in Section~\ref{sec:metodos} nonetheless is not met, because it
+requires agreement between the interval and the horizon-level tests, and the
+Diebold-Mariano test reaches significance in only one of six cells against each seasonal
+benchmark.
 
-The reviewer's request is nonetheless answered, and answered against the reviewer's
-expectation: including the strongest tabular learner does not change the conclusion. The
-distance from TabPFN to Prophet is 1.33 percentage points, wider than the entire spread
-among the three leading models. What the boosting results were showing was not the absence
+The distribution of that single cell is more informative than the aggregate. Significance
+is confined to the one-month horizon ($p=0.0012$ against the seasonal naive method and
+$p=0.0044$ against the drift variant) and the differential decays thereafter, with $p$
+above 0.35 from the third horizon onward in both comparisons. The advantage of the tabular
+foundation model over seasonal persistence is therefore a one-month-ahead advantage, and it
+does not survive the six-month horizon this paper is about. Reported as such, the finding is
+neither a defeat of the naive benchmark nor a null: it is a horizon-dependent gain that the
+pre-declared criterion, by design, declines to call established.
+
+This row carries a caveat of its own, distinct from the environment sensitivity of
+XGBoost described in Section~\ref{sec:repro}. TabPFN was evaluated through a hosted
+inference API, so the model version is not captured by the pinned environment at all. The same protocol returned 6.04\% under an earlier client
+release and 5.85\% under the current one, a shift of 0.19 percentage points, larger than the
+version sensitivity that motivated pinning the environment in the first place. This number
+is a dated measurement rather than a quantity a reader can reproduce from the repository,
+and it should be read accordingly.
+
+Including the strongest tabular learner does not change the conclusion. The
+distance from TabPFN to Prophet is 1.14 percentage points, wider than the entire spread
+among the three leading models, and the Diebold-Mariano test places SARIMA ahead of it in
+four of six horizons. What the boosting results were showing was not the absence
 of a good tabular model but the nature of the task: 168 monthly observations dominated by a
 clean annual cycle do not reward this class of method.
 
@@ -471,7 +494,10 @@ regime TimesFM leads at 4.74\% against 5.46\% for SARIMA.
 \input{figures/fig4_janela}
 \caption{Accuracy under an expanding training window and under a sliding 60-month window,
 on identical test origins. The classical models degrade when history is truncated; the
-foundation model does not, and overtakes them in that regime.}
+foundation model does not, and overtakes them in that regime. The annotation on each row
+is the cost of truncating, sliding minus expanding, so a positive value means the model
+loses accuracy when older history is discarded; Table~\ref{tab:janela} reports the same
+pairs with the opposite subtraction.}
 \label{fig:janela}
 \end{figure}
 
@@ -487,7 +513,7 @@ Table~\ref{tab:pares}.}
 \label{fig:horizonte}
 \end{figure}
 
-\subsection{Temperature helps, below the confirmation threshold}
+\subsection{Temperature supplies the calendar, and clears the threshold once}
 
 \input{tables/tab5_temperatura}
 
@@ -537,20 +563,27 @@ what it was adding to the boosting models was the calendar.
 \input{figures/fig6_temperatura}
 \caption{Reduction in sMAPE from adding monthly minimum temperature as an exogenous
 covariate under the leakage-free climatology policy, with 95\% paired bootstrap intervals.
-Positive values favour the model with temperature. All three intervals exclude zero, which
-is why the effect is reported as suggestive rather than absent, and none clears the
-pre-declared horizon-level threshold, which is why it is not reported as established.}
+Positive values favour the model with temperature. The four models are ordered by how much
+seasonal structure their specification already carries, and the gain grows as that
+structure falls away: it is negative for Prophet, which fits an explicit annual
+seasonality, and largest for the two boosting models, whose only inputs are twelve lags.
+Three intervals exclude zero, but only XGBoost also reaches the pre-declared horizon-level
+threshold, so it is the one row reported as established rather than suggestive, under
+the pinned environment of Section~\ref{sec:repro}.}
 \label{fig:temp}
 \end{figure}
 
-All three gains in Table~\ref{tab:temperatura} and Figure~\ref{fig:temp} have intervals
-excluding zero, but none reaches significance in at least three horizons, so under the
-pre-declared criterion the effect is suggestive and not established. The ceiling scenario
-is more informative than the
-point gains: replacing the climatological future covariate with the true observed future
-temperature, which no operational forecast could access, improves SARIMA by a further
-0.03 pp only. The predictive content of monthly temperature in this series is therefore
-almost entirely its climatology, information a seasonal model already carries.
+Across Table~\ref{tab:temperatura} and Figure~\ref{fig:temp}, then, the covariate divides
+the models rather than lifting them together. All three positive gains have intervals
+excluding zero, but only XGBoost also clears the horizon-level requirement; for SARIMA and
+CatBoost, at 1 of six cells each, the effect remains suggestive and not established.
+
+What the ceiling scenario adds is a limit on how much better any of this could get.
+Replacing the climatological future covariate with the true observed future temperature,
+which no operational forecast could access, improves SARIMA by a further 0.03 pp only. The
+predictive content of monthly temperature in this series is therefore almost entirely its
+climatology, information a seasonal model already carries, which is why the one model the
+covariate demonstrably helps is the one whose features carried no calendar at all.
 
 \subsection{Seasonality}
 
@@ -698,6 +731,20 @@ possible cause-of-death misclassification.
 \textbf{Raw SIM data.} No garbage code redistribution was applied, which affects
 comparability with Global Burden of Disease estimates, and SIM records take months to
 consolidate, which constrains real-time application.
+
+\textbf{Dependence between windows.} The block bootstrap resamples whole rolling origin
+windows, which respects the dependence among the six horizons inside a window. Consecutive
+windows nonetheless share five of their six test dates and almost all of their training
+data, so treating windows as exchangeable is still an approximation, and the intervals
+reported here are, if anything, narrower than they should be. A moving block bootstrap over
+adjacent windows would be the stricter alternative.
+
+\textbf{Multiplicity.} Tables~\ref{tab:pares}, \ref{tab:janela} and
+\ref{tab:temperatura}, together with Section~\ref{sec:naive}, report on the order of one
+hundred hypothesis tests with no correction for multiple comparisons. The pre-declared
+criterion, which requires agreement between an interval and at least three of six
+horizon-level tests, was adopted in place of a formal adjustment; it is a stricter bar than
+any single test, but it is not an error-rate control.
 
 \subsection{Conclusion}
 

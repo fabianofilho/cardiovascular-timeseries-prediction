@@ -1,19 +1,21 @@
 % gerado por scripts/build_paper_assets.py -- nao editar a mao
 \begin{tikzpicture}
 \begin{axis}[
-  width=0.78\textwidth, height=3.8cm,
+  width=0.78\textwidth, height=4.6cm,
   xlabel={Reduction in sMAPE from the temperature covariate (pp)},
-  xmin=-0.06, xmax=0.62,
+  xmin=-0.12, xmax=0.62,
   % com valores pequenos o pgfplots gera tick automatico em notacao cientifica
   % (-5 \cdot 10^-2) e os rotulos colidem. Tick e formato explicitos.
-  xtick={0,0.1,0.2,0.3,0.4,0.5,0.6},
+  xtick={-0.1,0,0.1,0.2,0.3,0.4,0.5,0.6},
   scaled x ticks=false,
   xticklabel style={/pgf/number format/fixed, /pgf/number format/precision=1},
-  ymin=0.4, ymax=3.6, ytick={3,2,1}, yticklabels={SARIMA,CatBoost,XGBoost},
+  ymin=0.4, ymax=4.6, ytick={4,3,2,1}, yticklabels={Prophet,SARIMA,CatBoost,XGBoost},
   axis lines=left, tick align=outside, tick pos=left,
 ]
 \draw[black!45, dashed, line width=0.6pt]
-  (axis cs:0,0.4) -- (axis cs:0,3.6);
+  (axis cs:0,0.4) -- (axis cs:0,4.6);
+\addplot[draw=cprophet, line width=2.0pt, mark=none] coordinates {(-0.0808,4) (0.0129,4)};
+\addplot[only marks, mark=*, mark size=2.2pt, draw=cprophet, fill=cprophet] coordinates {(-0.0346,4)};
 \addplot[draw=csarima, line width=2.0pt, mark=none] coordinates {(0.0340,3) (0.2573,3)};
 \addplot[only marks, mark=*, mark size=2.2pt, draw=csarima, fill=csarima] coordinates {(0.1358,3)};
 \addplot[draw=ccatboost, line width=2.0pt, mark=none] coordinates {(0.0728,2) (0.4519,2)};

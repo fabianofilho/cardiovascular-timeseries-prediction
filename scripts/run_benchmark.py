@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import time
 from pathlib import Path
 
 import numpy as np
@@ -17,6 +18,7 @@ from cv_timeseries.models import (
     SeasonalNaiveForecaster,
     ProphetForecaster,
     SarimaForecaster,
+    TabPFNForecaster,
     TimesFMForecaster,
     XGBoostForecaster,
 )
@@ -54,9 +56,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--models",
         default="sarima,prophet,timesfm",
-        help="Lista separada por vírgula (opções: sarima, prophet, timesfm, xgboost, catboost, naive, snaive, snaive_drift)",
+        help="Lista separada por vírgula (opções: sarima, prophet, timesfm, xgboost, catboost, tabpfn, naive, snaive, snaive_drift)",
     )
     parser.add_argument("--output-prefix", default="results/benchmark", help="Prefixo de saída")
+    parser.add_argument(
+        "--checkpoint-csv",
+        default="",
+        help="CSV de retomada, gravado janela a janela. Só faz sentido para modelo que "
+             "prevê por rede, onde uma queda no meio custa a rodada inteira. Apague o "
+             "arquivo para começar do zero.",
+    )
     parser.add_argument(
         "--exog-csv",
         default="",
@@ -98,7 +107,7 @@ def load_exog(csv_path: str, date_col: str, cols: list[str], freq: str) -> pd.Da
 
 def build_models(model_names: list[str]):
     selected = {m.strip().lower() for m in model_names if m.strip()}
-    valid = {"sarima", "prophet", "timesfm", "xgboost", "catboost",
+    valid = {"sarima", "prophet", "timesfm", "xgboost", "catboost", "tabpfn",
              "naive", "snaive", "snaive_drift"}
     invalid = selected - valid
     if invalid:
@@ -142,6 +151,12 @@ def build_models(model_names: list[str]):
         except Exception as exc:
             indisponiveis.append(f"CatBoost: {exc}")
 
+    if "tabpfn" in selected:
+        try:
+            models.append(TabPFNForecaster())
+        except Exception as exc:
+            indisponiveis.append(f"TabPFN: {exc}")
+
     # Baselines ingenuas: sem dependencia externa, entao nao precisam de try/except.
     # Rodam em qualquer maquina, que e parte do ponto: a referencia tem que estar
     # sempre disponivel para o benchmark nunca ser reportado sem ela.
@@ -172,6 +187,7 @@ def run_backtest(
     exog: pd.DataFrame | None = None,
     exog_policy: str = "climatology",
     max_train_size: int | None = None,
+    checkpoint: Path | None = None,
 ):
     label = model_label or model.name
     y_true_all = []
@@ -180,6 +196,31 @@ def run_backtest(
     # Motivo de cada janela perdida, para o erro no fim listar todas de uma vez em vez de
     # morrer na primeira. Quem esta consertando o ambiente quer ver o conjunto.
     descartadas: list[str] = []
+
+    # Checkpoint por janela. Existe para o modelo que preve por rede: uma rodada de uma
+    # hora que cai no minuto 50 sem isto custa a hora inteira, e ja custou uma vez.
+    # Nao muda nada para quem preve local, porque so e ligado quando pedido.
+    feitas: dict[int, list[dict]] = {}
+    if checkpoint is not None and checkpoint.exists():
+        guardado = pd.read_csv(checkpoint)
+        guardado = guardado[guardado.model == label]
+        for wid, g in guardado.groupby("window"):
+            feitas[int(wid)] = g.sort_values("horizon").to_dict("records")
+        if feitas:
+            print(f"[INFO] {label}: retomando com {len(feitas)} janela(s) do checkpoint")
+
+    # Quantas janelas o rolling origin oferece. O numero nao esta escrito no codigo de
+    # proposito; ele sai do proprio gerador, entao muda junto com serie, horizonte e
+    # treino minimo sem ninguem lembrar. Calculado aqui porque o progresso precisa dele
+    # antes do fim, e reusado na exigencia dura la embaixo.
+    esperadas = sum(
+        1 for _ in rolling_origin_splits(
+            series, horizon=horizon, min_train_size=min_train_size,
+            max_train_size=max_train_size,
+        )
+    )
+    t0 = time.time()
+    calculadas = 0          # janelas de fato previstas, sem contar as do checkpoint
 
     for window_id, (train, test) in enumerate(
         rolling_origin_splits(
@@ -190,6 +231,22 @@ def run_backtest(
         ),
         start=1,
     ):
+        if window_id in feitas:
+            # Reaproveitar previsao guardada so e legitimo se ela for da MESMA janela.
+            # Sem esta checagem, mudar a serie e retomar produziria um resultado que
+            # mistura duas series e nao denuncia nada.
+            guardadas = feitas[window_id]
+            esperado = [f"{d:%Y-%m-%d}" for d in test.index]
+            obtido = [str(r["date"])[:10] for r in guardadas]
+            if len(guardadas) != len(test) or obtido != esperado:
+                raise BenchmarkIncompleto(
+                    f"{label}: checkpoint da janela {window_id} e de outra serie "
+                    f"(datas {obtido} contra {esperado}). Apague o checkpoint.")
+            y_true_all.append(test.to_numpy(dtype=float))
+            y_pred_all.append(np.asarray([r["y_pred"] for r in guardadas], dtype=float))
+            rows.extend(guardadas)
+            continue
+
         try:
             if exog is not None:
                 exog_train, exog_future = build_exog_frames(
@@ -230,30 +287,44 @@ def run_backtest(
 
         y_true_all.append(y_true)
         y_pred_all.append(y_pred)
+        calculadas += 1
 
         train_end = train.index[-1]
-        for h, (dt, yt, yp) in enumerate(zip(test.index, y_true, y_pred), start=1):
-            rows.append(
-                {
-                    "model": label,
-                    "date": dt,
-                    "y_true": yt,
-                    "y_pred": yp,
-                    "window": window_id,
-                    "horizon": h,
-                    "train_end": train_end,
-                }
-            )
+        novas = [
+            {
+                "model": label,
+                "date": dt,
+                "y_true": yt,
+                "y_pred": yp,
+                "window": window_id,
+                "horizon": h,
+                "train_end": train_end,
+            }
+            for h, (dt, yt, yp) in enumerate(zip(test.index, y_true, y_pred), start=1)
+        ]
+        rows.extend(novas)
 
-    # Exigencia dura: toda janela que o rolling origin oferece tem que chegar ao resultado.
-    # O numero nao esta escrito no codigo de proposito; ele sai do proprio gerador de
-    # janelas, entao muda junto com serie, horizonte e treino minimo sem ninguem lembrar.
-    esperadas = sum(
-        1 for _ in rolling_origin_splits(
-            series, horizon=horizon, min_train_size=min_train_size,
-            max_train_size=max_train_size,
-        )
-    )
+        if checkpoint is not None:
+            # Grava a janela assim que ela fica pronta, e nao no fim: o ponto do
+            # checkpoint e sobreviver ao que interrompe a rodada no meio.
+            checkpoint.parent.mkdir(parents=True, exist_ok=True)
+            existia = checkpoint.exists()
+            pd.DataFrame(novas).to_csv(
+                checkpoint, index=False, mode="a" if existia else "w",
+                header=not existia)
+
+            # Progresso por janela, e so aqui. Checkpoint ligado quer dizer rodada
+            # longa por rede, e uma hora de silencio nao distingue "rodando" de
+            # "travado": quem esta olhando desiste ou reinicia sem precisar.
+            feitas_agora = len(y_true_all)
+            decorrido = time.time() - t0
+            resta = (esperadas - feitas_agora) * decorrido / max(1, calculadas)
+            print(f"[INFO] {label}: janela {feitas_agora}/{esperadas}, "
+                  f"{decorrido / 60:.1f} min decorridos, "
+                  f"~{resta / 60:.0f} min restantes", flush=True)
+
+    # Exigencia dura: toda janela que o rolling origin oferece tem que chegar ao
+    # resultado.
     if len(y_true_all) != esperadas:
         detalhe = "\n  ".join(descartadas) if descartadas else "sem motivo registrado"
         raise BenchmarkIncompleto(
@@ -327,6 +398,7 @@ def main() -> None:
             exog=exog,
             exog_policy=args.exog_policy,
             max_train_size=max_train,
+            checkpoint=Path(args.checkpoint_csv) if args.checkpoint_csv else None,
         )
         if metric_row is not None:
             metrics_rows.append(metric_row)

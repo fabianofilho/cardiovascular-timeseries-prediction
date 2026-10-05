@@ -18,9 +18,13 @@
 \usepackage{xcolor}
 \usepackage{caption}
 \usepackage{amsmath}
-% A legenda da fig4_janela usa \blacksquare, que vem daqui. Sem amssymb o
-% documento inteiro para de compilar, ainda que a figura isolada compile: o
-% preambulo que o gerador monta para compilar cada figura sozinha ja o carrega.
+% Tres legendas dependem daqui, nao uma: fig4_janela e revisao_fig_enriched_janela
+% usam \blacksquare, e revisao_fig_temp_diffcal usa \square. Sem amssymb o documento
+% inteiro para de compilar, ainda que a figura isolada compile: o preambulo que o
+% gerador monta para compilar cada figura sozinha ja o carrega.
+% Os tres simbolos saem dos geradores (build_paper_assets.py e
+% revisao/build_revisao_figs2.py), entao sobrevivem a qualquer regeneracao. Quem
+% cobra essa correspondencia e tests/test_latex_saudavel.py.
 \usepackage{amssymb}
 \usepackage[numbers,sort&compress]{natbib}
 
@@ -28,12 +32,22 @@
 \graphicspath{{figures/}}
 
 % Paleta das figuras, definida uma vez aqui em vez de repetida em cada uma.
-% Mesmos HEX de COR em scripts/build_paper_assets.py.
-\definecolor{cprophet}{HTML}{4C72B0}
-\definecolor{csarima}{HTML}{DD8452}
-\definecolor{ctimesfm}{HTML}{55A868}
-\definecolor{cxgboost}{HTML}{C44E52}
-\definecolor{ccatboost}{HTML}{8172B3}
+% Okabe-Ito (Wong, 2011): distinguivel sob deuteranopia, protanopia e tritanopia, e
+% legivel em impressao P&B.
+%
+% Estes HEX tem de ser os mesmos de COR em scripts/build_paper_assets.py, que e a
+% paleta usada ao rasterizar as figuras em PNG. Eles ficaram tres semanas divergentes:
+% o gerador migrou para Okabe-Ito e o preambulo continuou na paleta antiga do seaborn,
+% entao a MESMA figura saia com cores diferentes no PDF e no .docx, e a do PDF era a
+% que confunde vermelho com verde. Quem cobra a igualdade agora e
+% tests/test_latex_saudavel.py, porque o comentario sozinho ja falhou nisso.
+\definecolor{cprophet}{HTML}{0072B2}
+\definecolor{csarima}{HTML}{D55E00}
+\definecolor{ctimesfm}{HTML}{009E73}
+\definecolor{cxgboost}{HTML}{E69F00}
+\definecolor{ccatboost}{HTML}{CC79A7}
+% Papel, nao modelo: reservada para a covariavel de temperatura.
+\definecolor{ctemp}{HTML}{56B4E9}
 
 % Marcador de dado ainda indisponivel. Sai vermelho e em negrito de proposito:
 % e para ser impossivel submeter sem ver.

@@ -130,7 +130,7 @@ def limpa_inline(s: str, cites: dict, refs: dict) -> list[tuple[str, dict]]:
     s = s.replace("\\\\", " ")          # quebra de linha do LaTeX
 
     def texto_puro(x: str) -> str:
-        x = re.sub(r"\\citep?\{([^}]+)\}", lambda m: "[" + ", ".join(
+        x = re.sub(r"\\cite[tp]?\{([^}]+)\}", lambda m: "[" + ", ".join(
             str(cites.get(k.strip(), "?")) for k in m.group(1).split(",")) + "]", x)
         # \ref devolve so o numero: o texto ja escreve "Table" ou "Figure" antes dele
         x = re.sub(r"\\ref\{([^}]+)\}", lambda m: refs.get(m.group(1), "?"), x)
@@ -146,9 +146,12 @@ def limpa_inline(s: str, cites: dict, refs: dict) -> list[tuple[str, dict]]:
         x = x.replace("{", "").replace("}", "")
         return re.sub(r"[ \t]+", " ", x)
 
-    # 3. Tokeniza \missing (vermelho) e \textbf (negrito) em runs proprios
+    # 3. Tokeniza \missing e \aberto (vermelho) e \textbf (negrito) em runs proprios.
+    #    \aberto entrou junto porque sem ele o conteudo saia como texto corrido: uma
+    #    instrucao em portugues no meio do manuscrito em ingles, sem marca nenhuma de
+    #    que era pendencia, no documento que vai para revisao dos coautores.
     partes: list[tuple[str, dict]] = []
-    padrao = re.compile(r"\\(missing|textbf)\{")
+    padrao = re.compile(r"\\(missing|aberto|textbf)\{")
     resto = s
     while True:
         m = padrao.search(resto)
@@ -162,8 +165,10 @@ def limpa_inline(s: str, cites: dict, refs: dict) -> list[tuple[str, dict]]:
             prof += (resto[i] == "{") - (resto[i] == "}")
             i += 1
         dentro = texto_puro(resto[m.end():i - 1])
-        if m.group(1) == "missing":
-            partes.append(("[PENDING: " + dentro + "]", {"bold": True, "red": True}))
+        if m.group(1) in ("missing", "aberto"):
+            rotulo = "PENDING" if m.group(1) == "missing" else "DECIDE"
+            partes.append((f"[{rotulo}: " + dentro + "]",
+                           {"bold": True, "red": True}))
         else:
             partes.append((dentro, {"bold": True}))
         resto = resto[i:]
@@ -278,9 +283,14 @@ def add_figura(doc, nome, rotulo, legenda) -> bool:
 # indices de citacao e de referencia cruzada
 # --------------------------------------------------------------------------- #
 def indexa(tex: str) -> tuple[dict, dict, list[str]]:
-    """Numera citacoes por ordem de aparicao (unsrtnat) e resolve \\ref."""
+    """Numera citacoes por ordem de aparicao (unsrtnat) e resolve \\ref.
+
+    O padrao cobre \\citet tambem, e nao so \\cite e \\citep. Enquanto nao cobria, uma
+    referencia citada em texto ficava fora da lista sem aviso nenhum: o documento saia
+    inteiro, bonito, com uma referencia a menos, e so a contagem no fim denunciava.
+    """
     cites: dict[str, int] = {}
-    for m in re.finditer(r"\\citep?\{([^}]+)\}", tex):
+    for m in re.finditer(r"\\cite[tp]?\{([^}]+)\}", tex):
         for k in m.group(1).split(","):
             k = k.strip()
             if k not in cites:
@@ -500,7 +510,8 @@ def main() -> int:
                     n_ausente += 1
             continue
 
-        if b.startswith("\\") and not re.match(r"\\(noindent|textbf|emph|missing|input)", b):
+        if b.startswith("\\") and not re.match(
+                r"\\(noindent|textbf|emph|missing|aberto|input)", b):
             continue
 
         runs = limpa_inline(b, cites, refs)
