@@ -233,14 +233,34 @@ def parse_tabela(tex: str, cites: dict, refs: dict) -> dict:
             out.append((txt.strip(), neg))
         return out
 
-    header = [c for c, _ in celulas(cabec.group(1).replace("\\\\", "").strip())] if cabec else []
+    # Cabecalho pode ter mais de uma linha (\multicolumn agrupando colunas, com \cmidrule
+    # embaixo). Antes as linhas eram coladas numa so e o Word mostrava LaTeX cru:
+    # "2cLeading three (lr)3-5". Cada linha vira uma lista de (texto, quantas colunas).
+    header_rows = []
+    if cabec:
+        bruto = re.sub(r"\\cmidrule(\([^)]*\))?\{[^}]*\}", "", cabec.group(1))
+        for linha_h in bruto.split("\\\\"):
+            if not linha_h.strip():
+                continue
+            row = []
+            for c in linha_h.split("&"):
+                mc = re.match(r"\s*\\multicolumn\{(\d+)\}\{[^}]*\}\{(.*)\}\s*$", c, re.S)
+                if mc:
+                    txt = " ".join(x[0] for x in limpa_inline(mc.group(2), cites, refs))
+                    row.append((txt.strip(), int(mc.group(1))))
+                else:
+                    txt = " ".join(x[0] for x in limpa_inline(c, cites, refs))
+                    row.append((txt.strip(), 1))
+            header_rows.append(row)
+    header = [t for t, _ in header_rows[-1]] if header_rows else []
     linhas = []
     for l in corpo.group(1).split("\\\\"):
         if l.strip():
             linhas.append(celulas(l.strip()))
     nota = re.search(r"\\footnotesize\s*(.*?)\s*\\end\{minipage\}", tex, re.S)
     rodape = " ".join(x[0] for x in limpa_inline(nota.group(1), cites, refs)) if nota else ""
-    return {"legenda": legenda, "header": header, "linhas": linhas, "nota": rodape}
+    return {"legenda": legenda, "header": header, "header_rows": header_rows,
+            "linhas": linhas, "nota": rodape}
 
 
 def add_tabela(doc, dados, rotulo):
@@ -253,16 +273,27 @@ def add_tabela(doc, dados, rotulo):
     r2 = p.add_run(" " + dados["legenda"])
     r2.font.size = Pt(10)
 
-    t = doc.add_table(rows=1, cols=len(dados["header"]))
+    rows_h = dados.get("header_rows") or [[(h, 1) for h in dados["header"]]]
+    ncol = len(dados["header"])
+    t = doc.add_table(rows=len(rows_h), cols=ncol)
     t.style = "Table Grid"
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
-    for i, h in enumerate(dados["header"]):
-        cel = t.rows[0].cells[i]
-        cel.text = ""
-        run = cel.paragraphs[0].add_run(h)
-        run.bold = True
-        run.font.size = Pt(9)
-        cel.paragraphs[0].paragraph_format.line_spacing = 1.0
+    for ri, row in enumerate(rows_h):
+        ci = 0
+        for h, span in row:
+            if ci >= ncol:
+                break
+            cel = t.rows[ri].cells[ci]
+            if span > 1:
+                cel = cel.merge(t.rows[ri].cells[min(ci + span, ncol) - 1])
+            cel.text = ""
+            run = cel.paragraphs[0].add_run(h)
+            run.bold = True
+            run.font.size = Pt(9)
+            cel.paragraphs[0].paragraph_format.line_spacing = 1.0
+            if span > 1:
+                cel.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            ci += span
     for linha in dados["linhas"]:
         cells = t.add_row().cells
         for ci, (txt, neg) in enumerate(linha):
