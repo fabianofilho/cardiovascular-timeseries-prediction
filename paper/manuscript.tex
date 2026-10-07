@@ -36,7 +36,7 @@ forecasting, usually on point estimates alone. We benchmarked SARIMA, Prophet, T
 XGBoost and CatBoost on 168 months of cardiovascular mortality in S\~ao Paulo, Brazil,
 over 103 rolling origin windows, with a window-level block bootstrap, Diebold-Mariano
 tests and a decision criterion fixed in advance. Prophet, SARIMA and TimesFM were
-statistically indistinguishable: their spread in percentage error was about eight times
+statistically indistinguishable; their spread in percentage error was roughly eight times
 smaller than their interval width. Boosting was detectably worse and did not beat a
 seasonal naive benchmark. Holding test dates fixed, nine additional years of training
 reduced error about ten times more than any change of model. With only five years of
@@ -57,8 +57,8 @@ recent decades \citep{oliveira2020, brant2017}. S\~ao Paulo, the most populous s
 accounted for 1{,}217{,}427 cardiovascular deaths over the fourteen years analysed here.
 Age-standardised CVD mortality rates
 have declined since the 1990s, attributed to improved risk factor control, expanded primary
-care and advances in acute treatment \citep{ribeiro2016}, yet the absolute number of deaths
-keeps rising with population growth and ageing \citep{brant2025}. In the series analysed
+care and advances in acute treatment \citep{ribeiro2016}. However, the absolute number of
+deaths continues to rise due to population growth and ageing \citep{brant2025}. In the series analysed
 here, annual cardiovascular deaths in S\~ao Paulo rose from 79{,}933 in 2010 to 95{,}538 in
 2023. Anticipating these trends informs resource allocation within Brazil's universal
 health system.
@@ -78,11 +78,13 @@ forecasts, however, are not independent: they come from overlapping rolling wind
 within each window the horizons share a training origin. Treating them as independent
 understates uncertainty, and a ranking can then be entirely a product of sampling noise.
 Whether a gap of a few tenths of a percentage point constitutes evidence is an empirical
-question that requires an interval rather than a point.
+question that requires an interval rather than a point estimate.
 
-We address both questions. We compare five forecasting approaches on cardiovascular
-mortality in S\~ao Paulo from real SIM/DataSUS records, and attach a confidence interval to
-every comparison. We then decompose where accuracy actually comes from, by varying training
+To address both questions, we compare five forecasting approaches on cardiovascular
+mortality in S\~ao Paulo using real records from the Brazilian Mortality Information System
+(SIM), provided by the Department of Informatics of the Brazilian Unified Health System
+(DataSUS). Every comparison includes a confidence interval. Furthermore, we decompose where
+accuracy comes from, by varying training
 history while holding test dates fixed, and by testing monthly temperature as an exogenous
 covariate under an explicitly leakage-free design. This work extends an earlier round of the
 same benchmark restricted to 60 months, in which TimesFM ranked first; that ranking did not
@@ -92,8 +94,7 @@ survive the addition of data or of intervals, and we report why.
 
 \subsection{Data source and preprocessing}
 
-We used individual death records from the Brazilian Mortality Information System (Sistema
-de Informa\c{c}\~oes sobre Mortalidade, SIM), maintained by the Ministry of Health and
+We used individual death records from SIM, maintained by the Brazilian Ministry of Health and
 distributed through DataSUS \citep{datasus}. Records were extracted for the state of
 S\~ao Paulo (UF = SP) from January 2010 to December 2023 and filtered by underlying cause
 using ICD-10 codes I00--I99, diseases of the circulatory system \citep{icd10}.
@@ -109,7 +110,7 @@ are present, that the aggregated series is non-degenerate, and that the extracti
 is not flagged as synthetic; all nine checks passed. The aggregated series is versioned in
 the public repository; individual records are not redistributed.
 
-S\~ao Paulo has one of the highest death registration completeness rates in Brazil: a
+S\~ao Paulo presents one of the highest death registration completeness rates in Brazil; a
 record linkage study estimated SIM completeness in the state at 99.9\% in 2016
 \citep{costa2020}. We used raw SIM data without garbage code
 redistribution, which should be considered when comparing against Global Burden of
@@ -762,9 +763,11 @@ measuring the uncertainty rather than reporting the ranking.
 
 \ifdefined\BLIND\else
 \textbf{Author contributions (CRediT).} Fabiano Novaes Barcellos Filho: Conceptualization,
-Methodology, Software, Formal analysis, Writing -- original draft. Isabela Venancio da
-Silva: Validation, Writing -- review \& editing. Alexandre Chiavegatto Filho: Supervision,
-Writing -- review \& editing.
+Methodology, Software, Formal analysis, Data curation, Writing -- original draft,
+Visualization, Project administration. Isabela Venancio da Silva: Methodology, Software,
+Validation, Formal analysis, Investigation, Writing -- review \& editing, Visualization.
+Alexandre Chiavegatto Filho: Conceptualization, Resources, Supervision, Writing -- review
+\& editing.
 
 \textbf{Funding.} This study was financed in part by the Coordena\c{c}\~ao de
 Aperfei\c{c}oamento de Pessoal de N\'ivel Superior, Brazil (CAPES), Finance Code 001.
