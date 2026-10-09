@@ -137,6 +137,12 @@ def limpa_inline(s: str, cites: dict, refs: dict) -> list[tuple[str, dict]]:
     significado: negrito e rotulo de estrutura (Background., Methods.), vermelho e
     pendencia. Achatar tudo em texto plano perderia os dois.
     """
+    # 0. Quebra de linha simples dentro de um paragrafo e espaco, como no LaTeX. Sem isto o
+    #    python-docx transformava cada quebra do fonte (o .tex e quebrado a ~90 colunas) em
+    #    <w:br/>: 614 quebras forcadas no docx de 07/10, paragrafos picados no Word e, ao
+    #    consertar a mao, letras perdidas no arquivo compartilhado.
+    s = re.sub(r"[ \t]*\n[ \t]*", " ", s)
+
     # 1. Comandos COM argumento que nao produzem texto. Tem que sair antes da
     #    remocao generica, senao o argumento fica orfao ("\vspace{-2em}" -> "-2em").
     for cmd in ("vspace", "hspace", "label", "footnotemark", "bibliographystyle",
@@ -349,7 +355,13 @@ def indexa(tex: str) -> tuple[dict, dict, list[str]]:
     inteiro, bonito, com uma referencia a menos, e so a contagem no fim denunciava.
     """
     cites: dict[str, int] = {}
-    for m in re.finditer(r"\\cite[tp]?\{([^}]+)\}", tex):
+    # Citacao que so aparece dentro de tabela (ex.: gneiting2007 na nota da Tabela 6) saia
+    # como "[?]" e ficava fora da lista. A tabela entra no ponto do \input para a ordem de
+    # numeracao acompanhar o texto.
+    tex_cit = re.sub(r"\\input\{tables/(\w+)\}",
+                     lambda m: (PAPER / "tables" / f"{m.group(1)}.tex").read_text(encoding="utf-8"),
+                     tex)
+    for m in re.finditer(r"\\cite[tp]?\{([^}]+)\}", tex_cit):
         for k in m.group(1).split(","):
             k = k.strip()
             if k not in cites:
