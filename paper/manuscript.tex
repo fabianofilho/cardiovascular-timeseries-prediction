@@ -586,7 +586,8 @@ Replacing the climatological future covariate with the true observed future temp
 which no operational forecast could access, improves SARIMA by a further 0.03 pp only. The
 predictive content of monthly temperature in this series is therefore almost entirely its
 climatology, information a seasonal model already carries, which is why the one model the
-covariate demonstrably helps is the one whose features carried no calendar at all.
+covariate demonstrably helps is one of the two boosting models, whose features carried no
+calendar at all.
 
 \subsection{Seasonality}
 
@@ -666,8 +667,8 @@ selection and tuning.
 \subsection{Temperature and the limits of monthly resolution}
 
 Temperature improved three of the four models that received it, with intervals excluding
-zero, but met the pre-declared horizon-level criterion only for XGBoost, the one model whose
-features carried no calendar, and only marginally (Section~\ref{sec:repro}). Rather than
+zero, but met the pre-declared horizon-level criterion only for XGBoost, one of the two
+boosting models whose features carried no calendar, and only marginally (Section~\ref{sec:repro}). Rather than
 report the favourable half of that result, we note that the ceiling scenario explains why the
 effect is small: for SARIMA and CatBoost a perfect future temperature adds only 0.03 pp over
 its climatology, and for XGBoost it adds nothing. At monthly aggregation, temperature
