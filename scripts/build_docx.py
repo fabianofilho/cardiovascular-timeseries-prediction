@@ -609,12 +609,15 @@ def main() -> int:
                 r"\\(noindent|textbf|emph|missing|aberto|input)", b):
             continue
 
-        runs = limpa_inline(b, cites, refs)
-        if not runs:
-            continue
-        pp = doc.add_paragraph()
-        pp.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        escreve_runs(pp, runs)
+        # Quebra explicita do LaTeX (\\) vira paragrafo proprio. E o caso do "Running title"
+        # e do "Keywords" na abertura, que saiam colados num paragrafo so.
+        for parte in re.split(r"\\\\(?:\[[^\]]*\])?", b):
+            runs = limpa_inline(parte, cites, refs)
+            if not runs or not "".join(t for t, _ in runs).strip():
+                continue
+            pp = doc.add_paragraph()
+            pp.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            escreve_runs(pp, runs)
 
     # ---- referencias ----
     ph = doc.add_paragraph()
