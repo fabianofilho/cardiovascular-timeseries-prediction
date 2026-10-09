@@ -577,6 +577,31 @@ criterion, only SARIMA meets both conditions.{nota_enr}
     # merge das duas implementacoes, e a tabela saia com o Prophet duplicado. Ficou a
     # versao de cima porque ela passa pelo mesmo bootstrap das demais linhas, entao o
     # intervalo e o DM sao comparaveis; a outra lia numeros ja agregados.
+    # Nota da Tabela 5 gerada a partir dos numeros. O texto fixo anterior dizia que nenhum
+    # ganho atingia o criterio, o que deixou de ser verdade com a regeneracao de 23/09
+    # (XGBoost DM 3/6), e a nota continuou dizendo o contrario do texto.
+    t5 = V["tabela5"]
+    excl = [m for m in ("prophet", "sarima", "catboost", "xgboost") if m in t5 and t5[m]["ic_low"] > 0]
+    estab = [m for m in excl if t5[m]["dm_sig"] >= 3]
+    sugest = [m for m in excl if m not in estab]
+    def _lista(ms):
+        ns = [ROTULO[m] for m in ms]
+        return ns[0] if len(ns) == 1 else ", ".join(ns[:-1]) + " and " + ns[-1]
+    if estab:
+        nota_criterio = (
+            f"The gains whose intervals exclude zero are {_lista(excl)}. "
+            f"{_lista(estab)} also {'reaches' if len(estab) == 1 else 'reach'} the pre-declared threshold of DM "
+            "significance in at least three horizons and is reported as established under the "
+            "pinned environment of Section~\\ref{sec:repro}"
+            + (f"; for {_lista(sugest)} the effect is suggestive and not established." if sugest else ".")
+        )
+    else:
+        nota_criterio = (
+            f"The gains whose intervals exclude zero are {_lista(excl)}, but none reaches the "
+            "pre-declared threshold of DM significance in at least three horizons, so the effect "
+            "is reported as suggestive and not established."
+        )
+
     escreve_tabela("tab5_temperatura", f"""\\begin{{table}}[htbp]
 \\centering
 \\small
@@ -602,9 +627,7 @@ for each window from the exogenous series truncated at that window's training en
 value from after the training end is visible. The ceiling column replaces it with the
 true observed future temperature, which leaks by construction and is reported only to
 bound what a perfect weather forecast could add. Gain is positive when temperature helps.
-The three gains that exclude zero are SARIMA, CatBoost and XGBoost, but none reaches the
-pre-declared threshold of DM significance in at least three horizons, so the effect is
-reported as suggestive and not established.{nota_prophet}
+{nota_criterio}{nota_prophet}
 TimesFM does not accept exogenous regressors in this implementation and was excluded from
 this comparison rather than being given an input it would ignore.
 \\end{{minipage}}

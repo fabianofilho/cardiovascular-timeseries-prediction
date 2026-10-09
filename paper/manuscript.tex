@@ -663,10 +663,12 @@ selection and tuning.
 
 \subsection{Temperature and the limits of monthly resolution}
 
-Temperature improved every model that received it, with intervals excluding zero, yet failed
-the pre-declared horizon-level criterion. Rather than report the favourable half of that
-result, we note that the ceiling scenario explains why the effect is small: a perfect future
-temperature adds only 0.03 pp over its climatology. At monthly aggregation, temperature
+Temperature improved three of the four models that received it, with intervals excluding
+zero, but met the pre-declared horizon-level criterion only for XGBoost, the one model whose
+features carried no calendar, and only marginally (Section~\ref{sec:repro}). Rather than
+report the favourable half of that result, we note that the ceiling scenario explains why the
+effect is small: for SARIMA and CatBoost a perfect future temperature adds only 0.03 pp over
+its climatology, and for XGBoost it adds nothing. At monthly aggregation, temperature
 carries little information beyond the seasonal shape a model already captures. Cold waves,
 the plausible mechanism for acute cardiovascular events, occur over days and are averaged
 out. Weekly or daily aggregation, not a better source of monthly temperature, is the
