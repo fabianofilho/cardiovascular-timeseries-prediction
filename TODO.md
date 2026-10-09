@@ -7,35 +7,25 @@ o dado, nao a arquitetura.** As prioridades refletem isso.
 
 ---
 
-## Submissao ao IJF (estado em 07/10/2026)
+## Submissao ao IJF (estado em 09/10/2026)
 
 Feito:
 - [x] Dados do autor, resumo de 150 palavras, versao duplo-cega + title page (PRs #4 a #19)
-- [x] Branch conferencia-regeneracao da Isa incorporada: TabPFN com teste pareado (PR #20)
-- [x] Pacote `submissao_IJF_2026-10-05` no Drive; deck + docx no grupo Cardiotimes Paper (05/10)
-- [x] Gerador de docx entende a versao cega, as secoes e o Delta (PR #21) e as tabelas com
-      colunas agrupadas (PR #22)
-
-Retorno do grupo (lido em 07/10):
-- Isa (06/10): "o credit que vale e o do branch". Revisou e deixou sugestoes rastreadas no
-  docx compartilhado; numa copia propria (pasta `_old`) tirou as limitacoes de dependencia
-  entre janelas e de comparacoes multiplas e trocou "strongly dependent" por "dependent"
-- Victor (06/10): ainda revisando; acha que o Alexandre nao gosta de bootstrap
-- Ninguem aprovou a submissao ainda
-
-Problema no docx compartilhado: durante a edicao em 06/10 letras viraram espaco. O docx
-gerado estava integro (conferido contra o commit 1c6f04b). O Victor repos 96 letras, mas
-sobraram ~20 palavras grudadas e 5 reposicoes que mudam o sentido ("her relevant",
-"seatles", "and not Diebold-Mariano"...). NAO aplicar o docx de volta no .tex por
-copia: portar so as sugestoes de conteudo, uma a uma.
+- [x] Branch conferencia-regeneracao da Isa (TabPFN com teste pareado) (PR #20)
+- [x] CRediT da Isa e sugestoes de estilo de 06/10 (PR #24)
+- [x] docx: versao cega, secoes, Delta, tabelas agrupadas, sem quebras forcadas e com as
+      citacoes das tabelas (PRs #21, #22, #25). A Isa apontou a quebra em 07/10
+- [x] Nota da Tabela 5 e Discussao 4.4 alinhadas ao resultado da temperatura (PR #26)
+- [x] Victor Hugo Ovani Marchetti como autor, CRediT proposto (PR #27)
+- [x] Revisao da Isa de 07/10 portada, 12 paragrafos (PR #28); nao entraram: resumo de 201
+      palavras, "pre-registered", grafia americana, travessoes e trocas que mudavam o sentido
+- [x] Pacote `submissao_IJF_2026-10-09` no Drive; rascunho do email ao Alexandre atualizado
 
 Proximos passos:
-- [ ] Decidir com o Fabiano: CRediT da branch da Isa; manter ou tirar as duas limitacoes
-- [ ] Portar as sugestoes de estilo da Isa (introducao, dados) para o manuscript.tex
-- [ ] Gerar docx novo e devolver no grupo, avisando das palavras quebradas no compartilhado
-- [ ] Mandar o email ao Alexandre (rascunho no Superhuman, destinatarios a corrigir) e
-      antecipar a objecao ao bootstrap
-- [ ] Aprovacao dos tres coautores; acordo CAPES-Elsevier pelo CAFe; submeter
+- [ ] Mandar no grupo o resumo da rodada e o docx de 09/10 (aguarda ok do Fabiano)
+- [ ] Victor confirmar nome e CRediT (proposto: Investigation, Validation, Writing - review)
+- [ ] Enviar o email ao Alexandre com os 4 anexos de 09/10 (rascunho no Superhuman)
+- [ ] Aprovacao dos quatro autores; acordo CAPES-Elsevier pelo CAFe; submeter
 - Conformal fica para a resposta aos revisores (decisao de 29/09, LAB-126)
 
 Regra que ficou: numeros do XGBoost so reproduzem na maquina Windows (`n_jobs=1` nao basta
