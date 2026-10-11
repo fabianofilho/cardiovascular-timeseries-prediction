@@ -22,7 +22,12 @@ Nao converter de LaTeX com pandoc: ele perde booktabs, estraga figura vetorial e
 um artefato derivado que diverge do original. Aqui os dois sao irmaos do mesmo dado.
 
 Uso:
-    python scripts/build_docx.py
+    python scripts/build_docx.py                 # com carimbo de revisao
+    python scripts/build_docx.py --sem-carimbo   # para mandar a quem nao revisa o pipeline
+
+O carimbo (versao, coorte, semente) serve aos coautores que conferem numero; para o
+orientador ou leitor externo ele e ruido. O aviso de coorte misturada sai sempre: ele
+nao e cabecalho, e trava.
 """
 
 from __future__ import annotations
@@ -501,7 +506,12 @@ def coorte_misturada(v: dict) -> list:
     return fora
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--sem-carimbo", action="store_true",
+                    help="omite o carimbo de proveniencia do topo")
+    args = ap.parse_args(argv)
     BUILD.mkdir(parents=True, exist_ok=True)
     v = json.loads((PAPER / "verified_numbers.json").read_text(encoding="utf-8"))
     tex = (PAPER / "manuscript.tex").read_text(encoding="utf-8")
@@ -513,16 +523,17 @@ def main() -> int:
     n_sec = n_sub = 0
 
     # ---- carimbo de proveniencia ----
-    p = doc.add_paragraph()
-    p.paragraph_format.line_spacing = 1.0
-    r = p.add_run("VERSAO PARA REVISAO, NAO PARA SUBMISSAO")
-    r.bold = True
-    r.font.size = Pt(10)
-    p2 = doc.add_paragraph()
-    p2.paragraph_format.line_spacing = 1.0
-    r2 = p2.add_run(carimbo(v))
-    r2.font.size = Pt(9)
-    r2.italic = True
+    if not args.sem_carimbo:
+        p = doc.add_paragraph()
+        p.paragraph_format.line_spacing = 1.0
+        r = p.add_run("VERSAO PARA REVISAO, NAO PARA SUBMISSAO")
+        r.bold = True
+        r.font.size = Pt(10)
+        p2 = doc.add_paragraph()
+        p2.paragraph_format.line_spacing = 1.0
+        r2 = p2.add_run(carimbo(v))
+        r2.font.size = Pt(9)
+        r2.italic = True
 
     fora = coorte_misturada(v)
     if fora:
@@ -638,7 +649,8 @@ def main() -> int:
             r2.font.color.rgb = VERMELHO
             r2.bold = True
 
-    saida = BUILD / "manuscript_revisao.docx"
+    saida = BUILD / ("manuscript_limpo.docx" if args.sem_carimbo
+                     else "manuscript_revisao.docx")
     doc.save(saida)
     kb = saida.stat().st_size / 1024
     print(f"  {saida.relative_to(ROOT)} ({kb:.0f} KB)")
