@@ -24,7 +24,7 @@ Feito:
 Proximos passos:
 - [ ] Mandar no grupo o resumo da rodada e o docx de 09/10 (aguarda ok do Fabiano)
 - [ ] Victor confirmar nome e CRediT (proposto: Investigation, Validation, Writing - review)
-- [ ] Enviar o email ao Alexandre com os 4 anexos de 09/10 (rascunho no Superhuman)
+- [x] Email ao Alexandre enviado em 14/10 (versão de 13/10, combo com DFP e OPT); aguardando aprovação dele e o CRediT
 - [ ] Aprovacao dos quatro autores; acordo CAPES-Elsevier pelo CAFe; submeter
 - Conformal fica para a resposta aos revisores (decisao de 29/09, LAB-126)
 
