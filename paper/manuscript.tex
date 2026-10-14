@@ -725,11 +725,12 @@ data, so treating windows as exchangeable is still an approximation, and the int
 reported here are, if anything, narrower than they should be. A moving block bootstrap
 over adjacent windows would be the stricter alternative.
 
-\textbf{Multiple comparisons.} The paper reports well over one hundred hypothesis tests
-with no correction for multiplicity. The pre-declared criterion, which requires agreement
-between an interval and at least three of six horizon-level tests, was adopted in place of
-a formal adjustment; it is a stricter bar than any single test, but it is not an
-error-rate control.
+\textbf{Multiplicity.} The paper reports over one hundred hypothesis tests across
+Tables~\ref{tab:pares}, \ref{tab:janela} and \ref{tab:temperatura} and
+Section~\ref{sec:naive}, with no correction for multiple comparisons. The pre-declared
+criterion, which requires agreement between an interval and at least three of six
+horizon-level tests, was adopted in place of a formal adjustment; it is a stricter bar than
+any single test, but it is not an error-rate control.
 
 \textbf{Pandemic period.} The series includes COVID-19, which introduced level shifts and
 possible cause-of-death misclassification.
@@ -737,20 +738,6 @@ possible cause-of-death misclassification.
 \textbf{Raw SIM data.} No garbage code redistribution was applied, which affects
 comparability with Global Burden of Disease estimates, and SIM records take months to
 consolidate, which constrains real-time application.
-
-\textbf{Dependence between windows.} The block bootstrap resamples whole rolling origin
-windows, which respects the dependence among the six horizons inside a window. Consecutive
-windows nonetheless share five of their six test dates and almost all of their training
-data, so treating windows as exchangeable is still an approximation, and the intervals
-reported here are, if anything, narrower than they should be. A moving block bootstrap over
-adjacent windows would be the stricter alternative.
-
-\textbf{Multiplicity.} Tables~\ref{tab:pares}, \ref{tab:janela} and
-\ref{tab:temperatura}, together with Section~\ref{sec:naive}, report on the order of one
-hundred hypothesis tests with no correction for multiple comparisons. The pre-declared
-criterion, which requires agreement between an interval and at least three of six
-horizon-level tests, was adopted in place of a formal adjustment; it is a stricter bar than
-any single test, but it is not an error-rate control.
 
 \subsection{Conclusion}
 

@@ -236,12 +236,17 @@ def parse_tabela(tex: str, cites: dict, refs: dict) -> dict:
     corpo = re.search(r"\\midrule(.*?)\\bottomrule", tex, re.S)
     cabec = re.search(r"\\toprule(.*?)\\midrule", tex, re.S)
 
-    def celulas(linha: str) -> list[tuple[str, bool]]:
+    def celulas(linha: str) -> list[tuple[str, bool, int]]:
+        # \multicolumn no corpo tambem: sem isso o Word mostrava "3c6.27" (Isa, 13/10).
         out = []
         for c in linha.split("&"):
             neg = "\\textbf{" in c
+            span = 1
+            mc = re.match(r"\s*\\multicolumn\{(\d+)\}\{[^}]*\}\{(.*)\}\s*$", c, re.S)
+            if mc:
+                span, c = int(mc.group(1)), mc.group(2).replace("\\quad", "   ")
             txt = " ".join(x[0] for x in limpa_inline(c, cites, refs)) or ""
-            out.append((txt.strip(), neg))
+            out.append((txt.strip(), neg, span))
         return out
 
     # Cabecalho pode ter mais de uma linha (\multicolumn agrupando colunas, com \cmidrule
@@ -307,14 +312,21 @@ def add_tabela(doc, dados, rotulo):
             ci += span
     for linha in dados["linhas"]:
         cells = t.add_row().cells
-        for ci, (txt, neg) in enumerate(linha):
+        ci = 0
+        for txt, neg, span in linha:
             if ci >= len(cells):
-                continue
-            cells[ci].text = ""
-            run = cells[ci].paragraphs[0].add_run(txt)
+                break
+            cel = cells[ci]
+            if span > 1:
+                cel = cel.merge(cells[min(ci + span, len(cells)) - 1])
+            cel.text = ""
+            run = cel.paragraphs[0].add_run(txt)
             run.font.size = Pt(9)
             run.bold = neg
-            cells[ci].paragraphs[0].paragraph_format.line_spacing = 1.0
+            cel.paragraphs[0].paragraph_format.line_spacing = 1.0
+            if span > 1:
+                cel.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            ci += span
     if dados["nota"]:
         pn = doc.add_paragraph()
         pn.paragraph_format.line_spacing = 1.0
