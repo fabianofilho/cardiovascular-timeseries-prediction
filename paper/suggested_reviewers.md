@@ -18,9 +18,16 @@ com os autores.
 
 ## Riscos que conferi só em parte
 
-- **Bastos e Queiroz com os autores:** não chequei coautoria com o Alexandre. Os dois
-  circulam em saúde pública brasileira. Confira no Lattes antes de indicar. Se houver
-  coautoria recente, troque pelo Bracher ou tire o nome.
+- **Bastos e Queiroz com os autores: sem coautoria (conferido em 19/10/2026 no OpenAlex).**
+  Cruzei os trabalhos de cada um com os dos quatro autores e deu zero nos oito pares.
+  O controle positivo funcionou: Fabiano com Alexandre dá 2 trabalhos. Perfis usados:
+  Alexandre A5032516872 (mais dois perfis menores), Fabiano A5112573741, Isa A5040443065,
+  Victor A5040413861, Bastos A5065113060 (mais dois perfis menores; é o que tem o sprint de
+  dengue e o nowcasting de 2025), Queiroz A5077852423. Limite: o OpenAlex só vê
+  publicações. Banca, projeto e orientação em comum só aparecem no Lattes, que não
+  conferi porque pede captcha.
+- **Afiliação do Bastos:** o OpenAlex lista IMPA Tech além da Fiocruz como afiliação
+  recente. Confirmar na página dele antes de preencher o formulário.
 - **Queiroz é demógrafo** e deve cobrar a mesma limitação da LAB-127: contagem em vez de
   taxa, sem separar demografia de risco. O artigo já a declara nas Limitations, então é
   revisor exigente, não hostil.
