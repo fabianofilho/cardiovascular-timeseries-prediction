@@ -22,8 +22,10 @@ Feito:
 - [x] Pacote `submissao_IJF_2026-10-09` no Drive; rascunho do email ao Alexandre atualizado
 
 Proximos passos:
-- [ ] Mandar no grupo o resumo da rodada e o docx de 09/10 (aguarda ok do Fabiano)
-- [ ] Victor confirmar nome e CRediT (proposto: Investigation, Validation, Writing - review)
+- [x] Mandar no grupo o resumo da rodada e o docx de 09/10
+- [x] Victor confirmou nome e CRediT no grupo em 19/10 (Investigation, Validation, Writing - review); o texto ja estava assim
+- [x] Isa aprovou a versao de 13/10 (grupo, 14/10)
+- [x] Revisores Bastos e Queiroz sem coautoria com os autores no OpenAlex (PR #34)
 - [x] Email ao Alexandre enviado em 14/10 (versão de 13/10, combo com DFP e OPT); aguardando aprovação dele e o CRediT
 - [ ] Aprovacao dos quatro autores; acordo CAPES-Elsevier pelo CAFe; submeter
 - Conformal fica para a resposta aos revisores (decisao de 29/09, LAB-126)
