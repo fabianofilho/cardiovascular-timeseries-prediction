@@ -1,0 +1,7 @@
+Highlights
+
+- Prophet, SARIMA and TimesFM were indistinguishable: sMAPE from 4.70% to 4.83%
+- On identical test dates, nine more years of history cut error by 1.23 to 1.71 pp
+- That gain is about ten times the 0.13 pp spread among the three leading models
+- Neither gradient boosting model beat the seasonal naive benchmark
+- Claims required bootstrap and Diebold-Mariano agreement, fixed before analysis

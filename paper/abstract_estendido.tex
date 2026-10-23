@@ -36,7 +36,7 @@ Boosting models were detectably worse, with all 36 comparisons against a leading
 $p<0.05$, and neither cleared the seasonal naive benchmark (MASE 1.213 and 1.263 against
 1.148); enriching their features and adding a tabular foundation model narrowed the gap
 without closing it. Holding test dates fixed, nine additional years of training reduced sMAPE by
-1.23 to 1.71 pp, roughly ten times any between-model difference. Truncating training
+1.23 to 1.71 pp, roughly ten times the spread among the three leading models. Truncating training
 history to 60 months cost SARIMA 0.66 pp and Prophet 0.69 pp while leaving TimesFM
 unaffected ($p=0.42$), and TimesFM then led. Minimum temperature improved three of the
 four models that accept covariates, but only XGBoost met the pre-declared criterion (gain

@@ -40,9 +40,9 @@ tests and a decision criterion fixed in advance. Prophet, SARIMA and TimesFM wer
 statistically indistinguishable; their spread in percentage error was roughly eight times
 smaller than their interval width. Boosting was detectably worse and did not beat a
 seasonal naive benchmark. Holding test dates fixed, nine additional years of training
-reduced error about ten times more than any change of model. With only five years of
-history SARIMA and Prophet degraded while TimesFM did not. Monthly
-temperature helped mainly by supplying seasonality. For a long single series, model choice
+reduced error about ten times more than choosing among the leading models. With only five years of
+history SARIMA and Prophet degraded while TimesFM did not.
+Temperature helped mainly by supplying seasonality. For a long single series, model choice
 is an operational decision; the case for a foundation model is robustness to short
 history.
 
@@ -640,7 +640,7 @@ and would prevent a class of claims that do not replicate.
 \subsection{Where the accuracy came from}
 
 Holding test dates fixed, extending training from at most 54 to at most 168 months reduced
-error by 1.23 to 1.71 pp, roughly ten times the spread among models. For a surveillance
+error by 1.23 to 1.71 pp, roughly ten times the spread among the three leading models. For a surveillance
 team this reorders priorities: retrieving and validating a longer historical extraction
 dominates implementing a more sophisticated model, and the two are not close.
 
