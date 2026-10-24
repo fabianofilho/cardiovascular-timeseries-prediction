@@ -31,7 +31,7 @@ Proximos passos:
       highlights e o "dez vezes" do resumo restrito aos tres modelos lideres), grupo avisado
 - [x] SUBMETIDO em 24/10/2026, 07:32, pelo portal submit.elsevier.com (Full Length Article,
       versao de 23/10, commit fec8579). Acesso aberto sem custo pelo acordo CAPES-Elsevier.
-      Numero do manuscrito no email de confirmacao para fabiano.filho@usp.br
+      Manuscrito IJF-D-26-01619
 - [ ] Entrar na conta do periodico depois do email de confirmacao e acompanhar
 - [ ] Resposta aos revisores: conformal (LAB-126) e taxa em vez de contagem (LAB-127)
 - Conformal fica para a resposta aos revisores (decisao de 29/09, LAB-126)
