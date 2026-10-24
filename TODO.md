@@ -7,7 +7,19 @@ o dado, nao a arquitetura.** As prioridades refletem isso.
 
 ---
 
-## Submissao ao IJF (estado em 24/10/2026: submetido)
+## v2: escopo ampliado (desde 24/10/2026)
+
+**IJF-D-26-01619: desk reject em 24/10/2026**, no dia da submissão, por marcas de texto de
+agente e contribuição insuficiente. A v1 fica na tag `ijf-v1-2026-10-24`. Plano, barra de
+contribuição e passos em `docs/plano_v2_escopo_ampliado.md`. LAB-126 (conformal) entra na
+v2 como desfecho principal; LAB-127 perde o sentido.
+
+- [ ] Avisar Isa, Victor e Alexandre da rejeição e do plano
+- [ ] Definir interlocutor da vigilância (item 5 da barra)
+- [ ] Extrair SIM 2010-2023 das 26 UFs restantes
+- [ ] Denominadores por UF, ano, sexo e idade
+
+## Submissao ao IJF (v1, estado em 24/10/2026: desk reject)
 
 Feito:
 - [x] Dados do autor, resumo de 150 palavras, versao duplo-cega + title page (PRs #4 a #19)
