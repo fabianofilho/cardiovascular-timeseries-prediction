@@ -7,7 +7,7 @@ o dado, nao a arquitetura.** As prioridades refletem isso.
 
 ---
 
-## Submissao ao IJF (estado em 23/10/2026)
+## Submissao ao IJF (estado em 24/10/2026: submetido)
 
 Feito:
 - [x] Dados do autor, resumo de 150 palavras, versao duplo-cega + title page (PRs #4 a #19)
@@ -29,12 +29,11 @@ Proximos passos:
 - [x] Email ao Alexandre enviado em 14/10 (versão de 13/10, combo com DFP e OPT); aguardando aprovação dele e o CRediT
 - [x] Aprovacao dos quatro autores (Alexandre ao vivo em 21/10); pacote final de 23/10 (PR #36:
       highlights e o "dez vezes" do resumo restrito aos tres modelos lideres), grupo avisado
-- [ ] Submeter em https://submit.elsevier.com/IJF ("Start a submission"). O login passa por
-      id.elsevier.com, bloqueado na rede de casa: entrar por celular roteado ou VPN. Arquivos e
-      campos em ~/Downloads/CPT_submissao_IJF_2026-10-23 (DADOS_DO_FORMULARIO.txt)
-- [ ] Antes de subir, conferir no guia do IJF (nao lido em 23/10): highlights, limite do resumo,
-      PDF sem elsarticle, graphical abstract e formato da declaracao de IA
-- [ ] Acordo CAPES-Elsevier pelo CAFe, so se for optar por acesso aberto
+- [x] SUBMETIDO em 24/10/2026, 07:32, pelo portal submit.elsevier.com (Full Length Article,
+      versao de 23/10, commit fec8579). Acesso aberto sem custo pelo acordo CAPES-Elsevier.
+      Numero do manuscrito no email de confirmacao para fabiano.filho@usp.br
+- [ ] Entrar na conta do periodico depois do email de confirmacao e acompanhar
+- [ ] Resposta aos revisores: conformal (LAB-126) e taxa em vez de contagem (LAB-127)
 - Conformal fica para a resposta aos revisores (decisao de 29/09, LAB-126)
 
 Regra que ficou: numeros do XGBoost so reproduzem na maquina Windows (`n_jobs=1` nao basta
