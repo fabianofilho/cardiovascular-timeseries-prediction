@@ -1,0 +1,442 @@
+\input{../paper/preamble}
+
+\title{\vspace{-2em}\large\bfseries Training history and model choice in forecasting monthly
+cardiovascular mortality in S\~ao Paulo, Brazil: foundation, classical and boosting models
+compared with paired uncertainty}
+
+\ifdefined\BLIND
+\author{}
+\else
+\author{Fabiano Novaes Barcellos Filho\thanks{Faculdade de Sa\'ude P\'ublica, Universidade de
+S\~ao Paulo, S\~ao Paulo, Brazil. Corresponding author.} \and
+Isabela Venancio da Silva\footnotemark[1] \and
+Victor Hugo Ovani Marchetti\footnotemark[1] \and
+Alexandre Chiavegatto Filho\footnotemark[1]}
+\fi
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\noindent\textbf{Running title:} Forecasting cardiovascular mortality in S\~ao Paulo \\
+\textbf{Keywords:} cardiovascular mortality; time series forecasting; foundation models;
+prediction intervals; health surveillance; Brazil
+
+\vspace{1em}
+\hrule
+\vspace{1em}
+
+\section*{Abstract}
+
+Health services that plan for the winter rise in cardiovascular deaths need monthly
+forecasts, and a growing number of studies propose pre-trained foundation models for this
+task. We compared SARIMA, Prophet, the TimesFM foundation model, XGBoost and CatBoost on the
+monthly count of cardiovascular deaths in S\~ao Paulo state, Brazil, from 2010 to 2023
+(1{,}217{,}427 deaths), using 103 rolling origin windows with a 6-month horizon and paired
+block bootstrap intervals. Prophet, SARIMA and TimesFM reached sMAPE between 4.70\% and
+4.83\%, and none of the three pairwise differences was distinguishable from zero. Both
+boosting models were worse than all three and did not improve on repeating the same month
+of the previous year. On identical target months, nine additional years of training reduced
+error by 1.23 to 1.71 percentage points, about ten times the spread among the three leading
+models. When training was limited to the last five years, SARIMA and Prophet lost accuracy
+and TimesFM did not. The native 95\% intervals of SARIMA and Prophet covered 84.5\% and
+77.2\% of observations. For a single indicator with a long record, the choice among these
+models matters less than the length of the series and the calibration of the intervals.
+
+\vspace{1em}
+\hrule
+
+\section{Introduction}
+
+Cardiovascular diseases cause about 17.9 million deaths a year worldwide \citep{roth2020}
+and have been the leading cause of death in Brazil since the 1960s, around 30\% of all
+deaths in recent decades \citep{oliveira2020, brant2017}. Age-standardised rates have fallen
+since the 1990s \citep{ribeiro2016}, but population growth and ageing keep the absolute
+number rising \citep{brant2025}: in S\~ao Paulo, the most populous state, annual
+cardiovascular deaths went from 79{,}933 in 2010 to 95{,}538 in 2023. The burden is also
+seasonal. Mortality from myocardial infarction in the city of S\~ao Paulo rises in winter
+\citep{sharovsky2002}, and among six Brazilian micro-regions studied by \citet{ferreira2019},
+S\~ao Paulo had the largest number of deaths from myocardial infarction attributed to cold. Coronary and stroke beds, emergency staff
+and drug supply have to be arranged before that peak, which is the use a monthly forecast
+of deaths serves. \aberto{one or two sentences from the authors on how forecasts of this
+series are, or could be, used in state planning}
+
+Forecasts of cardiovascular mortality in Brazil have addressed long-range trends:
+\citet{siqueira2020}, for example, projected mortality from myocardial
+infarction, stroke and heart failure to 2030 in five-year intervals. Monthly forecasting
+over a horizon of a few months is a different problem, and the methods on offer for it have
+changed. Seasonal ARIMA \citep{box2015} and Prophet \citep{taylor2018} estimate a model from
+the target series itself. Foundation models such as TimesFM \citep{das2024} and Chronos
+\citep{ansari2024} are pre-trained on large collections of series and forecast a new one
+without task-specific training, and health-specific variants are appearing \citep{li2025}.
+Gradient boosting, which dominated the M5 competition \citep{makridakis2022}, is the usual choice
+when forecasting is posed as a tabular problem.
+
+How these families compare on one health series is less settled than benchmark leaderboards
+suggest. Foundation models are evaluated on archives of thousands of series
+\citep{godahewa2021, aksu2024}, and an average rank across an archive does not say which
+model to use for a particular indicator. Backtesting a single series produces forecasts from
+overlapping windows that share training data, so aggregate errors carry wide intervals, and
+differences of a few tenths of a percentage point are easily within them
+\citep{hewamalage2023}. The question for a surveillance team is therefore twofold: whether
+any of these models is measurably better on its own series, and what else affects accuracy
+that the team can control.
+
+We addressed both on the monthly series of cardiovascular deaths in S\~ao Paulo state from
+2010 to 2023. We compared five models and three naive references on identical rolling
+origin windows, with paired intervals for every comparison. We then varied the amount of
+training history while holding the test months fixed, measured the coverage of the
+prediction intervals that two of the models produce, and tested monthly temperature as a
+covariate.
+
+\section{Methods}\label{sec:metodos}
+
+\subsection{Data}
+
+We used individual death records from the Mortality Information System (SIM) of the
+Brazilian Ministry of Health, distributed by DataSUS \citep{datasus}, for residents of S\~ao
+Paulo state from January 2010 to December 2023. Of 4{,}317{,}224 records, 1{,}217{,}427 had
+an underlying cause in ICD-10 chapter IX, diseases of the circulatory system (I00--I99)
+\citep{icd10}. Aggregated by month of death, they form a series of 168 points with a mean of
+7{,}247 deaths (median 7{,}177), a minimum of 5{,}811 in February 2011 and a maximum of
+9{,}582 in January 2022 (Figure~\ref{fig:serie}). Death registration in the state is close
+to complete, estimated at 99.9\% in 2016 by record linkage \citep{costa2020}. We did not
+redistribute ill-defined causes (garbage codes), so counts are not directly comparable with
+Global Burden of Disease estimates.
+
+\begin{figure}[htbp]
+\centering
+\input{../paper/figures/fig1_serie}
+\caption{Monthly cardiovascular deaths (ICD-10 I00--I99) among residents of S\~ao Paulo
+state, January 2010 to December 2023. The shaded region marks the 36 target months used in
+Table~\ref{tab:serie}.}
+\label{fig:serie}
+\end{figure}
+
+\subsection{Models}
+
+SARIMA used order $(1,1,1)$ and seasonal order $(0,1,1,12)$ \citep{box2015}. Prophet used
+yearly seasonality, with weekly and daily components turned off for monthly data
+\citep{taylor2018}. TimesFM used the public \texttt{timesfm-2.5-200m-pytorch} checkpoint with
+a 512-point context, zero-shot, without fine-tuning \citep{das2024}. XGBoost
+\citep{chen2016} and CatBoost \citep{prokhorenkova2018} were each wrapped in a recursive
+multi-step forecaster with lags 1 to 12 of the target as the only inputs. No forecast was
+clipped or otherwise post-processed. Three naive references completed the comparison: the
+last observed value (naive), the same month of the previous year (seasonal naive), and the
+seasonal naive with an annual drift.
+
+XGBoost accuracy on this task varied with library version and number of threads (sMAPE
+6.80\% to 6.98\% across seven versions and five thread counts with code, data and seed
+fixed), so we pinned the version and fitted it on one thread. Across two machines with
+different processors the remaining variation was up to 0.10 percentage points
+(Supplementary Section~\ref{sec:s-repro}).
+
+\subsection{Evaluation}
+
+We used rolling origin evaluation \citep{tashman2000} with an expanding window, a minimum of
+60 months of training, a one-month step and a 6-month horizon. This gives 103 windows and
+618 out-of-sample forecasts per model, on identical test months for every model. We report
+mean absolute error (MAE), root mean squared error (RMSE), symmetric mean absolute percentage
+error (sMAPE) and the mean absolute scaled error (MASE) \citep{hyndman2006}.
+
+Forecasts from overlapping windows are dependent, so intervals were obtained by a block
+bootstrap that resamples whole windows, with the six horizons of a window kept together
+($B=10{,}000$, seed 20260817). In each replicate the same windows were used for every model,
+and differences between models were computed within replicate, which gives an interval for
+the paired difference. We also applied the Diebold-Mariano test \citep{diebold1995} with the
+small-sample correction of \citet{harvey1997} at each horizon, with absolute error as loss.
+A HAC variance with a Bartlett kernel and Newey-West bandwidth left all 90 pairwise cells on
+the same side of the 5\% threshold.
+
+Before running the comparisons we set the rule for calling a difference established: the
+95\% interval of the paired difference excludes zero and the Diebold-Mariano test reaches
+$p<0.05$ in at least three of the six horizons. A difference that meets only the first
+condition is reported as suggestive.
+
+\subsection{Training history}
+
+We isolated the effect of history length in two ways. First, we compared forecasts for the
+same 36 target months (January 2021 to December 2023) from a run on 2019--2023 data, where
+training windows held 24 to 54 months, and from the main analysis, where they held 132 to
+168 months. Second, we repeated the main analysis on the same 103 origins with training
+limited to the most recent 60 months.
+
+\subsection{Prediction intervals}
+
+SARIMA and Prophet produce native prediction intervals. For both we computed empirical
+coverage of the nominal 95\% interval, mean interval width and the interval score of
+\citet{gneiting2007} by horizon. TimesFM, XGBoost and CatBoost, as configured, produce point
+forecasts only.
+
+\subsection{Temperature}
+
+Cold is the main candidate driver of the winter excess \citep{analitis2008, phung2016,
+ferreira2019}. We took hourly records from the automatic station A701 of the National
+Institute of Meteorology (S\~ao Paulo, Mirante de Santana) \citep{inmet} and computed the
+monthly mean of daily minimum temperature, discarding days with fewer than 18 valid hours
+and months with fewer than 20 valid days; all 168 months were complete. A forecast cannot
+use future observed temperature, so the future value of the covariate was the month-of-year
+mean computed from data up to the end of each training window. As a ceiling, we also ran the
+models with the observed future temperature, which bounds what a perfect weather forecast
+could add. SARIMA, XGBoost and CatBoost received the covariate as a regressor and Prophet
+through \texttt{add\_regressor}; TimesFM has no covariate interface in the version used.
+
+\subsection{Supplementary analyses}
+
+To check that the boosting results did not depend on a weak configuration, we ran six
+feature engineering variants, a Bayesian hyperparameter search of 40 trials restricted to
+the first 60 months, and TabPFN, a pre-trained tabular transformer, under the same protocol.
+We also repeated the main comparison excluding the COVID-19 period, dropping whole windows
+whose test months overlap March 2020 to December 2021, or January 2020 to December 2022.
+Details are in the Supplementary Material.
+
+\subsection{Reproducibility}\label{sec:repro}
+
+All tables and figures are generated by one script from the per-forecast files, and every
+number in the text was checked against a file written by the same script. Code, the
+aggregated series and all forecasts are in the study repository.
+
+\section{Results}
+
+\subsection{Accuracy of the five models}
+
+\input{tables/tab1_desempenho}
+
+Prophet, SARIMA and TimesFM reached sMAPE of 4.70\%, 4.80\% and 4.83\% (Table~\ref{tab:desempenho},
+Figure~\ref{fig:smape}). With about 7{,}250 deaths a month, the best MAE of 355 deaths is an
+error near 4.9\%. The three are separated by 0.13 percentage points, while the mean width of
+their individual intervals is 1.07 points. None of the three paired differences excluded
+zero, and none of the 18 Diebold-Mariano cells reached significance (Table~\ref{tab:pares}).
+
+\begin{figure}[htbp]
+\centering
+\input{../paper/figures/fig2_smape_ic}
+\caption{sMAPE by model with 95\% block bootstrap intervals over the 103 rolling origin
+windows. The grey band spans the point estimates of the three most accurate models.}
+\label{fig:smape}
+\end{figure}
+
+\input{tables/tab2_pares}
+
+The two boosting models were at least 1.76 points behind. All 36 Diebold-Mariano
+comparisons of a boosting model with one of the three leading models had $p<0.05$, and the
+bootstrap $p$ for each pooled difference was below 0.001.
+
+The seasonal naive method reached 6.27\% (MASE 1.148) and the drift variant 6.18\%. The
+three leading models reduced the error of the seasonal naive by about a quarter (MASE 0.860
+to 0.887). CatBoost (6.59\%) and XGBoost (6.88\%) did not improve on it. For CatBoost the
+paired interval against the seasonal naive was $[-0.056, +0.716]$, and for XGBoost the
+interval excluded zero but no Diebold-Mariano cell did, so neither is established as worse
+than the reference. The naive method that ignores the annual cycle reached 10.74\%. Most of
+what there is to forecast in this series is the annual cycle.
+
+\subsection{Boosting configurations and a tabular foundation model}
+
+No configuration of the tabular models we tried was established as better than the seasonal
+naive method (Supplementary Tables~\ref{tab:variantes} and~\ref{tab:optuna}). Rolling window
+statistics made both boosting models worse. The changes that helped were those that gave
+them the annual cycle: calendar terms and forecasting the seasonal difference
+$y_t - y_{t-12}$. The best variant reached 6.09\%, with a paired interval against the
+seasonal naive of $[-0.45, +0.10]$. Hyperparameter search restricted to the training period
+moved CatBoost from 6.59\% to 6.42\% and XGBoost from 6.88\% to 7.02\%.
+
+TabPFN reached 5.85\%, the best of the tabular models. Its advantage over the seasonal
+naive (0.42 points, interval $[-0.698, -0.128]$) was significant only at the one-month
+horizon ($p=0.0012$), so it does not meet the criterion over the six-month horizon. It
+remained 1.14 points behind Prophet. Because TabPFN was run through a hosted API, its result
+is tied to the service version: an earlier client release gave 6.04\%.
+
+\subsection{Removing the pandemic period}
+
+Excluding the COVID-19 windows lowered the error of all three leading models by about the
+same amount; Prophet went from 4.70\% to 3.60\% and 3.47\% under the two exclusions, which
+remove 27 and 41 of the 103 windows (Supplementary Table~\ref{tab:covid}). No pair among the
+three separated in any of the three test periods, and under the wider exclusion SARIMA moved
+ahead of Prophet by 0.06 points.
+
+\subsection{Training history}
+
+\input{tables/tab3_serie}
+
+On the same 36 target months, the long-history forecasts had 1.23 to 1.71 points lower
+sMAPE than the short-history ones (Table~\ref{tab:serie}), about ten times the spread among
+the three leading models. With short history, the point ordering was different: TimesFM
+first at 7.30\% and Prophet last at 7.68\%, a spread of 0.38 points with a mean interval
+width of 2.45 points.
+
+\input{tables/tab4_janela}
+
+Limiting training to the most recent 60 months cost SARIMA 0.66 points, meeting the
+established criterion, and Prophet 0.69 points, with an interval that excluded zero and no
+significant Diebold-Mariano cell (Table~\ref{tab:janela}, Figure~\ref{fig:janela}). TimesFM
+did not change ($+0.09$, $p=0.42$). With five years of history, TimesFM had 4.74\% against
+5.46\% for SARIMA.
+
+\begin{figure}[htbp]
+\centering
+\input{../paper/figures/fig4_janela}
+\caption{sMAPE with an expanding training window and with the last 60 months only, on
+identical test origins. The annotation on each row is sliding minus expanding sMAPE, so a
+positive value is the accuracy lost by discarding older history.}
+\label{fig:janela}
+\end{figure}
+
+\subsection{Prediction intervals}
+
+\input{tables/tab6_calibracao}
+
+At a nominal 95\%, SARIMA intervals covered 84.5\% of observations and Prophet intervals
+77.2\% (Table~\ref{tab:calibracao}). A manager told the outcome would fall inside the
+interval nineteen times in twenty would see it fall inside about seventeen times with SARIMA
+and fifteen with Prophet. Prophet had the narrower intervals (1{,}045 against 1{,}288 deaths
+a month) and the worse interval score (4{,}468 against 3{,}500), and its coverage fell from
+0.796 at one month to 0.748 at six; SARIMA stayed between 0.854 and 0.835. The model with
+the lowest sMAPE had the worse intervals.
+
+\subsection{Temperature}
+
+\input{tables/tab5_temperatura}
+
+Temperature reduced the error of SARIMA (0.136 points), CatBoost (0.258) and XGBoost
+(0.368), with intervals excluding zero, and increased the error of Prophet by 0.035 points,
+within its interval (Table~\ref{tab:temperatura}). Only XGBoost met the established
+criterion, with 3 of 6 significant horizons, and this verdict depended on the computing
+environment: on a second machine it had 4 of 6, and with an earlier, unpinned library
+version 2 of 6. When calendar terms and seasonal differencing were added to the boosting
+models, the gain from temperature fell to 0.076 points for CatBoost and disappeared for
+XGBoost ($-0.010$) (Supplementary Table~\ref{tab:tempdiffcal}). Replacing the climatological
+covariate with the observed future temperature improved SARIMA by a further 0.03 points.
+
+The series peaks in July, with a mean of 8{,}247 deaths, and reaches its trough in February,
+with 6{,}273, an amplitude of 27.2\% around the mean. The seasonal shape was stable over the
+fourteen years, including the pandemic period (Figure~\ref{fig:serie}).
+
+\section{Discussion}
+
+On a 14-year monthly series of cardiovascular deaths in S\~ao Paulo state, three models of
+different families, a seasonal ARIMA, Prophet and a pre-trained foundation model, could not
+be told apart, while nine more years of training history reduced error by about ten times
+their spread. The foundation model was the only one that did not lose accuracy when history
+was cut to five years. The intervals that two of the models produce covered far less than
+their nominal level.
+
+\subsection{Comparison with other studies}
+
+The order of the model families agrees with the large forecasting competitions. In M4, with
+100{,}000 series of several frequencies, combinations of statistical methods were among the
+most accurate and pure machine learning methods did not improve on the statistical
+benchmarks \citep{makridakis2020}. Gradient boosting dominated M5 \citep{makridakis2022}, but
+there the task was 42{,}840 related series of Walmart unit sales with calendar and price
+information, the setting in which a single model learns across series. Our boosting models had
+one series and twelve lags. They improved when given the calendar, through calendar terms,
+seasonal differencing or temperature, which in this series acts as a proxy for the month of
+the year. The similarity between TimesFM and the classical models also fits evidence that
+simple models remain competitive with transformer architectures on standard forecasting
+benchmarks \citep{zeng2023}.
+
+Foundation model benchmarks summarise performance across archives of many series
+\citep{godahewa2021, aksu2024}. Our result does not contradict them, because a single
+series cannot. It shows that the difference between models on one series can be much
+smaller than the uncertainty of the comparison, which is the situation
+\citet{hewamalage2023} warn about when they discuss significance in forecast evaluation. In
+our case, the point ordering on the shorter series placed TimesFM first by 0.38 points
+inside intervals of 2.45 points, and with more data Prophet had the lowest error. Neither
+ordering is informative.
+
+The July peak agrees with the winter excess in myocardial infarction mortality reported for
+the city of S\~ao Paulo \citep{sharovsky2002}, and the stability of the seasonal shape over
+fourteen years, the pandemic included, is what makes a seasonal model sufficient here. Unlike the long-range projections of \citet{siqueira2020},
+our horizon is six months, which is what capacity planning for a winter needs.
+
+\subsection{Interpretation}
+
+Most of the predictable structure of this series is the annual cycle: repeating last year
+already gives 6.27\% sMAPE, and the naive method that ignores the cycle gives 10.74\%. Any
+model that represents the cycle well reaches about the same accuracy, and the remaining
+error is dominated by events no model sees coming, such as the pandemic, which raised the
+error of all three leading models alike. This also explains why longer history helps:
+more years give a better estimate of the seasonal shape and of the trend, which for
+absolute counts includes population growth and ageing.
+
+TimesFM was insensitive to history length because it does not estimate its parameters from
+the target series. It brings its prior from pre-training and reads a bounded context. That
+is a disadvantage on a long, clean series, where the classical models can learn the same
+structure, and an advantage on a short one.
+
+Temperature at monthly resolution added little beyond the calendar: the gain disappeared
+once the boosting models had calendar terms, and a perfect future temperature improved
+SARIMA by 0.03 points. The cardiovascular effect of cold acts over days \citep{analitis2008,
+ferreira2019}, and averaging to monthly minima removes most of that signal. Weekly or daily
+series would be needed to test it.
+
+\subsection{Limitations}
+
+We modelled counts, not rates. Part of what the long history adds is therefore population
+growth and ageing, and this probably overstates the benefit of long history for
+epidemiological change. The series is a single state aggregate, longer and smoother than
+any municipal or regional series, which probably makes all models look better than they
+would on subunits. We did not stratify by age, sex or cause subgroup, which have different
+seasonal patterns. TimesFM was used zero-shot; fine-tuning could change its relative
+position. Only two models produced prediction intervals, and both undercovered by 10 to 18
+percentage points, so none of the forecasts here can be given to a planner with a
+reliable interval. Ill-defined causes were not redistributed; a change in their share
+over time would appear in the series as a change in trend.
+
+\subsection{Implications}
+
+For a team forecasting one well-recorded indicator with more than a decade of data, the
+choice among SARIMA, Prophet and a foundation model can rest on cost, transparency and
+maintenance; SARIMA is the cheapest and had the better intervals. Effort spent extending and
+cleaning the historical series is likely to pay more than effort spent on model selection.
+A foundation model is a reasonable default where series are short, as for new indicators,
+municipalities or strata, though this needs testing on such series. In either case the
+intervals should be recalibrated before use; conformal prediction wraps any point forecaster
+and offers finite-sample coverage under exchangeability \citep{angelopoulos2023}.
+
+\section{Conclusion}
+
+For monthly cardiovascular mortality in S\~ao Paulo state, the three best models from three
+different families were statistically indistinguishable, the length of the training series
+mattered about ten times more than the choice among them, and the available prediction
+intervals undercovered. The foundation model's advantage appeared only when history was
+short.
+
+\section*{Declarations}
+
+\ifdefined\BLIND\else
+\textbf{Author contributions (CRediT).} Fabiano Novaes Barcellos Filho: Conceptualization,
+Methodology, Software, Formal analysis, Data curation, Writing -- original draft,
+Visualization. Isabela Venancio da Silva: Validation, Formal analysis, Investigation,
+Writing -- review \& editing, Visualization. Victor Hugo Ovani Marchetti: Investigation,
+Validation, Writing -- review \& editing. Alexandre Chiavegatto Filho: Conceptualization,
+Resources, Supervision, Writing -- review \& editing.
+
+\textbf{Funding.} This study was financed in part by the Coordena\c{c}\~ao de
+Aperfei\c{c}oamento de Pessoal de N\'ivel Superior, Brazil (CAPES), Finance Code 001.
+\fi
+
+\textbf{Ethics.} The study used public, de-identified mortality records. Under Resolution
+No.~510/2016 of the Brazilian National Health Council, research on publicly accessible
+databases without individual identification is exempt from ethics committee review.
+
+\textbf{Competing interests.} The authors declare no competing interests.
+
+\textbf{Data and code availability.} The aggregated monthly series, the temperature series,
+all forecasts, uncertainty outputs and the code that produces every table and figure are in
+the study repository
+\ifdefined\BLIND(address withheld for review)\else
+(\url{https://github.com/fabianofilho/cardiovascular-timeseries-prediction})\fi. Individual
+records are not redistributed; the extraction script retrieves them from DataSUS.
+
+\textbf{Use of artificial intelligence.} The authors used an AI assistant (Claude,
+Anthropic) to write analysis code and to draft and revise the manuscript text. The authors
+chose the questions and design, reviewed every analysis and number, and take full
+responsibility for the content. The tool is not an author.
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs/references}
+
+\input{supplement}
+
+\end{document}

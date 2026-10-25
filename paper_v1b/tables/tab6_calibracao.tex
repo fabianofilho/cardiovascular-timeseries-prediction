@@ -1,0 +1,27 @@
+% gerado por paper_v1b/build_tables.py a partir de paper/tables/tab6_calibracao.tex -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Empirical coverage and interval score of the nominal 95\% prediction intervals of SARIMA and Prophet, by forecast horizon, over the 103 windows.}
+\label{tab:calibracao}
+\begin{tabular}{lcccccccr}
+\toprule
+& \multicolumn{6}{c}{Forecast horizon (months)} & & \\
+\cmidrule(lr){2-7}
+Model and metric & $h=1$ & $h=2$ & $h=3$ & $h=4$ & $h=5$ & $h=6$ & All & MPIW \\
+\midrule
+SARIMA, coverage & 0.854 & 0.854 & 0.845 & 0.854 & 0.825 & 0.835 & 0.845 & 1288 \\
+Prophet, coverage & 0.796 & 0.786 & 0.796 & 0.767 & 0.738 & 0.748 & 0.772 & 1045 \\
+\midrule
+SARIMA, interval score & 2792 & 3460 & 3577 & 3532 & 3667 & 3969 & 3500 & --- \\
+Prophet, interval score & 4208 & 4342 & 4340 & 4572 & 4640 & 4706 & 4468 & --- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+Coverage is the fraction of observed values inside the interval (target 0.950). MPIW, mean interval width in deaths per month. Interval score as in \citet{gneiting2007}: width plus a penalty for each observation outside the interval, proportional to the miss; lower is better.
+\end{minipage}
+\end{table}
