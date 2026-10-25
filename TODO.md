@@ -14,9 +14,10 @@ agente e contribuição insuficiente. A v1 fica na tag `ijf-v1-2026-10-24`. Plan
 contribuição e passos em `docs/plano_v2_escopo_ampliado.md`. LAB-126 (conformal) entra na
 v2 como desfecho principal; LAB-127 perde o sentido.
 
-- [ ] Avisar Isa, Victor e Alexandre da rejeição e do plano
+- [x] Avisar Isa e Victor da rejeição e do plano (Visa Papers, 24/10); Alexandre na quarta 28/10
+- [x] SIM 2010-2023 das 27 UFs baixado (PR #41, 378/378)
+- [ ] paper_v1b (v1 reescrita com a voz nova): preencher o [OPEN] da introdução, mandar aos coautores em .docx (build_docx.py ainda não lê a v1b) e escolher revista pela /journal
 - [ ] Definir interlocutor da vigilância (item 5 da barra)
-- [ ] Extrair SIM 2010-2023 das 26 UFs restantes
 - [ ] Denominadores por UF, ano, sexo e idade
 
 ## Submissao ao IJF (v1, estado em 24/10/2026: desk reject)

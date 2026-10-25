@@ -325,9 +325,9 @@ their nominal level.
 
 The order of the model families agrees with the large forecasting competitions. In M4, with
 100{,}000 series of several frequencies, combinations of statistical methods were among the
-most accurate and pure machine learning methods did not improve on the statistical
-benchmarks \citep{makridakis2020}. Gradient boosting dominated M5 \citep{makridakis2022}, but
-there the task was 42{,}840 related series of Walmart unit sales with calendar and price
+most accurate, and none of the six pure machine learning methods beat the combination
+benchmark \citep{makridakis2018, makridakis2020}. In M5 most methods, the winner included, were built on LightGBM
+\citep{makridakis2022}, but there the task was 42{,}840 related series of Walmart unit sales with calendar and price
 information, the setting in which a single model learns across series. Our boosting models had
 one series and twelve lags. They improved when given the calendar, through calendar terms,
 seasonal differencing or temperature, which in this series acts as a proxy for the month of
@@ -338,8 +338,9 @@ benchmarks \citep{zeng2023}.
 Foundation model benchmarks summarise performance across archives of many series
 \citep{godahewa2021, aksu2024}. Our result does not contradict them, because a single
 series cannot. It shows that the difference between models on one series can be much
-smaller than the uncertainty of the comparison, which is the situation
-\citet{hewamalage2023} warn about when they discuss significance in forecast evaluation. In
+smaller than the uncertainty of the comparison, one of the ways in which, as
+\citet{hewamalage2023} show, evaluation practice produces spurious conclusions about
+forecasting methods. In
 our case, the point ordering on the shorter series placed TimesFM first by 0.38 points
 inside intervals of 2.45 points, and with more data Prophet had the lowest error. Neither
 ordering is informative.
