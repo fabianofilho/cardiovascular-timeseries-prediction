@@ -1,0 +1,22 @@
+% gerado por paper_v1b/build_tables.py a partir de paper/tables/tab3_serie.tex -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\caption{sMAPE on the same 36 target months (January 2021 to December 2023) with short and long training history.}
+\label{tab:serie}
+\begin{tabular}{lrrr}
+\toprule
+Model & sMAPE, 24--54 months & sMAPE, 132--168 months & Gain (pp) \\
+\midrule
+Prophet & 7.68 & 5.97 & 1.71 \\
+SARIMA & 7.45 & 6.18 & 1.27 \\
+TimesFM & 7.30 & 6.07 & 1.23 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+The short-history column comes from a run on 2019--2023 data, in which each window had 24 to 54 months of training ($n=186$ forecasts per model); the long-history column is the subset of the main analysis that falls on the same target months ($n=201$). Only the amount of training data differs.
+\end{minipage}
+\end{table}
