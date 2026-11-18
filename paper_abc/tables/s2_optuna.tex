@@ -1,0 +1,26 @@
+% gerado por paper_v1b/build_tables.py a partir de paper/tables/revisao_tab_optuna.tex -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Bayesian hyperparameter search for the two gradient boosting models.}
+\label{tab:optuna}
+\begin{tabular}{lrrrrrrr}
+\toprule
+& \multicolumn{3}{c}{sMAPE (\%)} & \multicolumn{2}{c}{Gain (pp)} & & \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-6}
+Model & Untuned & Training-only & Test-exposed & Training-only & Test-exposed & Trials & Hours \\
+\midrule
+CatBoost & 6.59 & 6.42 & 6.35 & $+0.17$ & $+0.24$ & 40 + 60 & 2.1 \\
+XGBoost & 6.88 & 7.02 & 6.25 & $-0.13$ & $+0.63$ & 40 + 60 & 1.1 \\
+\midrule
+Seasonal naive & \multicolumn{3}{c}{6.27} & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+Training-only: 40 trials with the search restricted to the first 60 months, so no test window enters it. Test-exposed: 60 trials allowed to score on the test windows, an upper bound that a real procedure cannot reach. Gain is positive when the search improved on the untuned configuration of Table~\ref{tab:desempenho}.
+\end{minipage}
+\end{table}
