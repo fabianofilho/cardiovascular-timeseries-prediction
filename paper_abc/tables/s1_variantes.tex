@@ -1,0 +1,31 @@
+% gerado por paper_v1b/build_tables.py a partir de paper/tables/tab7_variantes.tex -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Feature engineering variants for the two gradient boosting models, under the protocol of Table~\ref{tab:desempenho}. The last two columns compare each CatBoost variant with the seasonal naive method.}
+\label{tab:variantes}
+\begin{tabular}{lrrrrcc}
+\toprule
+& \multicolumn{2}{c}{CatBoost} & \multicolumn{2}{c}{XGBoost}
+& \multicolumn{2}{c}{CatBoost vs seasonal naive} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Variant & sMAPE & MASE & sMAPE & MASE & 95\% CI of $\Delta$ & DM \\
+\midrule
+Lags only (as reported) & 6.59 & 1.213 & 6.88 & 1.263 & $[-0.06, +0.72]$ & 0/6 \\
++ rolling window statistics & 6.79 & 1.248 & 6.95 & 1.275 & $[+0.16, +0.90]$ & 0/6 \\
++ Fourier calendar terms & 6.27 & 1.150 & 6.61 & 1.214 & $[-0.37, +0.39]$ & 0/6 \\
+Seasonal differencing & 6.20 & 1.142 & 6.35 & 1.166 & $[-0.37, +0.23]$ & 0/6 \\
+Differencing + windows + calendar & 6.14 & 1.129 & 6.44 & 1.181 & $[-0.43, +0.14]$ & 0/6 \\
+As above, direct multi-step & 6.09 & 1.126 & 6.39 & 1.183 & $[-0.45, +0.10]$ & 0/6 \\
+\midrule
+Seasonal naive (benchmark) & \multicolumn{4}{c}{6.27 \quad 1.148} & --- & --- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+$\Delta$, CatBoost minus seasonal naive sMAPE, with a paired bootstrap 95\% CI. DM, horizons with $p<0.05$ out of six. Direct multi-step fits one model per horizon.
+\end{minipage}
+\end{table}

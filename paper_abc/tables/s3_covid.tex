@@ -1,0 +1,25 @@
+% gerado por paper_v1b/build_tables.py a partir de paper/tables/tab8_covid.tex -- nao editar a mao
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{sMAPE of the three most accurate models with and without the COVID-19 period in the test set.}
+\label{tab:covid}
+\begin{tabular}{lrrrrcc}
+\toprule
+& & \multicolumn{3}{c}{sMAPE (\%)} & \multicolumn{2}{c}{Leading three} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-7}
+Test period & Windows & Prophet & SARIMA & TimesFM & Pairs separated & Worst DM \\
+\midrule
+Full test period & 103 & 4.70 & 4.80 & 4.83 & 0 of 3 & 0 of 6 \\
+Excluding 2020-03 to 2021-12 & 76 & 3.60 & 3.74 & 3.66 & 0 of 3 & 0 of 6 \\
+Excluding 2020-01 to 2022-12 & 62 & 3.47 & 3.41 & 3.59 & 0 of 3 & 0 of 6 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5em}
+\begin{minipage}{\textwidth}
+\footnotesize
+Windows whose test months overlap the excluded range are dropped whole, so the pairing is kept; no model is refitted. Pairs separated: paired comparisons among the three whose interval excludes zero and whose DM test reaches $p<0.05$ in at least three horizons. Worst DM: the largest count of significant horizons in any pair.
+\end{minipage}
+\end{table}

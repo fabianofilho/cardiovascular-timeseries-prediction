@@ -1,0 +1,100 @@
+% Material suplementar, compilado no fim do manuscrito para as referencias cruzadas
+% funcionarem. Para a submissao, separar em arquivo proprio.
+\clearpage
+\appendix
+\setcounter{table}{0}
+\setcounter{figure}{0}
+\setcounter{section}{0}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thesection}{S\arabic{section}}
+
+\begin{center}
+\large\bfseries Supplementary Material
+\end{center}
+
+\section{Computing environment}\label{sec:s-repro}
+
+XGBoost is deterministic within one environment, but its accuracy on this task changed with
+the library version and the number of fitting threads. With code, data and seed fixed, sMAPE
+ranged from 6.80\% to 6.98\% across seven released versions and five thread counts. CatBoost
+did not move by more than a tenth of a basis point under the same variation. We therefore
+pinned the XGBoost version and fitted it on one thread; the reported 6.88\% comes from that
+environment. On a second machine with a different processor architecture, the same versions
+and one thread gave 6.83\% for XGBoost and 6.41\% for its temperature variant (6.51\% in
+the pinned environment). This
+difference is small against every comparison between models in the paper, but it changes
+the count of significant horizons for the temperature gain of XGBoost (main text, Temperature).
+
+Prophet derives its interval bounds from a finite sample of posterior draws, which we seeded
+at every window. Without the seed the bounds moved by 34 to 53 deaths between two fits of
+the same window. Across machines, 63 of the 103 Prophet point forecasts differed by up to 49
+deaths, which left coverage at 0.772 and moved sMAPE from 4.701\% to 4.700\%.
+
+TabPFN was run through a hosted inference API, so its model version is outside the pinned
+environment. The same protocol gave 6.04\% with an earlier client release and 5.85\% with
+the current one.
+
+\section{Boosting configurations}
+
+\input{tables/s1_variantes}
+
+\input{tables/s2_optuna}
+
+Table~\ref{tab:variantes} changes one element of the boosting feature set at a time. Rolling
+window statistics made both models worse. Fourier calendar terms and forecasting the
+seasonal difference helped, and the best combination with one model per horizon reached
+6.09\% for CatBoost against 6.27\% for the seasonal naive method, with a paired interval
+containing zero and no significant horizon. In Table~\ref{tab:optuna}, the search restricted
+to the training period improved CatBoost by 0.17 points and made XGBoost 0.13 points worse.
+With the test windows exposed, CatBoost reached 6.35\% and XGBoost 6.25\%, 0.02 points ahead
+of the seasonal naive method; these values come from configurations selected on the test set
+and bound what tuning could achieve.
+
+The best feature engineering variant also lost accuracy under the 60-month sliding window:
+0.50 points for CatBoost and 0.41 for XGBoost. Only the aggregate metrics of that run were
+kept, so it has no paired interval.
+
+\section{TabPFN}
+
+TabPFN received the same twelve lags as the boosting models. Its sMAPE of 5.85\% was 0.74
+points ahead of CatBoost and 1.03 ahead of XGBoost. Against the seasonal naive method its
+advantage was 0.42 points (interval $[-0.698, -0.128]$), and against the drift variant 0.33
+points ($[-0.622, -0.031]$). The Diebold-Mariano test was significant only at the one-month
+horizon ($p=0.0012$ and $p=0.0044$), with $p$ above 0.35 from the third horizon onward, so
+the advantage is confined to the first month. SARIMA was ahead of TabPFN in four of six
+horizons.
+
+\section{COVID-19 period}
+
+\input{tables/s3_covid}
+
+\section{Temperature and the calendar}
+
+\input{tables/s4_temp_calendario}
+
+\begin{figure}[htbp]
+\centering
+\input{../paper/figures/fig6_temperatura}
+\caption{Reduction in sMAPE from adding monthly minimum temperature under the climatology
+policy, with 95\% paired bootstrap intervals. Positive values favour the model with
+temperature.}
+\label{fig:temp}
+\end{figure}
+
+\section{Error by horizon and seasonal profile}
+
+\begin{figure}[htbp]
+\centering
+\input{../paper/figures/fig3_horizonte}
+\caption{sMAPE by forecast horizon, $n=103$ windows per cell.}
+\label{fig:horizonte}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\input{../paper/figures/fig5_sazonal}
+\caption{Mean cardiovascular deaths by month of year (left axis) and mean monthly minimum
+temperature at station A701 (right axis), 2010--2023.}
+\label{fig:sazonal}
+\end{figure}
